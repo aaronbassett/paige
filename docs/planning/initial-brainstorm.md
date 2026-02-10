@@ -38,6 +38,7 @@ This document captures the initial planning and brainstorming sessions for Paige
 - [Stretch Goals](#stretch-goals)
 - [Design Principles](#design-principles)
 - [Architecture Amendment: Three-Tier Separation](#architecture-amendment-three-tier-separation)
+- [Architecture Amendment: Claude API Usage Strategy](#architecture-amendment-claude-api-usage-strategy)
 
 ---
 
@@ -908,3 +909,540 @@ Added to the existing [Design Principles](#design-principles):
 8. **Backend is the single source of truth** — All state, all file I/O, all logging flows through the backend. Electron renders. Claude Code coaches. Neither owns data.
 9. **Spec-driven development** — The MCP tool schemas and WebSocket message protocol are the contracts. Build to the spec, integrate with confidence.
 10. **Observable by default** — Log everything that flows through the backend. Coaching signals, session replay, and debugging all benefit from comprehensive observability. If data flows through the backend, it gets logged.
+
+---
+
+## Architecture Amendment: Claude API Usage Strategy
+
+> This section extends the architecture with a systematic approach to using the Claude API for backend-driven intelligence. Offload evaluative, transformative, and analytical tasks from Claude Code's conversational context to direct API calls made by the backend server.
+
+### The Problem with Claude-Code-for-Everything
+
+The initial brainstorm routes all intelligence through Claude Code's PTY — the Explore, Plan, Coach, and Review agents all run as conversational turns in the terminal. This works, but it has significant drawbacks:
+
+**Context pollution.** Every analytical task (assessing Dreyfus stage, evaluating diffs, generating kata specs) consumes Claude Code's context window. That window is shared with the user's conversation. The more background work Paige does *through* Claude Code, the less room there is for the actual coaching dialogue.
+
+**Model inflexibility.** Claude Code runs on one model (Opus 4.6 for the hackathon). But not every task needs Opus. A nudge/no-nudge binary decision? Haiku. A plan-to-phases transformation? Sonnet. Code explanation for a sidebar panel? Sonnet. We're burning premium tokens on janitor work.
+
+**Architectural coupling.** If every intelligent operation flows through the PTY, the backend is just a dumb pipe. The three-tier architecture promised that the backend is "the brain stem" — but without API calls, it's more like a filing cabinet with delusions of grandeur.
+
+### The Principle: Tools vs. Judgement
+
+The dividing line is clean:
+
+**Claude Code** handles anything that requires **tool access** (Read, Grep, Glob, Bash) or **conversational continuity** (the user is talking to Paige in the terminal).
+
+**API calls** handle anything that is **evaluative**, **transformative**, or **analytical** — tasks where all inputs are already available and the output is structured.
+
+```
+Claude Code (PTY)              API Calls (Backend)
+─────────────────              ───────────────────
+Explore Agent (needs tools)    Coach Agent (plan → phases)
+Review Agent (needs context)   Observer triage (nudge decision)
+User conversation              "Explain this" (code → explanation)
+Delivering nudges              Knowledge gap extraction
+Delivering reviews             Dreyfus stage assessment
+                               Memory (write + retrieval filtering)
+                               Practice mode review
+                               GitHub issue assessment
+                               Learning materials research
+                               Manager summaries
+```
+
+If a task needs to `Read` a file, `Grep` a codebase, or run `Bash` commands — it goes through Claude Code. If you can assemble all the inputs into a single prompt and get structured JSON back — it goes through the API.
+
+### API Call Inventory
+
+Each call is described with its trigger, inputs, model tier, and output schema.
+
+#### 1. Observer Triage
+
+Already described in the [Observer section](architecture-amendment.md#the-observer-proactive-coaching-via-two-tier-model-evaluation) of the architecture amendment. Included here for completeness.
+
+- **Trigger:** Observer event loop (file open, save, buffer threshold, idle timeout, phase transition).
+- **Model:** Haiku (fractions of a cent per call).
+- **Input:** Structured context snapshot — current phase, recent actions, time deltas, Dreyfus stage.
+- **Output:** `{ should_nudge, confidence, signal, reasoning, suggested_context }`.
+- **Notes:** Binary decision. Does *not* write user-facing text — only provides signals for Claude Code's persona to act on.
+
+#### 2. Coach Agent (Plan-to-Phases Transformation)
+
+The original brainstorm has the Coach Agent as part of the Claude Code pipeline. But its job is fundamentally *transformation*, not conversation: take a plan + Dreyfus stage + memory context, output phased scaffolded guidance with hint metadata. That's a single structured API call.
+
+- **Trigger:** Plan Agent completes (output received from Claude Code's Explore → Plan flow).
+- **Model:** Sonnet (needs strong reasoning for pedagogical decisions).
+- **Input:**
+  - Plan output from Claude Code (implementation strategy, file list, step descriptions).
+  - User's Dreyfus stage assessment (from SQLite).
+  - Relevant memory context (filtered by API call #6b — validated memories with `connection` and `use_in_coaching` guidance).
+  - Scaffolding framework reference (phase granularity guidelines, hint level rules).
+- **Output:**
+  ```json
+  {
+    "phases": [
+      {
+        "number": 1,
+        "title": "Find and understand the OAuth callback handler",
+        "description": "Coaching message explaining what and why",
+        "expected_files": ["src/handlers/oauth.ts"],
+        "hint_level": "line",
+        "hints": {
+          "file_hints": [
+            { "path": "src/handlers/oauth.ts", "style": "suggested" }
+          ],
+          "line_hints": [
+            { "path": "src/handlers/oauth.ts", "start": 38, "end": 52, "style": "hint", "hover_text": "The cleanup function should go here" }
+          ]
+        },
+        "knowledge_gap_opportunities": ["useEffect cleanup", "stale closure"]
+      }
+    ],
+    "memory_connection": "Similar to the race condition in UserProfile (session 2025-01-15)",
+    "estimated_difficulty": "intermediate"
+  }
+  ```
+- **Notes:** This is the novel coaching layer — the thing that differentiates Paige from a basic planning agent. Pulling it into a dedicated API call with a carefully crafted system prompt means we can iterate on the pedagogical quality independently of the Claude Code plugin.
+
+#### 3. "Explain This" Sidebar
+
+A UI-driven feature: user highlights code in Monaco, clicks "Explain," and gets an explanation in a sidebar panel — without touching the terminal conversation at all.
+
+- **Trigger:** User action in Electron UI (highlight + explain button, or right-click context menu).
+- **Model:** Sonnet (needs solid code comprehension; Haiku might underperform on complex code).
+- **Input:**
+  - Selected code snippet.
+  - File path and language.
+  - Surrounding context (±50 lines).
+  - User's Dreyfus stage (calibrates explanation depth).
+- **Output:**
+  ```json
+  {
+    "explanation": "This function handles the OAuth callback by...",
+    "key_concepts": ["OAuth 2.0 callback", "token exchange", "error handling"],
+    "analogy": "Think of this like a bouncer checking your ID — the callback is the moment you hand over the temporary pass and get a real wristband.",
+    "related_files": ["src/middleware/auth.ts", "src/utils/token.ts"]
+  }
+  ```
+- **Notes:** Rendered in a dedicated Electron panel, not the terminal. This is an entirely new interaction surface that doesn't exist in the original brainstorm. It's low-cost, high-value for the demo ("look, Paige explains code without losing her train of thought"), and trivial to implement since it's a stateless API call rendered in a React component.
+
+#### 4. Knowledge Gap Extraction
+
+At session wrap-up, analyse what the user struggled with and generate practice kata specifications.
+
+- **Trigger:** `Stop` hook fires (session end).
+- **Model:** Sonnet (analytical reasoning over session data).
+- **Input:**
+  - Session action log (file opens, saves, edit frequency, time-per-phase).
+  - Phase specs and completion status.
+  - Hints used (levels requested, frequency of escalation).
+  - Review feedback history (issues identified, repeat issues).
+  - Existing knowledge gap records (from SQLite — to avoid duplicates).
+- **Output:**
+  ```json
+  {
+    "knowledge_gaps": [
+      {
+        "topic": "useEffect cleanup functions",
+        "evidence": "Struggled for 8 minutes on Phase 2, needed 3 hint escalations, review identified same issue twice",
+        "severity": "high",
+        "related_concepts": ["React lifecycle", "memory leaks", "stale closures"]
+      }
+    ],
+    "kata_specs": [
+      {
+        "title": "Cleanup Timer in useEffect",
+        "description": "Write a component that starts a timer on mount and properly cleans it up on unmount",
+        "scaffolding_code": "function TimerComponent() {\n  // TODO: implement\n}",
+        "test_cases": ["timer starts on mount", "timer clears on unmount", "no memory leak after unmount"],
+        "constraints": [],
+        "follow_up_constraint": "Now implement it with useRef instead of a local variable"
+      }
+    ],
+    "session_summary": {
+      "phases_completed": 3,
+      "total_time": "47m",
+      "hints_used": 12,
+      "independent_completions": 1
+    }
+  }
+  ```
+- **Notes:** This feeds directly into SQLite (knowledge gaps table) and the practice mode system. The kata specs are stored and surfaced when the user enters practice mode.
+
+#### 5. Dreyfus Stage Assessment
+
+Periodic evaluation of the user's skill level across different domains.
+
+- **Trigger:** End of session, or after N sessions in the same skill area.
+- **Model:** Sonnet (nuanced judgement required).
+- **Input:**
+  - Accumulated evidence from SQLite: tasks completed independently, hint frequency by topic, time trends, error patterns.
+  - Current Dreyfus assessments (to detect progression or regression).
+  - Recent session summaries.
+- **Output:**
+  ```json
+  {
+    "assessments": [
+      {
+        "skill_area": "React state management",
+        "stage": "advanced_beginner",
+        "previous_stage": "novice",
+        "confidence": 0.75,
+        "evidence": "Completed 3 state management tasks with decreasing hint usage. Still needs guidance on complex side effects.",
+        "recommendation": "Transition to guided hints (pattern-based) instead of prescriptive (line-level)"
+      }
+    ]
+  }
+  ```
+- **Notes:** This is the feedback loop that makes Paige adaptive. Updated assessments change the Coach Agent's hint calibration and the Observer's nudge frequency. Should absolutely *not* run in Claude Code's context — it's background analytics.
+
+#### 6. Memory Summarisation & Retrieval Filtering
+
+This call serves two directions of the memory system: **writing** (session → ChromaDB) and **reading** (ChromaDB → Coach Agent). Both involve a model deciding what's actually relevant — one for storage, one for retrieval.
+
+**6a. Memory Write — Session Summarisation**
+
+Before storing session data to ChromaDB, generate summaries and decide what's worth persisting.
+
+- **Trigger:** Session wrap-up (after knowledge gap extraction).
+- **Model:** Haiku (summarisation is straightforward).
+- **Input:**
+  - Session transcript (condensed — key exchanges, not every buffer update).
+  - Issues worked on.
+  - Solutions arrived at.
+  - Patterns encountered.
+- **Output:**
+  ```json
+  {
+    "memories": [
+      {
+        "content": "Worked on OAuth callback race condition in auth flow. User learned about useEffect cleanup but still struggles with ref-based cleanup patterns.",
+        "tags": ["oauth", "useEffect", "race-condition", "cleanup"],
+        "importance": "high"
+      },
+      {
+        "content": "User independently identified the component responsible for token refresh without hints — showing growing familiarity with the auth module structure.",
+        "tags": ["auth", "navigation", "independence"],
+        "importance": "medium"
+      }
+    ]
+  }
+  ```
+- **Notes:** These get embedded and stored in ChromaDB. They power the "this is like that bug we fixed last week" recall. Haiku is sufficient because the task is extractive summarisation, not deep reasoning.
+
+**6b. Memory Read — Retrieval Filtering**
+
+Raw ChromaDB semantic search returns results ranked by vector similarity, but similarity ≠ relevance. A query about "OAuth callback cleanup" might pull back memories about OAuth token refresh, OAuth redirect URIs, and an unrelated cleanup function in a different module. A model needs to filter for what's actually useful before we stuff it into the Coach Agent's prompt.
+
+- **Trigger:** Coaching pipeline, after the Plan Agent completes and before the Coach Agent API call (#2).
+- **Model:** Haiku (classification/filtering task — does this memory help with this specific issue?).
+- **Input:**
+  - Current issue summary and plan output.
+  - Top N ChromaDB results from semantic search (raw, unfiltered).
+  - Current phase context (if mid-session retrieval).
+- **Output:**
+  ```json
+  {
+    "relevant_memories": [
+      {
+        "content": "Worked on OAuth callback race condition in auth flow. User learned about useEffect cleanup but still struggles with ref-based cleanup patterns.",
+        "relevance": "direct",
+        "connection": "Same component, same pattern — user has prior context here but needs reinforcement on ref cleanup.",
+        "use_in_coaching": "Reference this as a callback to prior work. Builds confidence and continuity."
+      }
+    ],
+    "discarded": [
+      {
+        "content": "User set up OAuth redirect URIs in the dashboard config.",
+        "reason": "OAuth-adjacent but unrelated to the code-level cleanup pattern."
+      }
+    ]
+  }
+  ```
+- **Notes:** This is essentially a RAG refinement step. ChromaDB does the fast, cheap vector lookup. Haiku does the cheap, smart relevance filtering. The Coach Agent (Sonnet) only sees memories that have been validated as genuinely useful. The `connection` and `use_in_coaching` fields give the Coach Agent explicit guidance on *how* to use each memory, not just *that* it exists. The `discarded` array is logged for observability but not forwarded.
+
+#### 7. Practice Mode Code Review
+
+When the user submits a kata solution, evaluate correctness and generate follow-up constraints.
+
+- **Trigger:** User clicks "Submit" / "Review" in practice mode.
+- **Model:** Sonnet (needs to evaluate code correctness and generate pedagogically useful follow-ups).
+- **Input:**
+  - Kata spec (description, scaffolding, test cases, constraints).
+  - User's submitted code.
+  - User's Dreyfus stage for this topic.
+- **Output:**
+  ```json
+  {
+    "correct": true,
+    "feedback": "Nice — that's clean and handles the edge cases. The cleanup runs on unmount and the ref prevents stale closures.",
+    "follow_up": {
+      "type": "constraint_escalation",
+      "constraint": "Now try implementing it with AbortController instead of a boolean flag",
+      "reason": "AbortController is the modern pattern for cancellable async operations"
+    },
+    "dreyfus_signal": "advancing"
+  }
+  ```
+- **Notes:** Self-contained evaluation. No file system access, no codebase context. Just the problem + the solution → feedback.
+
+#### 8. GitHub Issue Assessment & Curation
+
+On launch, Paige's dashboard shows a curated list of GitHub issues the user could work on. Rather than dumping a raw issue list, this API call assesses each issue against the user's skill profile and prioritises accordingly.
+
+- **Trigger:** App launch / dashboard load, or periodic refresh.
+- **Model:** Sonnet (needs to understand issue descriptions, estimate complexity, and match against user profile).
+- **Input:**
+  - Raw GitHub issues from `gh` CLI (title, body, labels, assignees, comments).
+  - User's Dreyfus stage assessments (from SQLite — per skill area).
+  - Recent session history (what they've worked on, what they've completed).
+  - Known knowledge gaps (from SQLite).
+  - ChromaDB context (similar past issues the user has tackled).
+- **Output:**
+  ```json
+  {
+    "issues": [
+      {
+        "number": 42,
+        "title": "Fix OAuth callback race condition",
+        "summary": "The OAuth handler doesn't clean up timers on unmount, causing a race condition when users navigate away mid-auth.",
+        "suitability": "good_fit",
+        "suitability_reason": "Matches your current React lifecycle skill level. Similar to the useEffect cleanup pattern you practised last week, but in a real-world auth context.",
+        "estimated_difficulty": "intermediate",
+        "relevant_skills": ["React lifecycle", "useEffect cleanup", "OAuth"],
+        "priority_score": 0.92,
+        "priority_factors": {
+          "user_tagged": true,
+          "similar_to_recent_work": true,
+          "addresses_knowledge_gap": true,
+          "team_urgency": "medium"
+        },
+        "learning_opportunities": ["Real-world race condition debugging", "Auth flow architecture"]
+      },
+      {
+        "number": 37,
+        "title": "Refactor database connection pooling",
+        "summary": "Connection pool exhaustion under load. Needs investigation and a fix to the pool configuration.",
+        "suitability": "stretch",
+        "suitability_reason": "You haven't worked with database internals yet. This would be a significant stretch but could open up backend infrastructure skills.",
+        "estimated_difficulty": "advanced",
+        "relevant_skills": ["Database", "Connection pooling", "Performance"],
+        "priority_score": 0.45,
+        "priority_factors": {
+          "user_tagged": false,
+          "similar_to_recent_work": false,
+          "addresses_knowledge_gap": false,
+          "team_urgency": "low"
+        },
+        "learning_opportunities": ["Database connection management", "Performance debugging"]
+      }
+    ]
+  }
+  ```
+- **Notes:** The `suitability` field drives dashboard UI — `good_fit` issues are prominent, `stretch` issues are shown with a "challenge" badge, and `too_advanced` issues are dimmed or hidden. The `priority_factors` breakdown lets the UI show *why* an issue is recommended ("You're tagged in this," "Similar to last week's work"). The `summary` field is a Paige-voice digest, not the raw GitHub issue body — concise, contextualised, and jargon-calibrated to the user's level.
+
+#### 9. Knowledge Gap Learning Materials Research
+
+Paige doesn't just identify what you don't know — she finds resources to help you learn it. This call takes knowledge gaps from SQLite and finds relevant documentation, tutorials, articles, and videos.
+
+- **Trigger:** App launch / dashboard load, or after new knowledge gaps are recorded (post-session).
+- **Model:** Sonnet (needs to reason about what resources are appropriate for the user's level and learning style, and generate useful search-oriented output).
+- **Input:**
+  - Knowledge gaps from SQLite (topic, severity, related concepts, frequency).
+  - User's Dreyfus stage for the relevant skill area.
+  - Technology stack context (React? Go? Python? What framework versions?).
+  - Previously recommended resources (to avoid repeats).
+- **Output:**
+  ```json
+  {
+    "recommendations": [
+      {
+        "knowledge_gap": "useEffect cleanup functions",
+        "resources": [
+          {
+            "type": "documentation",
+            "title": "Synchronizing with Effects – React Docs",
+            "url": "https://react.dev/learn/synchronizing-with-effects",
+            "description": "Official React docs on useEffect, including the cleanup section. Start here.",
+            "relevance": "direct",
+            "estimated_time": "15 min read"
+          },
+          {
+            "type": "article",
+            "title": "A Complete Guide to useEffect",
+            "url": "https://overreacted.io/a-complete-guide-to-useeffect/",
+            "description": "Dan Abramov's deep dive. More advanced but excellent for understanding the mental model.",
+            "relevance": "deep_dive",
+            "estimated_time": "45 min read"
+          },
+          {
+            "type": "video",
+            "title": "React useEffect Cleanup Explained",
+            "url": "https://youtube.com/...",
+            "description": "Visual walkthrough of cleanup patterns with timer and subscription examples.",
+            "relevance": "supplementary",
+            "estimated_time": "12 min watch"
+          }
+        ],
+        "study_order": "Start with the official docs, then try the practice kata. Come back to the article if you want the deeper mental model.",
+        "practice_connection": "After reading, try the 'Cleanup Timer in useEffect' kata in practice mode."
+      }
+    ]
+  }
+  ```
+- **Notes:** The model generates URLs based on its training knowledge — these are well-known, stable resources (official docs, popular blog posts, established YouTube channels). For a production system, you'd want URL validation or a search API integration, but for the hackathon, Sonnet's knowledge of canonical developer resources is reliable enough. The `study_order` field gives Paige a way to sequence the learning path, and `practice_connection` ties resources back to the kata system. The `relevance` field helps the UI group resources: "Start here" → "Go deeper" → "Also helpful."
+
+#### 10. Manager Summary
+
+Stretch goal. Generate a non-technical summary of the session for team leads.
+
+- **Trigger:** Explicit user action or end-of-session option.
+- **Model:** Haiku (prose generation from structured data).
+- **Input:** Session summary, phases completed, time allocation, skills demonstrated.
+- **Output:** Prose paragraph suitable for a stand-up update or 1:1.
+- **Notes:** Lowest priority. Include if time allows.
+
+### Model Selection Strategy
+
+Not all tasks are created equal. The API gives us the flexibility to pick the right model for each job:
+
+| Model Tier | Cost | Use Cases |
+|---|---|---|
+| **Haiku** | Fractions of a cent | Observer triage, memory summarisation, memory retrieval filtering, manager summaries |
+| **Sonnet** | Low cents | Coach Agent, "Explain this," knowledge gap extraction, Dreyfus assessment, practice mode review, GitHub issue assessment, learning materials research |
+| **Opus** | Reserved for Claude Code | Explore Agent (tool use), Plan Agent (tool use), Review Agent (tool use + codebase context), conversational coaching, nudge delivery |
+
+The principle: use the cheapest model that produces reliable output for the task. Structured JSON output with clear schemas makes smaller models perform well — they don't need to be creative, just precise.
+
+### Backend API Client Architecture
+
+All API calls are made by the backend server. The Electron UI and Claude Code plugin never call the API directly.
+
+```
+┌──────────────────────────────────────────────────────┐
+│  Backend Server                                      │
+│                                                      │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
+│  │ API Client  │  │ Prompt      │  │ Response     │  │
+│  │             │  │ Templates   │  │ Validators   │  │
+│  │ - Model     │  │             │  │              │  │
+│  │   selection │  │ - System    │  │ - Schema     │  │
+│  │ - Retry     │  │   prompts   │  │   validation │  │
+│  │   logic     │  │ - Input     │  │ - Fallback   │  │
+│  │ - Rate      │  │   assembly  │  │   handling   │  │
+│  │   limiting  │  │ - JSON mode │  │ - Logging    │  │
+│  └─────────────┘  └─────────────┘  └─────────────┘  │
+│                                                      │
+│  Called by:                                           │
+│  - Observer loop (triage)                             │
+│  - Coaching pipeline (memory retrieval, coach)        │
+│  - Session lifecycle (gaps, dreyfus, memory write)    │
+│  - WebSocket handlers (explain this, practice review) │
+│  - Dashboard loading (issue assessment, materials)    │
+└──────────────────────────────────────────────────────┘
+```
+
+**Key implementation details:**
+
+- **Single API client instance** with connection pooling and retry logic.
+- **Prompt templates** stored as separate files, versioned alongside the backend code. Each API call has a dedicated system prompt and input assembly function.
+- **Response validators** that verify structured output against expected JSON schemas. If validation fails, retry once with a "your output was malformed" correction prompt.
+- **Logging** — every API call is logged with input hash, model used, latency, token count, and cost estimate. Essential for tracking the $500 budget.
+
+### Cost Estimation
+
+Back-of-envelope for a typical one-hour coaching session (including dashboard load):
+
+| Call | Frequency | Model | Est. Cost |
+|---|---|---|---|
+| Observer triage | ~20–40 calls | Haiku | ~$0.02 |
+| Coach Agent | 1 call | Sonnet | ~$0.03 |
+| "Explain this" | 2–3 calls | Sonnet | ~$0.06 |
+| Knowledge gap extraction | 1 call | Sonnet | ~$0.03 |
+| Dreyfus assessment | 1 call | Sonnet | ~$0.02 |
+| Memory summarisation | 1 call | Haiku | ~$0.01 |
+| Memory retrieval filtering | 1–2 calls | Haiku | ~$0.01 |
+| Practice mode review | 1–3 calls | Sonnet | ~$0.04 |
+| GitHub issue assessment | 1 call (on launch) | Sonnet | ~$0.05 |
+| Learning materials research | 1 call (on launch) | Sonnet | ~$0.03 |
+| **Session total** | | | **~$0.30** |
+
+At ~$0.30 per session, $500 covers roughly **1,650 sessions**. More than enough for development, testing, and demo. Claude Code's own token usage (Opus via the PTY) is separate and covered by the hackathon's Claude Max subscription. Note that the Review Agent now runs through Claude Code as a subagent, so its cost is absorbed into the PTY's Opus token budget rather than appearing here.
+
+### WebSocket Protocol Additions
+
+New message types for API-driven features:
+
+**Electron → Backend:**
+
+| Message Type | Payload | Triggers |
+|---|---|---|
+| `explain_request` | `{ path, selection: { start, end }, surrounding_context }` | User highlights code + clicks "Explain" |
+| `practice_submit` | `{ kata_id, user_code }` | User submits practice mode solution |
+| `dashboard_load` | `{ }` | App launch / dashboard navigation |
+| `dashboard_refresh_issues` | `{ }` | User pulls to refresh or clicks refresh |
+
+**Backend → Electron:**
+
+| Message Type | Payload | Triggers |
+|---|---|---|
+| `explain_response` | `{ explanation, key_concepts, analogy, related_files }` | API call completes |
+| `practice_review` | `{ correct, feedback, follow_up, dreyfus_signal }` | API call completes |
+| `phase_plan` | `{ phases: [...] }` | Coach Agent API call completes |
+| `dashboard_state` | `{ dreyfus, stats, in_progress_sessions, issues, katas, learning_materials }` | Dashboard data assembled (may arrive in parts) |
+| `dashboard_issues` | `{ issues: [...] }` | GitHub issue assessment API call completes |
+| `dashboard_materials` | `{ recommendations: [...] }` | Learning materials API call completes |
+
+### The Dashboard: Where API Calls Meet the User
+
+On launch, before any coaching session begins, Paige presents a dashboard. This is the first thing the user sees, and it's powered almost entirely by API calls and SQLite queries — no Claude Code involvement at all.
+
+**Dashboard components and their data sources:**
+
+| Component | Data Source | API Call? |
+|---|---|---|
+| Dreyfus stage assessment | SQLite (pre-computed by API call #5) | Read only |
+| Session stats & metrics | SQLite aggregate queries | No |
+| In-progress sessions | SQLite (incomplete session records) | No |
+| Curated issue list | `gh` CLI → API call #8 | Yes |
+| Practice challenges | SQLite (kata specs from API call #4) | Read only |
+| Learning materials | API call #9 | Yes |
+
+**Dashboard loading flow:**
+
+1. Electron sends `dashboard_load` to backend via WebSocket.
+2. Backend immediately responds with `dashboard_state` containing data from SQLite (Dreyfus assessments, stats, in-progress sessions, existing katas) — this is instant, no API calls needed.
+3. Backend kicks off two parallel API calls: GitHub issue assessment (#8) and learning materials research (#9).
+4. As each completes, backend pushes `dashboard_issues` and `dashboard_materials` to Electron.
+5. Electron renders progressively — the dashboard is usable immediately with cached data, and the API-powered sections populate as results arrive.
+
+This progressive loading pattern means the dashboard feels snappy. The user sees their stats and can resume a session instantly. The curated issue list and learning materials trickle in over 2–3 seconds as the API calls complete.
+
+### Impact on Existing Architecture
+
+This amendment **refines** the coaching pipeline but does not change the three-tier separation or MVP feature set.
+
+**What changes:**
+
+- The Coach Agent moves from Claude Code (PTY) to a backend API call. The Review Agent remains in Claude Code as a subagent (it needs codebase-wide context via tools).
+- The memory system gains a retrieval filtering step — Haiku validates ChromaDB results before they're fed to the Coach Agent.
+- The backend gains an API client module with prompt templates and response validation.
+- New WebSocket message types are added for "Explain this," practice mode, and dashboard flows.
+- The Observer triage model (already spec'd as an API call) is confirmed and formalised here.
+- The dashboard is defined as an API-driven launch screen with progressive loading.
+- Two new API calls are added for GitHub issue curation and learning materials research.
+
+**What doesn't change:**
+
+- The Explore, Plan, and Review agents still run through Claude Code (they need tool access and codebase context).
+- The PTY architecture, MCP server surface, and read-only enforcement are unchanged.
+- The Electron UI remains a thin client — it gains new panels (Explain sidebar, dashboard) but no AI logic.
+- Claude Code's persona and hook system are unchanged — it still delivers coaching messages and nudges via the terminal.
+- The dashboard is assembled entirely from SQLite + API calls. Claude Code is not involved until the user starts a coaching session.
+
+### Updated Design Principles
+
+Added to the existing [Design Principles](#design-principles):
+
+11. **Right model for the job** — Use Haiku for binary decisions, Sonnet for structured analysis, Opus only for tool-using agents and conversation. Don't burn premium tokens on janitor work.
+12. **Context is sacred** — Claude Code's context window is shared with the user's conversation. Anything that doesn't need to be there shouldn't be there. Offload evaluative and analytical work to API calls.
+13. **Structured in, structured out** — API calls use JSON schemas for both input and output. This makes smaller models reliable, responses validatable, and prompt templates iterable.
