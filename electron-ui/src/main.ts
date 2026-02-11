@@ -1,6 +1,9 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { setupPtyIpc } from './pty/pty-service.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function createWindow(): BrowserWindow {
   const isMac = process.platform === 'darwin';
