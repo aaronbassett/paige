@@ -485,8 +485,8 @@
 - [x] T239 [GIT] Commit: add API error types
 - [x] T240 [US7] Integrate API call logging with logApiCall in src/api-client/claude.ts (use devs:typescript-dev agent)
 - [x] T241 [GIT] Commit: integrate API logging
-- [ ] T242 [US7] Verify US7 tests now pass
-- [ ] T243 [GIT] Commit: verify US7 complete
+- [x] T242 [US7] Verify US7 tests now pass
+- [x] T243 [GIT] Commit: verify US7 complete
 
 ### Phase 9 Wrap-Up
 
