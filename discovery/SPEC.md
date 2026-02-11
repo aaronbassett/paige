@@ -172,11 +172,13 @@ Paige's backend does the heavy intellectual lifting (coaching pipeline, memory, 
 ┌─────────────────────────────────────────────────────────┐
 │  Header: 48px — Logo + Back                             │
 ├────────┬──────────────────────────┬─────────────────────┤
-│  File  │  Code Editor (tabs)      │  Current Issue      │
-│  Explr │                          ├─────────────────────┤
-│        │                          │  Plan Phases        │
-│ 220px  │       flex (remaining)   │  + Hint Toggle      │
+│  File  │  Code Editor (tabs)      │  Coaching Sidebar   │
+│  Explr │                          │  - Issue Context    │
+│        │                          │  - Hint Slider      │
+│ 220px  │       flex (remaining)   │  - Phase Stepper    │
 │        │                          │       280px         │
+│        ├──────────────────────────┤                     │
+│        │  Status Bar: 32px        │                     │
 ├────────┴──────────────────────────┴─────────────────────┤
 │  Claude Code Terminal                         30% height│
 └─────────────────────────────────────────────────────────┘
@@ -185,9 +187,10 @@ Paige's backend does the heavy intellectual lifting (coaching pipeline, memory, 
 - Left sidebar: 220px fixed width
 - Right sidebar: 280px fixed width
 - Editor + terminal column: remaining width (flex)
-- Editor: 70% of column height
+- Editor (including 32px status bar): 70% of column height
 - Terminal: 30% of column height
 - Terminal spans full width below all three columns
+- Status bar sits at bottom of editor area, above terminal (see Story 5)
 
 **Sidebar Collapse**
 - Each sidebar has a small toggle icon at its top edge
@@ -454,7 +457,7 @@ interface WebSocketMessage {
 
 | Type | Payload | Description |
 |------|---------|-------------|
-| `session:started` | `{ issueContext, phases, hintLevel, openFiles? }` | Session initialised |
+| `session:started` | `{ issueContext: IssueContext, phases: Phase[], hintLevel, openFiles? }` | Session initialised (see Story 8 for IssueContext and Phase interfaces) |
 | `session:resumed` | `{ restoredState }` | Session restored from previous |
 | `session:ended` | `{ summary }` | Session wrap-up data |
 
@@ -463,8 +466,8 @@ interface WebSocketMessage {
 | Type | Payload | Description |
 |------|---------|-------------|
 | `coaching:phase_update` | `{ phase, status, description }` | Phase state change |
-| `coaching:message` | `{ message, type }` | Paige coaching message |
-| `coaching:issue_context` | `{ title, summary, labels }` | Current issue details |
+| `coaching:message` | `{ message, type, anchor?: { path, range } }` | Coaching message (anchored = comment balloon, unanchored = editor toast) |
+| `coaching:issue_context` | `{ number, title, summary, labels: [{ name, color }], url }` | Current issue details (number + url for link, label colors for pills) |
 
 **Observer**
 
@@ -736,6 +739,24 @@ All decorations are applied from `editor:decorations` WebSocket messages. The ed
 | Edit buffer | — | — | After 300ms debounce: `buffer:update { path, content, cursorPosition, selections }` |
 | Tab switch | (local + notify) | — | Sends `editor:tab_switch { fromPath, toPath }` |
 
+#### Status Bar (Editor Footer)
+
+VS Code-style status bar at the bottom of the editor area, 32px height. Background: `--bg-surface`. Border-top: `--border-subtle`.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  src/components/Auth.tsx    Ln 42, Col 18   TypeScript   │  ← left / center / right
+│                                          [Review My Work]│
+└──────────────────────────────────────────────────────────┘
+```
+
+- **Left**: File path breadcrumb (relative path of active file) in `--text-muted` (12px)
+- **Center-left**: Cursor position — `Ln {line}, Col {col}` in `--text-muted` (12px)
+- **Center-right**: Language indicator (from `fs:content` language field) in `--text-muted` (12px)
+- **Right**: "Review My Work" button — text button in `--accent-primary`, hover: `--accent-warm`. Click sends `user:review {}` via WebSocket.
+
+When no file is open: breadcrumb, cursor, and language sections are empty. "Review My Work" button remains visible.
+
 #### Keyboard Shortcuts
 
 | Shortcut | Action |
@@ -791,6 +812,8 @@ All decorations are applied from `editor:decorations` WebSocket messages. The ed
 | R5.9 | Duplicate tabs MUST be prevented (opening an already-open file switches to its tab) |
 | R5.10 | Cmd+S MUST trigger `file:save` via WebSocket |
 | R5.11 | Language mode MUST be set from the `language` field in `fs:content` response |
+| R5.12 | Editor MUST include a 32px status bar at bottom with file path, cursor position, language, and "Review My Work" button |
+| R5.13 | "Review My Work" button MUST send `user:review` via WebSocket |
 
 #### Success Criteria
 
@@ -965,6 +988,445 @@ When a hint arrives for a file inside a collapsed directory:
 | SC6.4 | Auto-expand matches style | `subtle` stays collapsed; `unmissable` reveals file |
 | SC6.5 | Performance with large trees | 500+ files render and scroll without jank |
 
+### Story 7: Terminal with Filter Pipeline [P1] ✅
+
+**As a** developer working on an issue in Paige,
+**I want** a terminal panel where I talk to Claude Code and see Observer nudges rendered as collapsible thinking blocks,
+**So that** I can have a conversational coaching experience where proactive guidance is visible but non-intrusive.
+
+**Priority**: P1 — The conversational coaching surface; where the user interacts with Paige.
+**Dependencies**: Story 1 (Visual Identity), Story 2 (App Shell), Story 4 (WebSocket).
+
+#### Rendering Approach: Full React (No xterm.js)
+
+The terminal does NOT use xterm.js. Instead:
+- PTY spawned via `node-pty` in Electron main process
+- Raw PTY data sent to renderer via Electron IPC
+- Renderer parses ANSI escape sequences into styled React components
+- Output organized into visual blocks (one per command+output)
+- `<thinking>` tags in the data stream trigger collapsible thinking block components
+
+This gives full control over styling, enables native thinking block interleaving, and integrates with the design system.
+
+**Note**: This approach is subject to PoC validation. If the PoC reveals issues (latency, ANSI edge cases, performance), we fall back to xterm.js with thinking blocks rendered above the terminal.
+
+#### Terminal Panel Layout
+
+- **Header**: "TERMINAL" in uppercase `--text-muted` (12px, weight 500) + Observer status indicator (right-aligned)
+- **Output area**: Scrollable, fills remaining panel height
+- **Input**: Captured via focused container; keystrokes forwarded to PTY. User types inline — PTY echo provides visible feedback in the output stream.
+
+Background: `--bg-inset` (#141413). Font: JetBrains Mono 14px.
+
+#### Data Pipeline
+
+```
+PTY (node-pty)
+  → pty.onData()
+  → Electron main process
+  → [synthetic <thinking> tag injection for nudges]
+  → IPC to renderer
+  → data batcher (16ms / requestAnimationFrame)
+  → ANSI parser → styled segments
+  → thinking block detector (tag scanning)
+  → block splitter (prompt pattern detection)
+  → React component tree
+```
+
+#### Warm-Mapped ANSI Color Palette
+
+All 16 ANSI colors remapped to warm-toned variants:
+
+**Standard 8**
+
+| ANSI | Name | Color | Reference |
+|------|------|-------|-----------|
+| 0 | Black | #1a1a18 | `--bg-base` |
+| 1 | Red | #d97757 | `--accent-primary` (terracotta) |
+| 2 | Green | #7cb87c | `--status-success` |
+| 3 | Yellow | #d4a843 | `--status-warning` |
+| 4 | Blue | #6b9bd2 | `--status-info` |
+| 5 | Magenta | #c0879b | warm rose |
+| 6 | Cyan | #7aab9e | warm sage |
+| 7 | White | #a8a69e | `--text-secondary` |
+
+**Bright 8**
+
+| ANSI | Name | Color | Reference |
+|------|------|-------|-----------|
+| 8 | Bright Black | #6b6960 | `--text-muted` |
+| 9 | Bright Red | #e8956a | `--accent-warm` |
+| 10 | Bright Green | #96d096 | lighter warm green |
+| 11 | Bright Yellow | #e5c35c | lighter warm yellow |
+| 12 | Bright Blue | #8bb4e0 | lighter warm blue |
+| 13 | Bright Magenta | #d4a0b0 | lighter warm rose |
+| 14 | Bright Cyan | #96c4b8 | lighter warm sage |
+| 15 | Bright White | #faf9f5 | `--text-primary` |
+
+Foreground default: `--text-primary` (#faf9f5). Background default: `--bg-inset` (#141413). Cursor: `--accent-primary` (#d97757).
+
+#### PTY Size Management
+
+The PTY needs cols/rows for programs that use terminal dimensions (e.g., `ls` column layout, `less` pagination):
+- Calculate cols from container width / monospace character width
+- Calculate rows from container height / line height
+- Update PTY dimensions on container resize
+- Send `terminal:ready` (on init) and `terminal:resize` (on change) to backend via WebSocket
+
+#### Thinking Block Detection
+
+The renderer scans the incoming data stream for `<thinking>` / `</thinking>` tags:
+
+- On `<thinking>`: begins buffering content into a separate thinking block buffer
+- On `</thinking>`: creates a ThinkingBlock component with the buffered content
+- Content between tags is parsed with the ANSI parser (formatting preserved inside thinking blocks)
+- Tags themselves are stripped from rendered output
+- Tags may be split across IPC data chunks — the detector must handle partial tags
+
+**ThinkingBlock component:**
+- **Collapsed** (default): single line — "Paige is thinking..." with chevron icon. Background: `--bg-surface`. Left border: 2px `--accent-primary`.
+- **Expanded**: full content rendered with ANSI formatting. Same background/border treatment.
+- Click anywhere on the block to toggle.
+- Scanline overlay on background (consistent with coaching aesthetic from Story 1).
+
+#### Observer Nudge Flow
+
+1. Backend sends `observer:nudge` via WebSocket: `{ signal, confidence, context }`
+2. Electron main process injects `<thinking>\n` into IPC data stream to renderer
+3. Main process writes nudge prompt to PTY stdin (Claude Code processes it as Paige)
+4. Claude Code's response streams through PTY → captured inside the thinking block buffer
+5. Main process detects response complete (prompt pattern detection — looks for Claude Code's idle prompt)
+6. Main process injects `\n</thinking>` into IPC data stream
+7. Renderer closes the thinking block; subsequent output renders normally
+
+**Observer status indicator** (in terminal header):
+- Idle: no indicator visible
+- Active nudge in progress: small pulsing dot in `--phase-active` (terracotta) + "Observing..." text in `--text-muted`
+- Muted: "Muted" in `--text-muted`
+
+#### Input Handling
+
+- Renderer captures all keyboard events when terminal panel is focused
+- Each keystroke sent to main process via IPC → `pty.write()`
+- PTY echo provides visible character feedback in output stream
+- Control sequences forwarded: Ctrl+C (SIGINT), Ctrl+D (EOF), Ctrl+Z (SIGTSTP)
+- Arrow keys, Tab sent as appropriate escape sequences for shell completion/history
+
+#### Block Splitting
+
+Terminal output is split into visual blocks for readability:
+- Each prompt line (detected by heuristic: line ending with `$`, `%`, `>`, or Claude Code's prompt pattern) starts a new block
+- Blocks have subtle visual separation (4px gap or faint `--border-subtle` divider)
+- New blocks auto-scroll into view
+- Thinking blocks are standalone blocks in the stream
+
+#### Acceptance Scenarios
+
+| # | Scenario | Expected Outcome |
+|---|----------|-----------------|
+| 7.1 | Session starts, terminal initializes | Shell prompt appears, user can type commands |
+| 7.2 | Run `ls --color` | Colored output rendered with warm-mapped ANSI colors as React components |
+| 7.3 | Run a command producing 1000+ lines | Output scrolls smoothly without freezing |
+| 7.4 | Type Ctrl+C during a running command | SIGINT sent, command interrupted |
+| 7.5 | Observer nudge arrives | Main process injects thinking tags, thinking block appears collapsed in output stream |
+| 7.6 | Click a thinking block | Block expands to show full Paige thinking content with ANSI formatting |
+| 7.7 | Output continues after thinking block | Normal terminal output renders below the thinking block |
+| 7.8 | Multiple thinking blocks in a session | Each renders independently, collapsible, properly interleaved |
+| 7.9 | Terminal panel resized (sidebar collapse) | PTY dimensions update, subsequent output reflows correctly |
+| 7.10 | Observer muted | Status indicator shows "Muted", no nudges injected |
+| 7.11 | View terminal header | "TERMINAL" label + observer status indicator visible |
+| 7.12 | Interactive command (`read` prompt, etc.) | User can type input to running script, echoed correctly |
+
+#### Edge Cases
+
+| ID | Scenario | Handling |
+|----|----------|----------|
+| E7.1 | `<thinking>` tag split across IPC data chunks | Detector buffers partial tags, only commits when full tag recognized |
+| E7.2 | Very large thinking block content | Thinking block content scrollable when expanded; collapsed stays one line |
+| E7.3 | Rapid successive output (>10KB/s) | Data batcher aggregates at 16ms intervals; React updates batched |
+| E7.4 | PTY exits (user types `exit`) | Terminal shows "Process exited" message; no crash |
+| E7.5 | Non-UTF8 output (binary data) | Best-effort rendering; don't crash |
+| E7.6 | Unclosed `<thinking>` tag | After 30s timeout with no `</thinking>`, flush buffer as normal output |
+| E7.7 | Terminal focused while typing in editor | Only capture input when terminal panel is explicitly focused |
+| E7.8 | `prefers-reduced-motion` active | Thinking block expand/collapse instant; observer dot static |
+
+#### Requirements
+
+| ID | Requirement |
+|----|-------------|
+| R7.1 | Terminal MUST render PTY output as React components (no xterm.js) |
+| R7.2 | ANSI escape sequences MUST be parsed and rendered as CSS styles |
+| R7.3 | All 16 ANSI colors MUST be remapped to warm palette variants |
+| R7.4 | `<thinking>` / `</thinking>` tags MUST trigger collapsible thinking block components |
+| R7.5 | Thinking block tags MUST be injected synthetically by main process (not actual PTY output) |
+| R7.6 | Thinking blocks MUST be collapsed by default |
+| R7.7 | Observer nudge flow MUST use synthetic tag injection around PTY responses |
+| R7.8 | Data batching MUST aggregate incoming data at ~16ms intervals |
+| R7.9 | PTY dimensions MUST be calculated from container size and updated on resize |
+| R7.10 | Control characters (Ctrl+C, Ctrl+D, Ctrl+Z) MUST be forwarded to PTY |
+| R7.11 | Terminal MUST only capture keyboard input when focused |
+
+#### Success Criteria
+
+| ID | Criterion | Measurement |
+|----|-----------|-------------|
+| SC7.1 | ANSI rendering fidelity | Colored command output renders correctly with warm-mapped colors |
+| SC7.2 | Thinking blocks work | Observer nudge → collapsed block appears → click expands → content visible |
+| SC7.3 | Input responsiveness | Typing feels immediate (PTY echo latency <50ms perceptible) |
+| SC7.4 | Large output performance | 1000+ lines scroll without jank |
+| SC7.5 | Interleaving works | Normal output → thinking block → normal output renders in correct order |
+
+### Story 8: Coaching Sidebar (Issue + Phases) [P1] ✅
+
+**As a** developer working on an issue in Paige,
+**I want** a sidebar showing my current issue context and coaching phase progression with adjustable detail,
+**So that** I can always see what I'm working on, where I am in the plan, and control how much guidance I receive.
+
+**Priority**: P1 — The coaching command center; makes the scaffolded learning visible.
+**Dependencies**: Story 1 (Visual Identity), Story 2 (App Shell), Story 4 (WebSocket).
+
+#### Sidebar Layout
+
+Right sidebar, 280px fixed width (Story 2). Background: `--bg-surface`. Independently scrollable when content exceeds panel height.
+
+```
+┌──────────────────────┐
+│  COACHING       [^]  │  ← Header + collapse toggle
+├──────────────────────┤
+│  #42                 │  ← Issue number (clickable link)
+│  Fix auth token bug  │  ← Title
+│  🏷 bug  🏷 auth     │  ← Label pills
+│  ▾ Summary           │  ← Toggleable
+│  "Auth token refresh │
+│   fails silently..." │
+├──────────────────────┤
+│  ┌──────────────────┐│
+│  │  [illustration]  ││  ← SVG, morphs per level
+│  └──────────────────┘│
+│  ○───○───●───○       │  ← Stepped slider (0-3)
+│  None Light Med Heavy│  ← Level labels
+├──────────────────────┤
+│  ✓ 1. Understand     │  ← Complete (green)
+│  ● 2. Plan approach  │  ← Active (terracotta, expanded)
+│    │  Summary text    │
+│    │  ├ Step 2.1      │  ← Sub-steps (level 2+)
+│    │  ├ Step 2.2      │
+│    │  └ Step 2.3      │
+│  ○ 3. Implement      │  ← Pending (muted)
+│  ○ 4. Test & verify  │
+│  ○ 5. Review         │
+└──────────────────────┘
+```
+
+**Header**: "COACHING" in uppercase `--text-muted` (12px, weight 500), consistent with "EXPLORER" and "TERMINAL" panel headers. Collapse toggle icon at right edge (Story 2 sidebar collapse behavior).
+
+#### Issue Context Section
+
+- **Issue number**: `#N` in `--accent-primary`, clickable. Opens GitHub issue URL in default browser via Electron `shell.openExternal`.
+- **Title**: H3 (18px, weight 600), `--text-primary`. Below issue number.
+- **Labels**: Horizontal row of pill badges below title. Each pill: background from GitHub label hex color, text auto-contrasted (white on dark labels, dark on light labels), border-radius 12px, font Small (12px). Hidden entirely when issue has no labels.
+- **Summary**: AI-generated by backend (Claude API call), max 250 characters. Summarizes issue body + comments — not just the issue description.
+  - Toggle: chevron icon (▾ expanded / ▸ collapsed) + "Summary" label in `--text-muted`. Click toggles.
+  - Default state: expanded (visible).
+  - Text: `--text-secondary`, Body size (14px).
+- **Divider**: `--border-subtle` horizontal line below the section.
+
+Data sources: `coaching:issue_context` and `session:started.issueContext`.
+
+#### Hint Level Slider
+
+Positioned between issue context and phase stepper. Controls both the phase detail shown in this sidebar and the hint intensity in the file explorer (Story 6) and editor (Story 9).
+
+**SVG Illustration** (centered above slider, ~120px tall):
+
+Morphs between 4 scenes with `standard` spring animation (stiffness: 300, damping: 28) on level change:
+
+| Level | Label | Illustration |
+|-------|-------|-------------|
+| 0 | None | Person hunched over laptop, looking determined |
+| 1 | Light | Person with stack of books next to laptop, more relaxed |
+| 2 | Medium | Second person standing behind, pointing at screen; first person happy with lightbulb over head |
+| 3 | Heavy | Second person seated at laptop; first person standing behind in straw hat and sunglasses, drinking a colorful cocktail |
+
+Scanline overlay on the illustration background (consistent with Story 1 aesthetic).
+
+**Stepped slider control**:
+- 4 discrete positions (0, 1, 2, 3)
+- Track: `--border-subtle` background, `--accent-primary` fill from left up to active position
+- Thumb: 16px circle, `--accent-primary` fill, 2px `--bg-surface` border
+- Level labels below each stop: "None", "Light", "Medium", "Heavy" in `--text-muted` (12px)
+- Active label: `--text-secondary`
+- On change: sends `hints:level_change { level }` via WebSocket
+
+**Divider**: `--border-subtle` horizontal line below the slider section.
+
+#### Phase Stepper
+
+Vertical stepper layout with connected status line. Maximum 5 phases per issue.
+
+**Connecting line**:
+- 2px wide vertical line running through phase indicators
+- Completed segment: `--phase-complete` (#7cb87c)
+- Active-to-pending segment: `--border-subtle` (#30302e)
+
+**Phase indicators** (circles on the line):
+
+| Status | Indicator | Size | Color |
+|--------|-----------|------|-------|
+| Complete | Filled circle with checkmark icon | 12px | `--phase-complete` (#7cb87c) |
+| Active | Filled circle with subtle pulse animation | 14px | `--phase-active` (#d97757) |
+| Pending | Outlined circle, unfilled | 12px | `--phase-pending` (#6b6960) |
+
+Active phase pulse: `gentle` spring preset (stiffness: 120, damping: 14), looping.
+
+**Phase title text** (right of indicator):
+
+| Status | Style |
+|--------|-------|
+| Complete | `--text-secondary`, normal weight |
+| Active | `--text-primary`, weight 600 |
+| Pending | `--text-muted`, normal weight |
+
+Font: Body (14px).
+
+#### Hint-Level-Driven Phase Detail
+
+Only the active phase shows expanded content. Inactive phases always show title + status indicator only, regardless of hint level.
+
+| Level | Active Phase Shows |
+|-------|-------------------|
+| 0 (None) | Title + status indicator only |
+| 1 (Light) | Title + summary (2-3 sentences, `--text-secondary`) |
+| 2 (Medium) | Title + summary + sub-step titles (bulleted list) |
+| 3 (Heavy) | Title + summary + sub-step accordion |
+
+**Sub-step accordion** (Level 3 only):
+- Each sub-step: clickable title row with chevron
+- Click expands to show description of required changes
+- Only one sub-step expanded at a time (clicking another closes the previous)
+- Expanded sub-step: description in `--text-secondary` (14px), indented, with 2px left border in `--accent-primary`
+- Collapsed sub-step title: `--text-primary` (14px)
+- Expand/collapse: `snappy` spring preset (stiffness: 400, damping: 35)
+
+#### Phase Transition Animation
+
+When a phase completes and the next becomes active:
+
+1. Completing phase indicator fills with green checkmark (`snappy` spring)
+2. Connecting line segment fills `--phase-complete` upward to next phase
+3. Next phase indicator transitions from pending outline to active filled circle (pulse begins)
+4. If hint level > 0: active phase content area expands with detail (`standard` spring)
+
+#### Phase Data Structure
+
+```typescript
+// Within session:started payload
+interface Phase {
+  number: number;        // 1-5
+  title: string;         // e.g., "Understand the problem"
+  status: 'pending' | 'active' | 'complete';
+  summary: string;       // 2-3 sentence description
+  steps: Array<{
+    title: string;       // e.g., "Read the failing test"
+    description: string; // e.g., "Look at test/auth.test.ts — the assertion on line 42..."
+  }>;
+}
+```
+
+Backend sends all phase data (including summaries and step descriptions) upfront in `session:started`. Frontend filters display based on current hint level — no round-trip needed on level change.
+
+#### Revised Issue Context Data Structure
+
+```typescript
+// Revision to coaching:issue_context (Story 4)
+interface IssueContext {
+  number: number;        // GitHub issue number
+  title: string;
+  summary: string;       // AI-generated, max 250 chars
+  labels: Array<{
+    name: string;
+    color: string;       // Hex color from GitHub
+  }>;
+  url: string;           // Full GitHub issue URL
+}
+```
+
+#### Collapsed Sidebar State
+
+When sidebar is collapsed to 32px rail (Story 2):
+- Coaching icon centered in rail (small Paige logo or speech bubble icon)
+- No content visible
+- Click rail toggle to expand back to full 280px
+
+#### Acceptance Scenarios
+
+| # | Scenario | Expected Outcome |
+|---|----------|-----------------|
+| 8.1 | Session starts (issue selected from dashboard) | Sidebar populates with issue context + phases from `session:started` |
+| 8.2 | View issue number | `#N` displayed in terracotta, styled as link |
+| 8.3 | Click issue number | GitHub issue opens in default browser |
+| 8.4 | View issue labels | Colored pills render with GitHub label colors, text contrast-adjusted |
+| 8.5 | Click summary chevron | Summary text collapses/expands with spring animation |
+| 8.6 | View hint slider at level 0 | "None" illustration shown, slider at leftmost, phases show titles only |
+| 8.7 | Move slider to level 1 | Illustration morphs to "Light" scene, active phase shows summary |
+| 8.8 | Move slider to level 2 | Illustration morphs to "Medium", active phase adds sub-step titles |
+| 8.9 | Move slider to level 3 | Illustration morphs to "Heavy", active phase shows sub-step accordion |
+| 8.10 | Click sub-step title at level 3 | Accordion expands showing description; previous sub-step collapses |
+| 8.11 | View phase stepper | Vertical stepper with connected line, indicators colored by status |
+| 8.12 | Phase completes during session | Green checkmark appears, line fills, next phase activates with pulse |
+| 8.13 | All phases complete | All indicators green with checkmarks, no active expansion |
+| 8.14 | Content overflows sidebar height | Sidebar scrolls independently of editor and terminal |
+| 8.15 | Sidebar collapsed | 32px rail with coaching icon, no content visible |
+| 8.16 | Expand collapsed sidebar | Full content restored, hint level and phase state preserved |
+| 8.17 | Session resumed from dashboard | Sidebar restores issue context + phase state from `session:resumed` |
+
+#### Edge Cases
+
+| ID | Scenario | Handling |
+|----|----------|----------|
+| E8.1 | Issue has no labels | Labels row hidden entirely (no empty pills, no "no labels" message) |
+| E8.2 | Issue summary >250 chars from backend | Frontend truncates at 250 chars with ellipsis (backend should enforce, defense in depth) |
+| E8.3 | Very long phase title | Truncate with ellipsis; tooltip shows full title |
+| E8.4 | Only 1-2 phases | Stepper renders correctly with fewer nodes; connecting line shortened |
+| E8.5 | Phase update for non-existent phase number | Ignore, log warning |
+| E8.6 | Hint level drops below 3 while accordion open | Accordion state resets; sub-steps hidden |
+| E8.7 | SVG illustrations not ready at build time | Fallback: level name in large text with representative emoji |
+| E8.8 | `prefers-reduced-motion` active | Phase pulse static; illustration morph instant; accordion toggle instant; slider snap instant |
+| E8.9 | Session ends while sidebar visible | Navigation returns to dashboard (Story 2 reverse zoom) |
+| E8.10 | Label color too light for white text | Auto-contrast: use dark text on light-colored label pills |
+
+#### Requirements
+
+| ID | Requirement |
+|----|-------------|
+| R8.1 | Sidebar MUST be 280px fixed width with independent vertical scrolling |
+| R8.2 | Issue number MUST be a clickable link that opens GitHub URL via `shell.openExternal` |
+| R8.3 | Issue summary MUST be toggleable (expand/collapse) and max 250 characters |
+| R8.4 | Label pill text color MUST auto-contrast against the GitHub label background color |
+| R8.5 | Hint level slider MUST have exactly 4 discrete positions (0-3) |
+| R8.6 | Hint level labels MUST be "None", "Light", "Medium", "Heavy" |
+| R8.7 | SVG illustrations MUST morph between levels using `standard` spring animation |
+| R8.8 | Phase stepper MUST use vertical layout with connected status line |
+| R8.9 | Phase detail MUST be frontend-filtered by hint level (no backend round-trip) |
+| R8.10 | Only the active phase MUST show expanded content |
+| R8.11 | Sub-step accordion (level 3) MUST allow only one expanded sub-step at a time |
+| R8.12 | Phase transitions MUST animate (checkmark, line fill, pulse activation) |
+| R8.13 | All sidebar data MUST come from backend via WebSocket |
+| R8.14 | Sidebar MUST NOT contain AI logic (thin client principle) |
+| R8.15 | `prefers-reduced-motion` MUST be respected for all sidebar animations |
+| R8.16 | Maximum 5 phases per issue |
+
+#### Success Criteria
+
+| ID | Criterion | Measurement |
+|----|-----------|-------------|
+| SC8.1 | Issue context renders | Number (linked), title, labels, toggleable summary all display from backend data |
+| SC8.2 | Hint slider controls phase detail | Moving between 4 levels visibly changes what the active phase shows |
+| SC8.3 | Illustrations morph | Each of 4 levels displays distinct SVG illustration with spring transition |
+| SC8.4 | Phase stepper reflects state | Complete = green checkmark, active = terracotta pulse, pending = muted outline |
+| SC8.5 | Phase transition animates | Completing a phase shows checkmark → line fill → next activation sequence |
+| SC8.6 | Accordion works at level 3 | Click sub-step title → expands description; click another → previous collapses |
+
 ---
 
 ## Edge Cases
@@ -1006,6 +1468,24 @@ When a hint arrives for a file inside a collapsed directory:
 | E6.6 | Multiple hints, same directory, different intensities | Highest intensity wins | 6 |
 | E6.7 | Very long filenames | Truncate with ellipsis; tooltip shows full name | 6 |
 | E6.8 | Hidden files (dotfiles) | Shown in tree | 6 |
+| E7.1 | `<thinking>` tag split across IPC chunks | Detector buffers partial tags; commits on full tag | 7 |
+| E7.2 | Very large thinking block content | Scrollable when expanded; collapsed stays one line | 7 |
+| E7.3 | Rapid successive output (>10KB/s) | Data batcher aggregates at 16ms intervals | 7 |
+| E7.4 | PTY exits (user types `exit`) | "Process exited" message; no crash | 7 |
+| E7.5 | Non-UTF8 output (binary data) | Best-effort rendering; don't crash | 7 |
+| E7.6 | Unclosed `<thinking>` tag | 30s timeout → flush buffer as normal output | 7 |
+| E7.7 | Terminal focused while typing in editor | Only capture input when terminal explicitly focused | 7 |
+| E7.8 | `prefers-reduced-motion` active | Thinking block transitions instant; observer dot static | 7 |
+| E8.1 | Issue has no labels | Labels row hidden entirely | 8 |
+| E8.2 | Issue summary >250 chars | Frontend truncates at 250 with ellipsis | 8 |
+| E8.3 | Very long phase title | Truncate with ellipsis; tooltip for full title | 8 |
+| E8.4 | Only 1-2 phases | Stepper renders with fewer nodes; line shortened | 8 |
+| E8.5 | Phase update for non-existent phase | Ignore, log warning | 8 |
+| E8.6 | Hint level drops below 3 with accordion open | Accordion state resets; sub-steps hidden | 8 |
+| E8.7 | SVG illustrations not ready | Fallback: level name text + emoji | 8 |
+| E8.8 | `prefers-reduced-motion` active | Phase pulse static; morph/accordion/slider instant | 8 |
+| E8.9 | Session ends while sidebar visible | Navigate back to dashboard | 8 |
+| E8.10 | Label color too light for white text | Auto-contrast: dark text on light labels | 8 |
 
 ---
 
@@ -1061,6 +1541,8 @@ When a hint arrives for a file inside a collapsed directory:
 | R5.9 | Duplicate tabs MUST be prevented | 5 | 100% |
 | R5.10 | Cmd+S MUST trigger `file:save` via WebSocket | 5 | 100% |
 | R5.11 | Language mode MUST be set from `fs:content` language field | 5 | 100% |
+| R5.12 | Editor MUST include 32px status bar with file path, cursor, language, "Review My Work" | 5 | 100% |
+| R5.13 | "Review My Work" button MUST send `user:review` via WebSocket | 5 | 100% |
 | R6.1 | File tree MUST use `react-arborist` with virtualized rendering | 6 | 100% |
 | R6.2 | File icons MUST use `vscode-icons` | 6 | 100% |
 | R6.3 | All tree data MUST come from backend via WebSocket | 6 | 100% |
@@ -1071,6 +1553,33 @@ When a hint arrives for a file inside a collapsed directory:
 | R6.8 | Single click file MUST open in editor | 6 | 100% |
 | R6.9 | `explorer:hint_files` MUST support per-file style + optional directory list | 6 | 100% |
 | R6.10 | Auto-expand MUST match hint style | 6 | 100% |
+| R7.1 | Terminal MUST render PTY output as React components (no xterm.js) | 7 | 100% |
+| R7.2 | ANSI escape sequences MUST be parsed and rendered as CSS styles | 7 | 100% |
+| R7.3 | All 16 ANSI colors MUST be remapped to warm palette variants | 7 | 100% |
+| R7.4 | `<thinking>` / `</thinking>` tags MUST trigger collapsible thinking block components | 7 | 100% |
+| R7.5 | Thinking block tags MUST be injected synthetically by main process | 7 | 100% |
+| R7.6 | Thinking blocks MUST be collapsed by default | 7 | 100% |
+| R7.7 | Observer nudge flow MUST use synthetic tag injection around PTY responses | 7 | 100% |
+| R7.8 | Data batching MUST aggregate incoming data at ~16ms intervals | 7 | 100% |
+| R7.9 | PTY dimensions MUST be calculated from container size and updated on resize | 7 | 100% |
+| R7.10 | Control characters (Ctrl+C, Ctrl+D, Ctrl+Z) MUST be forwarded to PTY | 7 | 100% |
+| R7.11 | Terminal MUST only capture keyboard input when focused | 7 | 100% |
+| R8.1 | Sidebar MUST be 280px fixed width with independent scrolling | 8 | 100% |
+| R8.2 | Issue number MUST be clickable link opening GitHub URL via `shell.openExternal` | 8 | 100% |
+| R8.3 | Issue summary MUST be toggleable and max 250 characters | 8 | 100% |
+| R8.4 | Label pill text MUST auto-contrast against GitHub label color | 8 | 100% |
+| R8.5 | Hint level slider MUST have exactly 4 discrete positions (0-3) | 8 | 100% |
+| R8.6 | Hint level labels MUST be "None", "Light", "Medium", "Heavy" | 8 | 100% |
+| R8.7 | SVG illustrations MUST morph between levels with `standard` spring | 8 | 100% |
+| R8.8 | Phase stepper MUST use vertical layout with connected status line | 8 | 100% |
+| R8.9 | Phase detail MUST be frontend-filtered by hint level (no round-trip) | 8 | 100% |
+| R8.10 | Only active phase MUST show expanded content | 8 | 100% |
+| R8.11 | Sub-step accordion (level 3) MUST allow only one expanded at a time | 8 | 100% |
+| R8.12 | Phase transitions MUST animate (checkmark, line fill, pulse) | 8 | 100% |
+| R8.13 | All sidebar data MUST come from backend via WebSocket | 8 | 100% |
+| R8.14 | Sidebar MUST NOT contain AI logic | 8 | 100% |
+| R8.15 | `prefers-reduced-motion` MUST be respected for all sidebar animations | 8 | 100% |
+| R8.16 | Maximum 5 phases per issue | 8 | 100% |
 
 ### Key Entities
 
@@ -1109,6 +1618,17 @@ When a hint arrives for a file inside a collapsed directory:
 | SC6.3 | Gradient animation visible | Parent dir visibly brighter/faster than distant ancestors | 6 |
 | SC6.4 | Auto-expand matches style | subtle stays collapsed; unmissable reveals file | 6 |
 | SC6.5 | Performance with large trees | 500+ files render without jank | 6 |
+| SC7.1 | ANSI rendering fidelity | Colored output renders correctly with warm-mapped colors | 7 |
+| SC7.2 | Thinking blocks work | Nudge → collapsed block → click expands → content visible | 7 |
+| SC7.3 | Input responsiveness | Typing feels immediate (<50ms PTY echo latency) | 7 |
+| SC7.4 | Large output performance | 1000+ lines scroll without jank | 7 |
+| SC7.5 | Interleaving works | Normal → thinking block → normal renders in correct order | 7 |
+| SC8.1 | Issue context renders | Number (linked), title, labels, toggleable summary display from backend | 8 |
+| SC8.2 | Hint slider controls detail | 4 levels visibly change active phase content | 8 |
+| SC8.3 | Illustrations morph | 4 distinct SVG scenes with spring transitions | 8 |
+| SC8.4 | Phase stepper reflects state | Complete=green check, active=terracotta pulse, pending=muted | 8 |
+| SC8.5 | Phase transition animates | Checkmark → line fill → next activation sequence | 8 |
+| SC8.6 | Accordion at level 3 | Click sub-step → expand; click another → collapse previous | 8 |
 
 ---
 
@@ -1119,3 +1639,7 @@ When a hint arrives for a file inside a collapsed directory:
 | Date | Story | Change | Reason |
 |------|-------|--------|--------|
 | 2026-02-10 | 4 | `explorer:hint_files` payload changed from `{ paths, style }` to `{ hints: [{ path, style, directories? }] }` | Story 6 requires per-file hint styles and backend-controlled directory glow lists |
+| 2026-02-11 | 4 | `coaching:issue_context` payload changed from `{ title, summary, labels }` to `{ number, title, summary, labels: [{ name, color }], url }` | Story 8 needs issue number link, label colors for pills |
+| 2026-02-11 | 4 | `coaching:message` payload changed from `{ message, type }` to `{ message, type, anchor?: { path, range } }` | Story 8 discovery: coaching messages render as anchored comment balloons (when anchor present) or editor toasts (when absent), not in sidebar |
+| 2026-02-11 | 4 | `session:started` payload clarified: `phases` is `Phase[]`, `issueContext` is `IssueContext` (see Story 8 for interfaces) | Story 8 requires formal data structures for phase stepper and issue context |
+| 2026-02-11 | 2, 5 | Added 32px editor status bar (VS Code-style) to IDE layout between editor and terminal | Story 8 discovery: "Review My Work" button needs a home; status bar also shows file path, cursor position, language |

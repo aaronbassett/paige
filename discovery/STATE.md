@@ -1,6 +1,6 @@
 # Discovery State: electron-ui
 
-**Updated**: 2026-02-10 21:50 UTC
+**Updated**: 2026-02-11
 **Iteration**: 2
 **Phase**: Story Development (Phase 3)
 
@@ -46,8 +46,8 @@ Paige's backend does the heavy intellectual lifting (coaching pipeline, memory, 
 | 4 | WebSocket Client | P1 | ✅ In SPEC | 15% | - |
 | 5 | Code Editor (Monaco) | P1 | ✅ In SPEC | 25% | 1, 2, 4 |
 | 6 | File Explorer with Hint Glow | P1 | ✅ In SPEC | 20% | 1, 2, 4 |
-| 7 | Terminal with Filter Pipeline | P1 | ⏳ Queued | 20% | 1, 2, 4 |
-| 8 | Coaching Sidebar (Issue + Phases) | P1 | ⏳ Queued | 20% | 1, 2, 4 |
+| 7 | Terminal with Filter Pipeline | P1 | ✅ In SPEC | 20% | 1, 2, 4 |
+| 8 | Coaching Sidebar (Issue + Phases) | P1 | ✅ In SPEC | 95% | 1, 2, 4 |
 | 9 | Hinting System | P1 | ⏳ Queued | 15% | 5, 6, 8 |
 | 10 | Placeholder / Coming Soon Page | P2 | ⏳ Queued | 40% | 1, 2 |
 
@@ -81,7 +81,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 | # | Story | Priority | Completed | Key Decisions | Revision Risk |
 |---|-------|----------|-----------|---------------|---------------|
-| *No completed stories yet* | - | - | - | - | - |
+| 8 | Coaching Sidebar | P1 | 2026-02-11 | Coaching messages NOT in sidebar (comment balloons + toasts in editor); hint levels None/Light/Medium/Heavy; SVG illustrations morph per level; phase detail frontend-filtered; editor status bar added (Story 2/5 revision) | Low — Story 9 may refine coaching message rendering |
 
 *Full stories in SPEC.md*
 
@@ -89,7 +89,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 ## In-Progress Story Detail
 
-*No story currently in progress. Next up: Story 7 (Terminal with Filter Pipeline).*
+*No story currently in progress.*
 
 ---
 
@@ -97,7 +97,8 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 *Items that might affect graduated stories:*
 
-[Will be populated as graduated stories accumulate]
+- Story 9 (Hinting System) will define how coaching messages render as comment balloons and toasts — may refine the `coaching:message` anchor format from Story 4 revision
+- Story 9 will define how "Explain This" responses render — may need a new WebSocket message type or reuse `coaching:message` with anchor
 
 ---
 
@@ -115,6 +116,5 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 ## Next Actions
 
-- Deep-dive Story 7: Terminal with Filter Pipeline
-- Then Story 8: Coaching Sidebar (Issue + Phases)
-- Story 9 (Hinting System) unblocks once 5, 6, 8 are done
+- Story 9: Hinting System (now unblocked — depends on 5, 6, 8, all graduated)
+- Story 10: Placeholder / Coming Soon Page (P2)
