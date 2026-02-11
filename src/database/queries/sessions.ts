@@ -1,6 +1,7 @@
-// TDD stub — will be implemented in T085
 import type { AppDatabase } from '../db.js';
 import type { Session } from '../../types/domain.js';
+
+// ── Input Types ─────────────────────────────────────────────────────────────
 
 export interface CreateSessionInput {
   project_dir: string;
@@ -15,18 +16,97 @@ export interface UpdateSessionInput {
   ended_at?: string | null;
 }
 
-export function createSession(_db: AppDatabase, _input: CreateSessionInput): Promise<Session> {
-  return Promise.reject(new Error('Not implemented'));
+// ── Queries ─────────────────────────────────────────────────────────────────
+
+/**
+ * Inserts a new session row and returns the full persisted record.
+ *
+ * Optional fields (`issue_number`, `issue_title`) default to `null` when
+ * omitted. The `ended_at` column is always `null` on creation.
+ */
+export async function createSession(db: AppDatabase, input: CreateSessionInput): Promise<Session> {
+  const result = await db
+    .insertInto('sessions')
+    .values({
+      project_dir: input.project_dir,
+      status: input.status,
+      started_at: input.started_at,
+      issue_number: input.issue_number ?? null,
+      issue_title: input.issue_title ?? null,
+      ended_at: null,
+    } as never)
+    .executeTakeFirstOrThrow();
+
+  const id = Number(result.insertId);
+  const session = await getSession(db, id);
+
+  if (session === undefined) {
+    throw new Error(`Failed to retrieve session after insert (id=${id})`);
+  }
+
+  return session;
 }
 
-export function getSession(_db: AppDatabase, _id: number): Promise<Session | undefined> {
-  return Promise.reject(new Error('Not implemented'));
+/**
+ * Retrieves a single session by primary key.
+ *
+ * Returns `undefined` when no row matches the given ID.
+ */
+export async function getSession(db: AppDatabase, id: number): Promise<Session | undefined> {
+  return db.selectFrom('sessions').selectAll().where('id', '=', id).executeTakeFirst() as Promise<
+    Session | undefined
+  >;
 }
 
-export function updateSession(
-  _db: AppDatabase,
-  _id: number,
-  _input: UpdateSessionInput,
+/**
+ * Updates an existing session with the provided fields and returns the full
+ * updated record.
+ *
+ * Only fields present in `input` are written; omitted fields remain unchanged.
+ *
+ * @throws {Error} If no session exists with the given ID
+ */
+export async function updateSession(
+  db: AppDatabase,
+  id: number,
+  input: UpdateSessionInput,
 ): Promise<Session> {
-  return Promise.reject(new Error('Not implemented'));
+  // Build an object containing only the fields that were actually provided.
+  // This avoids overwriting columns the caller did not intend to change.
+  const updates: Record<string, unknown> = {};
+
+  if (input.status !== undefined) {
+    updates['status'] = input.status;
+  }
+  if (input.ended_at !== undefined) {
+    updates['ended_at'] = input.ended_at;
+  }
+
+  // Guard: nothing to update
+  if (Object.keys(updates).length === 0) {
+    const existing = await getSession(db, id);
+    if (existing === undefined) {
+      throw new Error(`Session not found (id=${id})`);
+    }
+    return existing;
+  }
+
+  const result = await db
+    .updateTable('sessions')
+    .set(updates as never)
+    .where('id', '=', id)
+    .executeTakeFirst();
+
+  // `numUpdatedRows` is 0n when the ID doesn't match any row
+  if (result.numUpdatedRows === 0n) {
+    throw new Error(`Session not found (id=${id})`);
+  }
+
+  const session = await getSession(db, id);
+
+  if (session === undefined) {
+    throw new Error(`Failed to retrieve session after update (id=${id})`);
+  }
+
+  return session;
 }

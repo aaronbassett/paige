@@ -188,10 +188,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T085 [P] [US2] Create src/database/queries/sessions.ts with CRUD functions (use devs:typescript-dev agent)
-- [ ] T086 [P] [US2] Create src/database/queries/plans.ts with CRUD functions (use devs:typescript-dev agent)
-- [ ] T087 [P] [US2] Create src/database/queries/phases.ts with CRUD functions (use devs:typescript-dev agent)
-- [ ] T088 [GIT] Commit: add session/plan/phase queries
+- [x] T085 [P] [US2] Create src/database/queries/sessions.ts with CRUD functions (use devs:typescript-dev agent)
+- [x] T086 [P] [US2] Create src/database/queries/plans.ts with CRUD functions (use devs:typescript-dev agent)
+- [x] T087 [P] [US2] Create src/database/queries/phases.ts with CRUD functions (use devs:typescript-dev agent)
+- [x] T088 [GIT] Commit: add session/plan/phase queries
 - [ ] T089 [P] [US2] Create src/database/queries/hints.ts with CRUD functions (use devs:typescript-dev agent)
 - [ ] T090 [P] [US2] Create src/database/queries/progress.ts with CRUD functions (use devs:typescript-dev agent)
 - [ ] T091 [GIT] Commit: add hint/progress queries
