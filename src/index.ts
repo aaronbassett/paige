@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { loadEnv } from './config/env.js';
 import { createDatabase, closeDatabase } from './database/db.js';
 import { createFileWatcher, type FileChangeEvent } from './file-system/watcher.js';
+import { initializeMemory, closeMemory } from './memory/chromadb.js';
 import { createMcpServer } from './mcp/server.js';
 import { createWebSocketServer, broadcast } from './websocket/server.js';
 import type { FsTreeAction } from './types/websocket.js';
@@ -47,6 +48,9 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
 
   // eslint-disable-next-line no-console
   console.log(`[server] Database initialized at ${dbPath}`);
+
+  // Initialize ChromaDB (lazy — server starts even if ChromaDB is down)
+  await initializeMemory(env.chromadbUrl);
 
   // Create MCP server (tool registration happens lazily per session)
   const mcpHandle = createMcpServer(null as unknown as Server);
@@ -151,6 +155,10 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
         }
       });
     });
+
+    // eslint-disable-next-line no-console
+    console.log('[server] Closing ChromaDB...');
+    await closeMemory();
 
     // eslint-disable-next-line no-console
     console.log('[server] Closing database...');
