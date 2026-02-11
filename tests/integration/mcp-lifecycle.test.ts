@@ -186,12 +186,16 @@ describe('MCP tool surface (integration)', () => {
       expect(result.isError).not.toBe(true);
 
       const data = extractJson(result) as {
+        success: boolean;
         session_id: number;
-        status: string;
+        memories_added: number;
+        gaps_identified: number;
+        katas_generated: number;
+        assessments_updated: number;
       };
 
+      expect(data.success).toBe(true);
       expect(data.session_id).toBeTypeOf('number');
-      expect(data.status).toBe('completed');
     });
 
     it('paige_end_session without active session returns error', async () => {

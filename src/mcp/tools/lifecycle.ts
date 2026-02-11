@@ -3,8 +3,9 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getDatabase } from '../../database/db.js';
-import { createSession, updateSession } from '../../database/queries/sessions.js';
+import { createSession } from '../../database/queries/sessions.js';
 import { getActiveSessionId, setActiveSessionId, clearActiveSessionId } from '../session.js';
+import { runSessionWrapUp } from '../../coaching/wrap-up.js';
 
 /** Registers lifecycle tools (paige_start_session, paige_end_session) on the MCP server. */
 export function registerLifecycleTools(server: McpServer): void {
@@ -72,31 +73,44 @@ export function registerLifecycleTools(server: McpServer): void {
       };
     }
 
-    const db = getDatabase();
-    if (db === null) {
+    try {
+      const result = await runSessionWrapUp(sessionId);
+
+      clearActiveSessionId();
+
       return {
-        content: [{ type: 'text' as const, text: 'Database not initialized' }],
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              success: true,
+              session_id: sessionId,
+              memories_added: result.memoriesAdded,
+              gaps_identified: result.gapsIdentified,
+              katas_generated: result.katasGenerated,
+              assessments_updated: result.assessmentsUpdated,
+            }),
+          },
+        ],
+      };
+    } catch (error: unknown) {
+      clearActiveSessionId();
+
+      const message = error instanceof Error ? error.message : String(error);
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              success: false,
+              session_id: sessionId,
+              error: message,
+            }),
+          },
+        ],
         isError: true,
       };
     }
-
-    await updateSession(db, sessionId, {
-      status: 'completed',
-      ended_at: new Date().toISOString(),
-    });
-
-    clearActiveSessionId();
-
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: JSON.stringify({
-            session_id: sessionId,
-            status: 'completed',
-          }),
-        },
-      ],
-    };
   });
 }

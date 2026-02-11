@@ -10,6 +10,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { registerLifecycleTools } from './tools/lifecycle.js';
 import { registerReadTools } from './tools/read.js';
 import { registerUiTools } from './tools/ui.js';
+import { registerCoachingTools } from './tools/coaching.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ export function createMcpServer(_httpServer: Server): McpServerHandle {
     registerLifecycleTools(mcpServer);
     registerReadTools(mcpServer);
     registerUiTools(mcpServer);
+    registerCoachingTools(mcpServer);
 
     await mcpServer.connect(transport);
 
@@ -129,5 +131,6 @@ export function getRegisteredToolNames(): string[] {
     'paige_update_phase',
     'paige_show_message',
     'paige_show_issue_context',
+    'paige_run_coaching_pipeline',
   ];
 }
