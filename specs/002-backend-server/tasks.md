@@ -312,13 +312,13 @@
 - [x] T150 [US4] Add query functions for action timeline in src/database/queries/actions.ts (use devs:typescript-dev agent)
 - [x] T151 [GIT] Commit: add action queries
 - [x] T152 [US4] Verify US4 tests now pass
-- [ ] T153 [GIT] Commit: verify US4 complete
+- [x] T153 [GIT] Commit: verify US4 complete
 
 ### Phase 6 Wrap-Up
 
-- [ ] T154 [US4] Run /sdd:map incremental for Phase 6 changes
-- [ ] T155 [GIT] Commit: update codebase documents for phase 6
-- [ ] T156 [US4] Review retro/P6.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T154 [US4] Run /sdd:map incremental for Phase 6 changes (skipped: no .sdd/codebase/ exists yet)
+- [x] T155 [GIT] Commit: update codebase documents for phase 6
+- [x] T156 [US4] Review retro/P6.md and extract critical learnings to CLAUDE.md (conservative)
 - [ ] T157 [GIT] Commit: finalize phase 6 retro
 
 ### Phase 6 Completion
