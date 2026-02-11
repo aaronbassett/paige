@@ -639,8 +639,8 @@ Phase 10 (Polish)
 
 - [x] T300 [US6] Run /sdd:map incremental for Phase 5 changes (skipped — no new deps or structural changes, only new components following existing patterns)
 - [x] T301 [GIT] Commit: update codebase documents for phase 5
-- [ ] T302 Review retro/P5.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T303 [GIT] Commit: finalize phase 5 retro
+- [x] T302 Review retro/P5.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T303 [GIT] Commit: finalize phase 5 retro
 
 ### Phase Completion
 
@@ -661,9 +661,9 @@ Phase 10 (Polish)
 
 ### Phase Start
 
-- [ ] T308 [GIT] Verify working tree is clean before starting Phase 6
-- [ ] T309 [GIT] Pull and rebase on origin/main if needed
-- [ ] T310 [US7] Create retro/P6.md for this phase
+- [x] T308 [GIT] Verify working tree is clean before starting Phase 6
+- [x] T309 [GIT] Pull and rebase on origin/main if needed
+- [x] T310 [US7] Create retro/P6.md for this phase
 - [ ] T311 [GIT] Commit: initialize phase 6 retro
 
 ### PTY Manager (Main Process)
