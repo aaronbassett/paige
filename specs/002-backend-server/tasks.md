@@ -520,7 +520,7 @@
 ### Retro Initialization
 
 - [x] T254 [US8] Create retro/P10.md for this phase
-- [ ] T255 [GIT] Commit: initialize phase 10 retro
+- [x] T255 [GIT] Commit: initialize phase 10 retro
 
 ### Tests for User Story 8
 

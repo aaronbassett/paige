@@ -7,6 +7,7 @@ export interface EnvConfig {
   projectDir: string;
   dataDir: string;
   anthropicApiKey: string | undefined;
+  chromadbUrl: string;
 }
 
 /**
@@ -52,6 +53,9 @@ export function loadEnv(): EnvConfig {
   // ANTHROPIC_API_KEY: optional
   const anthropicApiKey = process.env['ANTHROPIC_API_KEY'];
 
+  // CHROMADB_URL: optional, default http://localhost:8000
+  const chromadbUrl = process.env['CHROMADB_URL'] ?? 'http://localhost:8000';
+
   if (errors.length > 0) {
     const message = [
       'Environment validation failed:',
@@ -67,6 +71,7 @@ export function loadEnv(): EnvConfig {
     projectDir,
     dataDir,
     anthropicApiKey,
+    chromadbUrl,
   };
 }
 
