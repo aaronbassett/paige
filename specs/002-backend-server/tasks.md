@@ -784,10 +784,10 @@
 
 ### Phase 14 Wrap-Up
 
-- [ ] T398 [US12] Run /sdd:map incremental for Phase 14 changes
-- [ ] T399 [GIT] Commit: update codebase documents for phase 14
-- [ ] T400 [US12] Review retro/P14.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T401 [GIT] Commit: finalize phase 14 retro
+- [x] T398 [US12] Run /sdd:map incremental for Phase 14 changes (skipped: no .sdd/codebase/ exists yet)
+- [x] T399 [GIT] Commit: update codebase documents for phase 14
+- [x] T400 [US12] Review retro/P14.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T401 [GIT] Commit: finalize phase 14 retro
 
 ### Phase 14 Completion
 
