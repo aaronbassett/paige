@@ -15,13 +15,16 @@ export interface BufferEntry {
   lastUpdated: string; // ISO 8601
 }
 
+/** Module-level buffer cache. */
+const buffers = new Map<string, BufferEntry>();
+
 /**
  * Gets the buffer entry for a given file path.
  * @param path - Absolute file path
  * @returns The BufferEntry or null if not in cache
  */
-export function getBuffer(_path: string): BufferEntry | null {
-  return Promise.reject(new Error('Not implemented')) as never;
+export function getBuffer(path: string): BufferEntry | null {
+  return buffers.get(path) ?? null;
 }
 
 /**
@@ -31,35 +34,41 @@ export function getBuffer(_path: string): BufferEntry | null {
  * @param content - Current buffer content
  * @param cursorPosition - Current cursor position
  */
-export function updateBuffer(
-  _path: string,
-  _content: string,
-  _cursorPosition: CursorPosition,
-): void {
-  throw new Error('Not implemented');
+export function updateBuffer(path: string, content: string, cursorPosition: CursorPosition): void {
+  buffers.set(path, {
+    content,
+    cursorPosition,
+    dirty: true,
+    lastUpdated: new Date().toISOString(),
+  });
 }
 
 /**
  * Marks a buffer as clean (dirty: false) after a file save.
+ * No-op if the path is not in the cache.
  * @param path - Absolute file path
  */
-export function markClean(_path: string): void {
-  throw new Error('Not implemented');
+export function markClean(path: string): void {
+  const entry = buffers.get(path);
+  if (entry) {
+    entry.dirty = false;
+  }
 }
 
 /**
  * Removes a buffer entry from the cache.
+ * No-op if the path is not in the cache.
  * @param path - Absolute file path
  */
-export function removeBuffer(_path: string): void {
-  throw new Error('Not implemented');
+export function removeBuffer(path: string): void {
+  buffers.delete(path);
 }
 
 /**
  * Clears all buffer entries (e.g., on session end).
  */
 export function clearAll(): void {
-  throw new Error('Not implemented');
+  buffers.clear();
 }
 
 /**
@@ -67,5 +76,11 @@ export function clearAll(): void {
  * @returns Array of file paths with dirty buffers
  */
 export function getDirtyPaths(): string[] {
-  return Promise.reject(new Error('Not implemented')) as never;
+  const dirty: string[] = [];
+  for (const [path, entry] of buffers) {
+    if (entry.dirty) {
+      dirty.push(path);
+    }
+  }
+  return dirty;
 }
