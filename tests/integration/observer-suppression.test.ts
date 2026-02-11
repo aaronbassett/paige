@@ -128,13 +128,12 @@ describe('Observer nudge suppression (integration)', () => {
     expect(mockRunTriage).toHaveBeenCalledTimes(1);
     expect(mockDeliverNudge).toHaveBeenCalledTimes(1);
 
-    // Second action within 120s cooldown window
+    // Second triage-eligible action within 120s cooldown window
     mockRunTriage.mockResolvedValue(triageResult());
-    emitAction('file_save');
+    emitAction('file_open');
     await vi.advanceTimersByTimeAsync(100);
 
-    // Triage may or may not be called (implementation choice), but nudge
-    // must NOT be delivered again — it should be suppressed with reason "cooldown"
+    // Triage is called but nudge must NOT be delivered — suppressed with "cooldown"
     expect(mockDeliverNudge).toHaveBeenCalledTimes(1);
 
     // Verify nudge_suppressed was logged with reason "cooldown"
@@ -162,9 +161,9 @@ describe('Observer nudge suppression (integration)', () => {
     // Advance past cooldown (121 seconds)
     await vi.advanceTimersByTimeAsync(121_000);
 
-    // Second action after cooldown expiry
+    // Second triage-eligible action after cooldown expiry
     mockRunTriage.mockResolvedValue(triageResult());
-    emitAction('file_save');
+    emitAction('file_open');
     await vi.advanceTimersByTimeAsync(100);
 
     // Second nudge should be delivered
@@ -253,8 +252,9 @@ describe('Observer nudge suppression (integration)', () => {
       await vi.advanceTimersByTimeAsync(10);
     }
 
-    // Reset mock to track only calls after flow state is established
+    // Reset mocks to track only calls after flow state is established
     mockRunTriage.mockClear();
+    mockDeliverNudge.mockClear();
 
     // Emit one more action — should be in flow state now
     emitAction('file_open');
@@ -306,8 +306,8 @@ describe('Observer nudge suppression (integration)', () => {
     mockRunTriage.mockClear();
     mockRunTriage.mockResolvedValue(triageResult());
 
-    // Emit a new action after window expiry — triage should fire
-    emitAction('file_save');
+    // Emit a triage-eligible action after window expiry — triage should fire
+    emitAction('file_open');
     await vi.advanceTimersByTimeAsync(100);
 
     expect(mockRunTriage).toHaveBeenCalled();
@@ -385,7 +385,7 @@ describe('Observer nudge suppression (integration)', () => {
 
     // --- Second: trigger a cooldown suppression ---
     mockRunTriage.mockResolvedValue(triageResult({ confidence: 0.9 }));
-    emitAction('file_save');
+    emitAction('file_open');
     await vi.advanceTimersByTimeAsync(100);
 
     // Find cooldown suppression log entry
@@ -405,7 +405,7 @@ describe('Observer nudge suppression (integration)', () => {
     await vi.advanceTimersByTimeAsync(121_000);
 
     mockRunTriage.mockResolvedValue(triageResult({ should_nudge: true, confidence: 0.5 }));
-    emitAction('editor_tab_switch');
+    emitAction('phase_completed');
     await vi.advanceTimersByTimeAsync(100);
 
     // Find low_confidence suppression log entry
@@ -508,8 +508,8 @@ describe('Observer nudge suppression (integration)', () => {
     mockRunTriage.mockClear();
     mockRunTriage.mockResolvedValue(triageResult());
 
-    // User action after 11 system events — triage SHOULD fire (no flow state)
-    emitAction('file_save');
+    // Triage-eligible action after 11 system events — triage SHOULD fire (no flow state)
+    emitAction('file_open');
     await vi.advanceTimersByTimeAsync(100);
 
     expect(mockRunTriage).toHaveBeenCalled();
