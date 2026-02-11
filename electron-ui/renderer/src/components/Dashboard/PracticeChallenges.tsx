@@ -81,7 +81,7 @@ const skeletonCardStyle: React.CSSProperties = {
   height: '36px',
   borderRadius: '6px',
   background: 'var(--bg-elevated)',
-  opacity: 0.6,
+  animation: 'breathe 2s ease-in-out infinite',
   marginBottom: 'var(--space-xs)',
 };
 
@@ -97,9 +97,9 @@ export function PracticeChallenges({ challenges, onChallengeClick }: PracticeCha
     // Loading state: null means data hasn't arrived yet
     if (challenges === null) {
       return (
-        <div style={listStyle} aria-busy="true" aria-label="Loading challenges">
-          <div style={skeletonCardStyle} />
-          <div style={skeletonCardStyle} />
+        <div style={listStyle} role="status" aria-busy="true" aria-label="Loading challenges">
+          <div style={skeletonCardStyle} aria-hidden="true" />
+          <div style={{ ...skeletonCardStyle, animationDelay: '150ms' }} aria-hidden="true" />
         </div>
       );
     }
