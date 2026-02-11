@@ -51,8 +51,14 @@ export async function createKata(db: AppDatabase, input: CreateKataInput): Promi
  * Retrieves a single kata spec by its ID. Returns `null` if no kata exists
  * with the given ID.
  */
-export function getKataById(_db: AppDatabase, _id: number): Promise<KataSpec | null> {
-  return Promise.reject(new Error('Not implemented'));
+export async function getKataById(db: AppDatabase, id: number): Promise<KataSpec | null> {
+  const result = await db
+    .selectFrom('kata_specs')
+    .selectAll()
+    .where('id', '=', id)
+    .executeTakeFirst();
+
+  return (result ?? null) as KataSpec | null;
 }
 
 /**
