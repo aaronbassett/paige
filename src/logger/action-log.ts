@@ -50,9 +50,30 @@ export async function logAction(
   actionEvents.emit('action', payload);
 }
 
-// ── Buffer Summary Timer (Stub) ────────────────────────────────────────────────
-// Full implementation in Phase 6 (US4). This skeleton provides the timer
-// lifecycle so other modules can depend on the interface now.
+// ── Buffer Summary Logging (Stubs) ─────────────────────────────────────────────
+
+/**
+ * Logs a `buffer_summary` action for each dirty buffer.
+ * Tracks lastLoggedCharCount per file for significant change detection.
+ */
+export function logBufferSummaries(_db: Kysely<DatabaseTables>, _sessionId: number): Promise<void> {
+  return Promise.reject(new Error('Not implemented'));
+}
+
+/**
+ * Checks if a buffer update represents a significant change (>50% or >500 chars)
+ * relative to the last logged char count. Logs `buffer_significant_change` if so.
+ */
+export function checkSignificantChange(
+  _db: Kysely<DatabaseTables>,
+  _sessionId: number,
+  _path: string,
+  _newCharCount: number,
+): Promise<boolean> {
+  return Promise.reject(new Error('Not implemented'));
+}
+
+// ── Buffer Summary Timer ───────────────────────────────────────────────────────
 
 let bufferTimerId: ReturnType<typeof setInterval> | null = null;
 
