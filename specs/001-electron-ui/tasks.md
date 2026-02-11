@@ -741,10 +741,10 @@ Phase 10 (Polish)
 
 ### Phase Completion
 
-- [ ] T355 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T356 [GIT] Create/update PR to main with Phase 6 summary
-- [ ] T357 [GIT] Verify all CI checks pass
-- [ ] T358 [GIT] Report PR ready status
+- [x] T355 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T356 [GIT] Create/update PR to main with Phase 6 summary
+- [x] T357 [GIT] Verify all CI checks pass (no CI configured — lint + typecheck + tests all pass locally)
+- [x] T358 [GIT] Report PR ready status
 
 ---
 
