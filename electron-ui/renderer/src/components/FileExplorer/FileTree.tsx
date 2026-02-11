@@ -24,15 +24,11 @@ import { useMemo, useCallback, useRef, useEffect, useState } from 'react';
 import { Tree } from 'react-arborist';
 import type { NodeRendererProps } from 'react-arborist';
 import type { TreeNode, ExplorerHintStyle } from '@shared/types/entities';
+import type { HintInfo } from '../../services/hint-manager';
 
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
-
-/** Hint information attached to a file or directory path. */
-export interface HintInfo {
-  style: ExplorerHintStyle;
-}
 
 export interface FileTreeProps {
   /** File tree data from the fs:tree WebSocket message. Null while loading. */
@@ -43,6 +39,8 @@ export interface FileTreeProps {
   onFileClick: (path: string) => void;
   /** Path of the currently active file in the editor. */
   activeFilePath?: string;
+  /** Directory paths that should be auto-expanded (from hint manager). */
+  autoExpandPaths?: ReadonlySet<string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -470,8 +468,11 @@ export function FileTree({
   hints,
   onFileClick,
   activeFilePath,
+  autoExpandPaths,
 }: FileTreeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const treeRef = useRef<any>(null);
   const [treeHeight, setTreeHeight] = useState(400);
 
   // Measure the available height for the tree
@@ -490,6 +491,22 @@ export function FileTree({
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
+
+  // Auto-expand directories when hint autoExpandPaths change
+  useEffect(() => {
+    if (!autoExpandPaths || autoExpandPaths.size === 0 || !treeRef.current) {
+      return;
+    }
+
+    // react-arborist's Tree ref exposes .open(id) to expand a node
+    for (const path of autoExpandPaths) {
+      try {
+        treeRef.current.open(path);
+      } catch {
+        // Node may not exist in tree yet -- ignore silently
+      }
+    }
+  }, [autoExpandPaths]);
 
   // Transform TreeNode data to react-arborist format
   const arboristData = useMemo(() => {
@@ -537,6 +554,7 @@ export function FileTree({
       <div style={headerStyle}>EXPLORER</div>
       <div style={treeContainerStyle}>
         <Tree<ArboristNode>
+          ref={treeRef}
           data={arboristData}
           width={TREE_WIDTH}
           height={treeHeight}
