@@ -1,25 +1,22 @@
 // WebSocket message router: dispatches client->server messages to handlers
 // Implementation for T171
 
-import { randomUUID } from 'node:crypto';
 import { WebSocket as WsWebSocket } from 'ws';
-import { loadEnv } from '../config/env.js';
 import { getDatabase } from '../database/db.js';
-import { readFile } from '../file-system/file-ops.js';
-import { updateBuffer } from '../file-system/buffer-cache.js';
 import { logAction } from '../logger/action-log.js';
 import type { ActionType } from '../types/domain.js';
 import type {
   ClientToServerMessage,
   ConnectionErrorData,
-  FileOpenData,
-  BufferUpdateData,
   EditorTabSwitchData,
   EditorSelectionData,
   HintsLevelChangeData,
   UserIdleStartData,
   UserIdleEndData,
 } from '../types/websocket.js';
+import { handleConnectionHello } from './handlers/connection.js';
+import { handleFileOpen, handleFileSave } from './handlers/file.js';
+import { handleBufferUpdate } from './handlers/buffer.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,15 +45,6 @@ function sendError(
 }
 
 /**
- * Sends a typed JSON message to the client.
- */
-function send(ws: WsWebSocket, type: string, data: unknown): void {
-  if (ws.readyState === WsWebSocket.OPEN) {
-    ws.send(JSON.stringify({ type, data }));
-  }
-}
-
-/**
  * Creates a stub handler that responds with NOT_IMPLEMENTED.
  */
 function notImplementedHandler(messageType: string): MessageHandler {
@@ -79,65 +67,8 @@ function safeLogAction(actionType: ActionType, data?: Record<string, unknown>): 
   }
 }
 
-// ── Implemented Handlers ─────────────────────────────────────────────────────
+// ── Inline Handlers (to be extracted in T177-T179) ──────────────────────────
 
-/**
- * Handles connection:hello — responds with connection:init.
- */
-function handleConnectionHello(ws: WsWebSocket, _data: unknown, _connectionId: string): void {
-  send(ws, 'connection:init', {
-    sessionId: randomUUID(),
-    capabilities: {
-      chromadb_available: false,
-      gh_cli_available: false,
-    },
-    featureFlags: {
-      observer_enabled: false,
-      practice_mode_enabled: false,
-    },
-  });
-}
-
-/**
- * Handles file:open — reads the file and responds with fs:content.
- */
-async function handleFileOpen(
-  ws: WsWebSocket,
-  data: unknown,
-  _connectionId: string,
-): Promise<void> {
-  const { path: filePath } = data as FileOpenData;
-
-  try {
-    const env = loadEnv();
-    const { content, language } = await readFile(filePath, env.projectDir);
-    const lineCount = content.split('\n').length;
-
-    send(ws, 'fs:content', {
-      path: filePath,
-      content,
-      language,
-      lineCount,
-    });
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error reading file';
-    sendError(ws, 'INTERNAL_ERROR', errorMessage, { path: filePath });
-  }
-}
-
-/**
- * Handles buffer:update — updates the in-memory buffer cache.
- */
-function handleBufferUpdate(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
-  const { path, content, cursorPosition } = data as BufferUpdateData;
-  // The buffer cache expects { line, column } but we receive a single number offset.
-  // Convert the offset to a simple cursor position (line 0, column = offset).
-  updateBuffer(path, content, { line: 0, column: cursorPosition });
-}
-
-/**
- * Handles editor:tab_switch — logs the action.
- */
 function handleEditorTabSwitch(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
   const tabData = data as EditorTabSwitchData;
   safeLogAction('editor_tab_switch', {
@@ -146,9 +77,6 @@ function handleEditorTabSwitch(_ws: WsWebSocket, data: unknown, _connectionId: s
   });
 }
 
-/**
- * Handles editor:selection — logs the action.
- */
 function handleEditorSelection(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
   const selData = data as EditorSelectionData;
   safeLogAction('editor_selection', {
@@ -158,9 +86,6 @@ function handleEditorSelection(_ws: WsWebSocket, data: unknown, _connectionId: s
   });
 }
 
-/**
- * Handles hints:level_change — logs the action.
- */
 function handleHintsLevelChange(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
   const hintsData = data as HintsLevelChangeData;
   safeLogAction('hints_level_change', {
@@ -169,17 +94,11 @@ function handleHintsLevelChange(_ws: WsWebSocket, data: unknown, _connectionId: 
   });
 }
 
-/**
- * Handles user:idle_start — logs the action.
- */
 function handleUserIdleStart(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
   const idleData = data as UserIdleStartData;
   safeLogAction('user_idle_start', { durationMs: idleData.durationMs });
 }
 
-/**
- * Handles user:idle_end — logs the action.
- */
 function handleUserIdleEnd(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
   const idleData = data as UserIdleEndData;
   safeLogAction('user_idle_end', { idleDurationMs: idleData.idleDurationMs });
@@ -189,18 +108,20 @@ function handleUserIdleEnd(_ws: WsWebSocket, data: unknown, _connectionId: strin
 
 /** Map of message type -> handler function. */
 const handlers = new Map<string, MessageHandler>([
-  // Implemented handlers
+  // Core handlers (T173-T175)
   ['connection:hello', handleConnectionHello],
   ['file:open', handleFileOpen],
+  ['file:save', handleFileSave],
   ['buffer:update', handleBufferUpdate],
+
+  // Inline handlers (to be extracted in T177-T179)
   ['editor:tab_switch', handleEditorTabSwitch],
   ['editor:selection', handleEditorSelection],
   ['hints:level_change', handleHintsLevelChange],
   ['user:idle_start', handleUserIdleStart],
   ['user:idle_end', handleUserIdleEnd],
 
-  // Stub handlers (NOT_IMPLEMENTED until T173-T179)
-  ['file:save', notImplementedHandler('file:save')],
+  // Stub handlers (NOT_IMPLEMENTED — later phases)
   ['file:close', notImplementedHandler('file:close')],
   ['file:create', notImplementedHandler('file:create')],
   ['file:delete', notImplementedHandler('file:delete')],

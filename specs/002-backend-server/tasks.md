@@ -360,10 +360,10 @@
 - [x] T170 [GIT] Commit: add WebSocket server
 - [x] T171 [US5] Create src/websocket/router.ts with message type dispatcher (use devs:typescript-dev agent)
 - [x] T172 [GIT] Commit: add message router
-- [ ] T173 [P] [US5] Create src/websocket/handlers/connection.ts for connection:hello (use devs:typescript-dev agent)
-- [ ] T174 [P] [US5] Create src/websocket/handlers/file.ts for file:open, file:save (use devs:typescript-dev agent)
-- [ ] T175 [P] [US5] Create src/websocket/handlers/buffer.ts for buffer:update (use devs:typescript-dev agent)
-- [ ] T176 [GIT] Commit: add core WebSocket handlers
+- [x] T173 [P] [US5] Create src/websocket/handlers/connection.ts for connection:hello (use devs:typescript-dev agent)
+- [x] T174 [P] [US5] Create src/websocket/handlers/file.ts for file:open, file:save (use devs:typescript-dev agent)
+- [x] T175 [P] [US5] Create src/websocket/handlers/buffer.ts for buffer:update (use devs:typescript-dev agent)
+- [x] T176 [GIT] Commit: add core WebSocket handlers
 - [ ] T177 [P] [US5] Create src/websocket/handlers/editor.ts for editor:tab_switch (use devs:typescript-dev agent)
 - [ ] T178 [P] [US5] Create src/websocket/handlers/hints.ts for hints:level_change (use devs:typescript-dev agent)
 - [ ] T179 [P] [US5] Create src/websocket/handlers/user.ts for user:idle_start, user:idle_end (use devs:typescript-dev agent)
