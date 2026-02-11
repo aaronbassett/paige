@@ -291,12 +291,12 @@
 ### Retro Initialization
 
 - [x] T137 [US4] Create retro/P6.md for this phase
-- [ ] T138 [GIT] Commit: initialize phase 6 retro
+- [x] T138 [GIT] Commit: initialize phase 6 retro
 
 ### Tests for User Story 4
 
-- [ ] T139 [P] [US4] Integration test for action logging in tests/integration/action-log.test.ts (use devs:typescript-dev agent)
-- [ ] T140 [P] [US4] Integration test for buffer summary logging in tests/integration/buffer-summary.test.ts (use devs:typescript-dev agent)
+- [x] T139 [P] [US4] Integration test for action logging in tests/integration/action-log.test.ts (use devs:typescript-dev agent)
+- [x] T140 [P] [US4] Integration test for buffer summary logging in tests/integration/buffer-summary.test.ts (use devs:typescript-dev agent)
 - [ ] T141 [GIT] Commit: add US4 tests (failing)
 
 ### Implementation for User Story 4
