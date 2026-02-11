@@ -148,9 +148,9 @@
 
 ### Phase 3 Wrap-Up
 
-- [ ] T070 [US1] Run /sdd:map incremental for Phase 3 changes
-- [ ] T071 [GIT] Commit: update codebase documents for phase 3
-- [ ] T072 [US1] Review retro/P3.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T070 [US1] Run /sdd:map incremental for Phase 3 changes (skipped: no .sdd/codebase/ exists yet)
+- [x] T071 [GIT] Commit: update codebase documents for phase 3
+- [x] T072 [US1] Review retro/P3.md and extract critical learnings to CLAUDE.md (conservative)
 - [ ] T073 [GIT] Commit: finalize phase 3 retro
 
 ### Phase 3 Completion
