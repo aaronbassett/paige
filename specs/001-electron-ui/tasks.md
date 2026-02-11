@@ -837,15 +837,15 @@ Phase 10 (Polish)
 
 - [x] T406 [US8] Run /sdd:map incremental for Phase 7 changes (skipped — no new deps or structural changes, only new components following existing patterns)
 - [x] T407 [GIT] Commit: update codebase documents for phase 7
-- [ ] T408 Review retro/P7.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T409 [GIT] Commit: finalize phase 7 retro
+- [x] T408 Review retro/P7.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T409 [GIT] Commit: finalize phase 7 retro
 
 ### Phase Completion
 
-- [ ] T410 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T411 [GIT] Create/update PR to main with Phase 7 summary
-- [ ] T412 [GIT] Verify all CI checks pass
-- [ ] T413 [GIT] Report PR ready status
+- [x] T410 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T411 [GIT] Create/update PR to main with Phase 7 summary
+- [x] T412 [GIT] Verify all CI checks pass (no CI configured — lint + typecheck + 326 tests all pass locally)
+- [x] T413 [GIT] Report PR ready status
 
 ---
 
