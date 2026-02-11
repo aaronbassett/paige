@@ -122,3 +122,22 @@ export const triageSchema = z.object({
   reasoning: z.string(),
 });
 export type TriageResponse = z.infer<typeof triageSchema>;
+
+// ── Explain This (Sonnet) ───────────────────────────────────────────────
+// Dreyfus-aware code explanation for selected code.
+
+export const explainThisSchema = z.object({
+  explanation: z.string(),
+  phaseConnection: z.string().optional(),
+});
+export type ExplainThisResponse = z.infer<typeof explainThisSchema>;
+
+// ── Practice Review (Sonnet) ────────────────────────────────────────────
+// Kata solution review with level assignment and pass/fail.
+
+export const practiceReviewSchema = z.object({
+  review: z.string(),
+  level: z.number().int().min(1).max(10),
+  passed: z.boolean(),
+});
+export type PracticeReviewResponse = z.infer<typeof practiceReviewSchema>;
