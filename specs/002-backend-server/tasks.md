@@ -230,12 +230,12 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T108 [GIT] Verify working tree is clean before starting Phase 5
-- [ ] T109 [GIT] Pull and rebase on origin/main if needed
+- [x] T108 [GIT] Verify working tree is clean before starting Phase 5
+- [x] T109 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T110 [US3] Create retro/P5.md for this phase
+- [x] T110 [US3] Create retro/P5.md for this phase
 - [ ] T111 [GIT] Commit: initialize phase 5 retro
 
 ### Tests for User Story 3
