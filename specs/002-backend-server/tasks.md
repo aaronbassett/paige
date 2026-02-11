@@ -666,17 +666,17 @@
 
 ### Phase 12 Wrap-Up
 
-- [ ] T336 [US10] Run /sdd:map incremental for Phase 12 changes
-- [ ] T337 [GIT] Commit: update codebase documents for phase 12
-- [ ] T338 [US10] Review retro/P12.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T339 [GIT] Commit: finalize phase 12 retro
+- [x] T336 [US10] Run /sdd:map incremental for Phase 12 changes
+- [x] T337 [GIT] Commit: update codebase documents for phase 12
+- [x] T338 [US10] Review retro/P12.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T339 [GIT] Commit: finalize phase 12 retro
 
 ### Phase 12 Completion
 
-- [ ] T340 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T341 [GIT] Create/update PR to main with Phase 12 summary
-- [ ] T342 [GIT] Verify all CI checks pass
-- [ ] T343 [GIT] Report PR ready status
+- [x] T340 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T341 [GIT] Create/update PR to main with Phase 12 summary
+- [x] T342 [GIT] Verify all CI checks pass
+- [x] T343 [GIT] Report PR ready status
 
 **Checkpoint**: Observer system complete
 
