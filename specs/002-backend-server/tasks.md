@@ -319,14 +319,14 @@
 - [x] T154 [US4] Run /sdd:map incremental for Phase 6 changes (skipped: no .sdd/codebase/ exists yet)
 - [x] T155 [GIT] Commit: update codebase documents for phase 6
 - [x] T156 [US4] Review retro/P6.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T157 [GIT] Commit: finalize phase 6 retro
+- [x] T157 [GIT] Commit: finalize phase 6 retro
 
 ### Phase 6 Completion
 
-- [ ] T158 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T159 [GIT] Create/update PR to main with Phase 6 summary
-- [ ] T160 [GIT] Verify all CI checks pass
-- [ ] T161 [GIT] Report PR ready status
+- [x] T158 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T159 [GIT] Create/update PR to main with Phase 6 summary
+- [x] T160 [GIT] Verify all CI checks pass (no CI configured)
+- [x] T161 [GIT] Report PR ready status
 
 **Checkpoint**: Action logging and observability complete
 
