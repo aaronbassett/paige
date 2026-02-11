@@ -27,6 +27,14 @@
     "clean": "rm -rf dist/ node_modules/",
     "prepare": "husky"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "better-sqlite3": "^12.6.2",
+    "chokidar": "^5.0.0",
+    "chromadb": "^3.3.0",
+    "kysely": "^0.28.11",
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
+  }
 }
