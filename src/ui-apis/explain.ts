@@ -81,7 +81,7 @@ export async function handleExplainThis(
 ): Promise<ExplainResult> {
   const db = getDatabase();
   if (db === null) {
-    throw new Error('Database not initialised');
+    throw new Error('Database not initialized. Cannot handle explain request.');
   }
 
   // Load Dreyfus assessments for prompt calibration

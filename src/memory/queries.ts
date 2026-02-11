@@ -26,7 +26,14 @@ export interface MemoryResult {
   distance: number;
 }
 
-/** Store memories in ChromaDB. Returns { added: N } or { added: 0 } if unavailable. */
+/**
+ * Stores memory documents in ChromaDB for cross-session semantic retrieval.
+ * Degrades gracefully: returns `{ added: 0 }` if ChromaDB is unavailable.
+ * @param memories - Documents to store with tags and importance
+ * @param sessionId - Session that produced these memories
+ * @param project - Project directory used as a ChromaDB metadata filter
+ * @returns The count of memories successfully added
+ */
 export function addMemories(
   memories: MemoryInput[],
   sessionId: string,
@@ -61,7 +68,14 @@ export function addMemories(
     });
 }
 
-/** Semantic search for memories. Returns [] if ChromaDB is unavailable. */
+/**
+ * Performs semantic search against ChromaDB memories.
+ * Degrades gracefully: returns `[]` if ChromaDB is unavailable.
+ * @param params.queryText - Natural language query for semantic matching
+ * @param params.nResults - Max results to return (default 10)
+ * @param params.project - Optional project directory filter
+ * @returns Matching memories sorted by semantic distance
+ */
 export function queryMemories(params: {
   queryText: string;
   nResults?: number;

@@ -231,8 +231,13 @@ export class Observer {
         signal: result.signal,
         confidence: result.confidence,
       });
-    } catch {
+    } catch (err: unknown) {
       // Triage failure: Observer continues operating (spec scenario 10)
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[observer] Triage evaluation failed (continuing):',
+        err instanceof Error ? err.message : err,
+      );
     }
   }
 }

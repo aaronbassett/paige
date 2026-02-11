@@ -812,13 +812,13 @@
 ### Retro Initialization
 
 - [x] T408 Create retro/P15.md for this phase
-- [ ] T409 [GIT] Commit: initialize phase 15 retro
+- [x] T409 [GIT] Commit: initialize phase 15 retro
 
 ### Polish Tasks
 
-- [ ] T410 [P] Run quickstart.md validation (verify all setup steps work)
-- [ ] T411 [P] Add missing JSDoc comments to public API functions (use devs:typescript-dev agent)
-- [ ] T412 [P] Review all error messages for clarity and actionability
+- [x] T410 [P] Run quickstart.md validation (verify all setup steps work)
+- [x] T411 [P] Add missing JSDoc comments to public API functions (use devs:typescript-dev agent)
+- [x] T412 [P] Review all error messages for clarity and actionability
 - [ ] T413 [GIT] Commit: documentation and error message polish
 - [ ] T414 [P] Review logging levels (info vs warn vs error)
 - [ ] T415 [P] Add startup banner with ASCII art and version info

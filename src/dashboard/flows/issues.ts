@@ -27,7 +27,7 @@ interface GhIssue {
 export async function assembleIssues(sessionId: number): Promise<DashboardIssuesData> {
   const db = getDatabase();
   if (db === null) {
-    throw new Error('Database not initialised');
+    throw new Error('Database not initialized. Cannot load dashboard issues.');
   }
 
   // Fetch open GitHub issues via CLI

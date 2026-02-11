@@ -59,7 +59,12 @@ const MEMORY_FILTER_SYSTEM_PROMPT = `You are a memory relevance filter for an AI
 
 // ── Pipeline ────────────────────────────────────────────────────────────────
 
-/** Runs the full coaching pipeline: memories -> coach agent -> store in SQLite -> broadcast. */
+/**
+ * Runs the full coaching pipeline: retrieves memories, calls the coach agent,
+ * stores the phased plan in SQLite, and broadcasts `coaching:plan_ready` via WebSocket.
+ * @param input - Plan text, issue summary, and optional issue number
+ * @returns Plan metadata on success, or an `{ error }` object on failure
+ */
 export async function runCoachingPipeline(input: PipelineInput): Promise<PipelineResult> {
   // Step 1: Get active session
   const sessionId = getActiveSessionId();

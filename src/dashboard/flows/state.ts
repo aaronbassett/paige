@@ -20,7 +20,7 @@ import { getApiCallCountByPeriod, getApiCostByPeriod } from '../../logger/api-lo
 export async function assembleState(statsPeriod: StatsPeriod): Promise<DashboardStateData> {
   const db = getDatabase();
   if (db === null) {
-    throw new Error('Database not initialised');
+    throw new Error('Database not initialized. Cannot assemble dashboard state.');
   }
 
   // Load Dreyfus assessments and map to entry format

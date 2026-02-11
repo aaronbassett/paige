@@ -16,7 +16,7 @@ import { getDatabase } from '../../database/db.js';
 export async function assembleChallenges(): Promise<DashboardChallengesData> {
   const db = getDatabase();
   if (db === null) {
-    throw new Error('Database not initialised');
+    throw new Error('Database not initialized. Cannot load dashboard challenges.');
   }
 
   // Get all katas with their gap's topic via a join

@@ -89,9 +89,10 @@ export function validatePath(filePath: string, projectDir: string): string {
 
 /**
  * Reads a file from within PROJECT_DIR.
- * Returns content and detected language identifier based on extension.
  * @param filePath - Path to read (relative to projectDir or absolute within it)
  * @param projectDir - The root project directory boundary
+ * @returns File content and detected language identifier based on extension
+ * @throws {Error} If path resolves outside projectDir or file does not exist
  */
 export async function readFile(filePath: string, projectDir: string): Promise<FileReadResult> {
   const resolvedPath = validatePath(filePath, projectDir);
@@ -103,10 +104,11 @@ export async function readFile(filePath: string, projectDir: string): Promise<Fi
 
 /**
  * Writes content to a file within PROJECT_DIR (Electron-only).
- * Updates buffer cache to dirty: false after successful write.
+ * Creates parent directories if needed and marks the buffer clean after write.
  * @param filePath - Path to write (relative to projectDir or absolute within it)
  * @param content - File content to write
  * @param projectDir - The root project directory boundary
+ * @throws {Error} If path resolves outside projectDir
  */
 export async function writeFile(
   filePath: string,
@@ -121,9 +123,10 @@ export async function writeFile(
 
 /**
  * Computes a unified diff between saved file on disk and buffer content.
- * Returns empty string if buffer is clean or missing.
  * @param filePath - Path to diff (relative to projectDir or absolute within it)
  * @param projectDir - The root project directory boundary
+ * @returns Unified diff string, or empty string if buffer is clean or missing
+ * @throws {Error} If path resolves outside projectDir
  */
 export async function getDiff(filePath: string, projectDir: string): Promise<string> {
   const resolvedPath = validatePath(filePath, projectDir);
