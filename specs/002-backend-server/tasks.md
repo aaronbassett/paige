@@ -749,13 +749,13 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T375 [GIT] Verify working tree is clean before starting Phase 14
-- [ ] T376 [GIT] Pull and rebase on origin/main if needed
+- [x] T375 [GIT] Verify working tree is clean before starting Phase 14
+- [x] T376 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T377 [US12] Create retro/P14.md for this phase
-- [ ] T378 [GIT] Commit: initialize phase 14 retro
+- [x] T377 [US12] Create retro/P14.md for this phase
+- [x] T378 [GIT] Commit: initialize phase 14 retro
 
 ### Tests for User Story 12
 
