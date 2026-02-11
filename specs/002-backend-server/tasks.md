@@ -68,12 +68,12 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T029 [GIT] Verify working tree is clean before starting Phase 2
-- [ ] T030 [GIT] Pull and rebase on origin/main if needed
+- [x] T029 [GIT] Verify working tree is clean before starting Phase 2
+- [x] T030 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T031 Create retro/P2.md for this phase
+- [x] T031 Create retro/P2.md for this phase
 - [ ] T032 [GIT] Commit: initialize phase 2 retro
 
 ### Foundational Infrastructure
