@@ -605,10 +605,10 @@
 
 ### Phase 11 Wrap-Up
 
-- [ ] T303 [US9] Run /sdd:map incremental for Phase 11 changes
-- [ ] T304 [GIT] Commit: update codebase documents for phase 11
-- [ ] T305 [US9] Review retro/P11.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T306 [GIT] Commit: finalize phase 11 retro
+- [x] T303 [US9] Run /sdd:map incremental for Phase 11 changes
+- [x] T304 [GIT] Commit: update codebase documents for phase 11
+- [x] T305 [US9] Review retro/P11.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T306 [GIT] Commit: finalize phase 11 retro
 
 ### Phase 11 Completion
 
