@@ -74,30 +74,30 @@
 ### Retro Initialization
 
 - [x] T031 Create retro/P2.md for this phase
-- [ ] T032 [GIT] Commit: initialize phase 2 retro
+- [x] T032 [GIT] Commit: initialize phase 2 retro
 
 ### Foundational Infrastructure
 
-- [ ] T033 Create src/types/domain.ts with core type definitions (Session, Plan, Phase, etc.) (use devs:typescript-dev agent)
-- [ ] T034 [GIT] Commit: add domain types
-- [ ] T035 [P] Create src/config/env.ts with environment validation (use devs:typescript-dev agent)
-- [ ] T036 [GIT] Commit: add environment config
-- [ ] T037 [P] Create src/database/db.ts with Kysely setup and WAL mode (use devs:typescript-dev agent)
-- [ ] T038 [P] Create src/database/migrations/ directory with all 10 table CREATE TABLE IF NOT EXISTS scripts (use devs:typescript-dev agent)
-- [ ] T039 [GIT] Commit: add database setup and migrations
-- [ ] T040 [P] Create src/logger/action-log.ts with logAction function and EventEmitter (use devs:typescript-dev agent)
-- [ ] T041 [P] Create src/logger/api-log.ts with logApiCall function and cost tracking (use devs:typescript-dev agent)
-- [ ] T042 [GIT] Commit: add logging infrastructure
-- [ ] T043 Create src/types/websocket.ts with 55 WebSocket message type definitions from contracts/websocket.json (use devs:typescript-dev agent)
-- [ ] T044 [GIT] Commit: add WebSocket types
-- [ ] T045 Create src/types/mcp.ts with MCP tool parameter/return types from contracts/mcp-tools.json (use devs:typescript-dev agent)
-- [ ] T046 [GIT] Commit: add MCP types
+- [x] T033 Create src/types/domain.ts with core type definitions (Session, Plan, Phase, etc.) (use devs:typescript-dev agent)
+- [x] T034 [GIT] Commit: add domain types
+- [x] T035 [P] Create src/config/env.ts with environment validation (use devs:typescript-dev agent)
+- [x] T036 [GIT] Commit: add environment config
+- [x] T037 [P] Create src/database/db.ts with Kysely setup and WAL mode (use devs:typescript-dev agent)
+- [x] T038 [P] Create src/database/migrations/ directory with all 10 table CREATE TABLE IF NOT EXISTS scripts (use devs:typescript-dev agent)
+- [x] T039 [GIT] Commit: add database setup and migrations
+- [x] T040 [P] Create src/logger/action-log.ts with logAction function and EventEmitter (use devs:typescript-dev agent)
+- [x] T041 [P] Create src/logger/api-log.ts with logApiCall function and cost tracking (use devs:typescript-dev agent)
+- [x] T042 [GIT] Commit: add logging infrastructure
+- [x] T043 Create src/types/websocket.ts with 55 WebSocket message type definitions from contracts/websocket.json (use devs:typescript-dev agent)
+- [x] T044 [GIT] Commit: add WebSocket types
+- [x] T045 Create src/types/mcp.ts with MCP tool parameter/return types from contracts/mcp-tools.json (use devs:typescript-dev agent)
+- [x] T046 [GIT] Commit: add MCP types
 
 ### Phase 2 Wrap-Up
 
-- [ ] T047 Run /sdd:map incremental for Phase 2 changes
-- [ ] T048 [GIT] Commit: update codebase documents for phase 2
-- [ ] T049 Review retro/P2.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T047 Run /sdd:map incremental for Phase 2 changes
+- [x] T048 [GIT] Commit: update codebase documents for phase 2
+- [x] T049 Review retro/P2.md and extract critical learnings to CLAUDE.md (conservative)
 - [ ] T050 [GIT] Commit: finalize phase 2 retro
 
 ### Phase 2 Completion
