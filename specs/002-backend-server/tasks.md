@@ -461,13 +461,13 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T227 [GIT] Verify working tree is clean before starting Phase 9
-- [ ] T228 [GIT] Pull and rebase on origin/main if needed
+- [x] T227 [GIT] Verify working tree is clean before starting Phase 9
+- [x] T228 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T229 [US7] Create retro/P9.md for this phase
-- [ ] T230 [GIT] Commit: initialize phase 9 retro
+- [x] T229 [US7] Create retro/P9.md for this phase
+- [x] T230 [GIT] Commit: initialize phase 9 retro
 
 ### Tests for User Story 7
 
