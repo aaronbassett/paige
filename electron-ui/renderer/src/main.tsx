@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import '@xterm/xterm/css/xterm.css';
 import './styles/global.css';
 import './styles/file-explorer.css';
 import App from './App';

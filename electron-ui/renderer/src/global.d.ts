@@ -13,6 +13,8 @@ import 'react';
 interface PaigeAPI {
   /** The operating system platform (e.g. 'darwin', 'linux', 'win32') */
   readonly platform: NodeJS.Platform;
+  /** Terminal IPC bridge for PTY communication (see types/window.d.ts) */
+  terminal: PaigeTerminalAPI;
 }
 
 declare global {
