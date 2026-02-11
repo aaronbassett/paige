@@ -767,14 +767,14 @@
 
 - [x] T382 [US12] Add IssueSuitability schema to src/api-client/schemas.ts (use devs:typescript-dev agent)
 - [x] T383 [GIT] Commit: add issue suitability schema
-- [ ] T384 [US12] Create src/dashboard/handler.ts with dashboard:request dispatcher (use devs:typescript-dev agent)
-- [ ] T385 [GIT] Commit: add dashboard dispatcher
-- [ ] T386 [P] [US12] Create src/dashboard/flows/state.ts with Dreyfus + stats assembly (use devs:typescript-dev agent)
-- [ ] T387 [P] [US12] Create src/dashboard/flows/issues.ts with GitHub fetch and Haiku suitability assessment (use devs:typescript-dev agent)
-- [ ] T388 [GIT] Commit: add dashboard flows (state, issues)
-- [ ] T389 [P] [US12] Create src/dashboard/flows/challenges.ts with active kata loading (use devs:typescript-dev agent)
-- [ ] T390 [P] [US12] Create src/dashboard/flows/learning.ts with web search for knowledge gaps (use devs:typescript-dev agent)
-- [ ] T391 [GIT] Commit: add dashboard flows (challenges, learning)
+- [x] T384 [US12] Create src/dashboard/handler.ts with dashboard:request dispatcher (use devs:typescript-dev agent)
+- [x] T385 [GIT] Commit: add dashboard dispatcher
+- [x] T386 [P] [US12] Create src/dashboard/flows/state.ts with Dreyfus + stats assembly (use devs:typescript-dev agent)
+- [x] T387 [P] [US12] Create src/dashboard/flows/issues.ts with GitHub fetch and Haiku suitability assessment (use devs:typescript-dev agent)
+- [x] T388 [GIT] Commit: add dashboard flows (state, issues)
+- [x] T389 [P] [US12] Create src/dashboard/flows/challenges.ts with active kata loading (use devs:typescript-dev agent)
+- [x] T390 [P] [US12] Create src/dashboard/flows/learning.ts with web search for knowledge gaps (use devs:typescript-dev agent)
+- [x] T391 [GIT] Commit: add dashboard flows (challenges, learning)
 - [ ] T392 [US12] Wire dashboard:request handler in src/websocket/handlers/dashboard.ts (use devs:typescript-dev agent)
 - [ ] T393 [GIT] Commit: wire dashboard handler
 - [ ] T394 [US12] Wire dashboard:refresh_issues handler in src/websocket/handlers/dashboard.ts (use devs:typescript-dev agent)
