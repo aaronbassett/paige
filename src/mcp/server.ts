@@ -6,6 +6,7 @@ import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 
 import { registerLifecycleTools } from './tools/lifecycle.js';
 import { registerReadTools } from './tools/read.js';
@@ -77,7 +78,11 @@ export function createMcpServer(_httpServer: Server): McpServerHandle {
     registerUiTools(mcpServer);
     registerCoachingTools(mcpServer);
 
-    await mcpServer.connect(transport);
+    // Cast required: StreamableHTTPServerTransport's onclose getter returns
+    // (() => void) | undefined, which is incompatible with Transport's
+    // onclose?: () => void under exactOptionalPropertyTypes. This is an
+    // upstream MCP SDK type issue.
+    await mcpServer.connect(transport as Transport);
 
     // Track the transport by session ID once assigned
     const sid = transport.sessionId;
