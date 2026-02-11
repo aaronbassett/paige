@@ -1,4 +1,4 @@
-import type { Kysely } from 'kysely';
+import { sql, type Kysely } from 'kysely';
 import type { ApiCallType, DatabaseTables } from '../types/domain.js';
 
 // ── Pricing Table ──────────────────────────────────────────────────────────────
@@ -67,19 +67,42 @@ export async function logApiCall(db: Kysely<DatabaseTables>, entry: ApiCallInput
  * Returns the total API call count within the given time period.
  * Period: '7d' = last 7 days, '30d' = last 30 days, 'all' = no filter.
  */
-export function getApiCallCountByPeriod(
-  _db: Kysely<DatabaseTables>,
-  _period: string,
+export async function getApiCallCountByPeriod(
+  db: Kysely<DatabaseTables>,
+  period: string,
 ): Promise<number> {
-  return Promise.reject(new Error('Not implemented'));
+  let query = db
+    .selectFrom('api_call_log')
+    .select([sql<number>`COALESCE(COUNT(*), 0)`.as('count')]);
+
+  if (period !== 'all') {
+    const interval = period === '7d' ? '-7 days' : '-30 days';
+    query = query.where('created_at', '>=', sql<string>`datetime('now', ${interval})`);
+  }
+
+  const result = await query.executeTakeFirstOrThrow();
+  return Number(result.count);
 }
 
 /**
  * Returns the total estimated cost (USD) within the given time period.
  * Period: '7d' = last 7 days, '30d' = last 30 days, 'all' = no filter.
  */
-export function getApiCostByPeriod(_db: Kysely<DatabaseTables>, _period: string): Promise<number> {
-  return Promise.reject(new Error('Not implemented'));
+export async function getApiCostByPeriod(
+  db: Kysely<DatabaseTables>,
+  period: string,
+): Promise<number> {
+  let query = db
+    .selectFrom('api_call_log')
+    .select([sql<number>`COALESCE(SUM(cost_estimate), 0)`.as('totalCost')]);
+
+  if (period !== 'all') {
+    const interval = period === '7d' ? '-7 days' : '-30 days';
+    query = query.where('created_at', '>=', sql<string>`datetime('now', ${interval})`);
+  }
+
+  const result = await query.executeTakeFirstOrThrow();
+  return Number(result.totalCost);
 }
 
 // ── Session Cost Query ─────────────────────────────────────────────────────────

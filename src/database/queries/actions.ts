@@ -87,16 +87,32 @@ export interface ApiCallStats {
  * Returns the count of distinct sessions within the given time period.
  * Period: '7d' = last 7 days, '30d' = last 30 days, 'all' = no filter.
  */
-export function getSessionCountByPeriod(_db: AppDatabase, _period: string): Promise<number> {
-  return Promise.reject(new Error('Not implemented'));
+export async function getSessionCountByPeriod(db: AppDatabase, period: string): Promise<number> {
+  let query = db.selectFrom('sessions').select([sql<number>`COALESCE(COUNT(*), 0)`.as('count')]);
+
+  if (period !== 'all') {
+    const interval = period === '7d' ? '-7 days' : '-30 days';
+    query = query.where('started_at', '>=', sql<string>`datetime('now', ${interval})`);
+  }
+
+  const result = await query.executeTakeFirstOrThrow();
+  return Number(result.count);
 }
 
 /**
  * Returns the total action count within the given time period.
  * Period: '7d' = last 7 days, '30d' = last 30 days, 'all' = no filter.
  */
-export function getActionCountByPeriod(_db: AppDatabase, _period: string): Promise<number> {
-  return Promise.reject(new Error('Not implemented'));
+export async function getActionCountByPeriod(db: AppDatabase, period: string): Promise<number> {
+  let query = db.selectFrom('action_log').select([sql<number>`COALESCE(COUNT(*), 0)`.as('count')]);
+
+  if (period !== 'all') {
+    const interval = period === '7d' ? '-7 days' : '-30 days';
+    query = query.where('created_at', '>=', sql<string>`datetime('now', ${interval})`);
+  }
+
+  const result = await query.executeTakeFirstOrThrow();
+  return Number(result.count);
 }
 
 /**
