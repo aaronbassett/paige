@@ -859,9 +859,9 @@ Phase 10 (Polish)
 
 ### Phase Start
 
-- [ ] T414 [GIT] Verify working tree is clean before starting Phase 8
-- [ ] T415 [GIT] Pull and rebase on origin/main if needed
-- [ ] T416 [US9] Create retro/P8.md for this phase
+- [x] T414 [GIT] Verify working tree is clean before starting Phase 8
+- [x] T415 [GIT] Pull and rebase on origin/main if needed
+- [x] T416 [US9] Create retro/P8.md for this phase
 - [ ] T417 [GIT] Commit: initialize phase 8 retro
 
 ### Comment Balloon Component
