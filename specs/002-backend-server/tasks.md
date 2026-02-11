@@ -377,10 +377,10 @@
 
 ### Phase 7 Wrap-Up
 
-- [ ] T187 [US5] Run /sdd:map incremental for Phase 7 changes
-- [ ] T188 [GIT] Commit: update codebase documents for phase 7
-- [ ] T189 [US5] Review retro/P7.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T190 [GIT] Commit: finalize phase 7 retro
+- [x] T187 [US5] Run /sdd:map incremental for Phase 7 changes (skipped: no .sdd/codebase/ exists yet)
+- [x] T188 [GIT] Commit: update codebase documents for phase 7
+- [x] T189 [US5] Review retro/P7.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T190 [GIT] Commit: finalize phase 7 retro
 
 ### Phase 7 Completion
 
