@@ -25,7 +25,10 @@ import { EditorTabs } from '../components/Editor/EditorTabs';
 import { StatusBar } from '../components/Editor/StatusBar';
 import { FloatingExplainButton } from '../components/Editor/FloatingExplainButton';
 import type { ExplainPayload } from '../components/Editor/FloatingExplainButton';
+import { FileTree } from '../components/FileExplorer/FileTree';
 import { useFileOperations } from '../hooks/useFileOperations';
+import { useFileTree } from '../hooks/useFileTree';
+import { useFileExplorerHints } from '../hooks/useFileExplorerHints';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { editorState } from '../services/editor-state';
 
@@ -154,6 +157,15 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
   // Wire file operations (Cmd+S, Cmd+W, WebSocket flows)
   useFileOperations();
 
+  // File tree state from WebSocket
+  const { tree, openFile } = useFileTree();
+
+  // File explorer hint glows
+  const { hints: fileHints, autoExpandPaths } = useFileExplorerHints();
+
+  // Convert ReadonlyMap to Map for FileTree prop compatibility
+  const hintsMap = fileHints instanceof Map ? fileHints : new Map(fileHints);
+
   // WebSocket send for review and explain
   const { send } = useWebSocket();
 
@@ -230,7 +242,17 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
             {leftCollapsed ? '\u25B6' : '\u25C0'}
           </button>
         </div>
-        {!leftCollapsed && <div style={panelLabelStyle}>File Explorer</div>}
+        {!leftCollapsed && (
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <FileTree
+              tree={tree}
+              hints={hintsMap}
+              onFileClick={openFile}
+              activeFilePath={activeTabPath}
+              autoExpandPaths={autoExpandPaths}
+            />
+          </div>
+        )}
       </motion.div>
 
       {/* Center: Editor + Status Bar + Terminal */}
