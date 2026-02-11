@@ -779,8 +779,8 @@
 - [x] T393 [GIT] Commit: wire dashboard handler
 - [x] T394 [US12] Wire dashboard:refresh_issues handler in src/websocket/handlers/dashboard.ts (use devs:typescript-dev agent)
 - [x] T395 [GIT] Commit: wire dashboard refresh handler
-- [ ] T396 [US12] Verify US12 tests now pass
-- [ ] T397 [GIT] Commit: verify US12 complete
+- [x] T396 [US12] Verify US12 tests now pass
+- [x] T397 [GIT] Commit: verify US12 complete
 
 ### Phase 14 Wrap-Up
 
