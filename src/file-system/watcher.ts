@@ -83,7 +83,7 @@ export function createFileWatcher(projectDir: string): FileWatcher {
     });
 
     // Swallow EACCES errors on inaccessible subdirectories (e.g. /tmp/systemd-*)
-    watcher.on('error', (error: Error) => {
+    watcher.on('error', (error: unknown) => {
       const nodeErr = error as NodeJS.ErrnoException;
       if (nodeErr.code === 'EACCES') return;
       emitter.emit('error', error);

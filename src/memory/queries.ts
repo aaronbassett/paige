@@ -11,6 +11,7 @@ export interface MemoryInput {
 
 /** Metadata stored alongside each memory in ChromaDB. */
 export interface MemoryMetadata {
+  [key: string]: string;
   session_id: string;
   project: string;
   created_at: string;

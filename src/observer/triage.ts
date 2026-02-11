@@ -16,7 +16,11 @@ export interface TriageResult {
 
 export interface TriageContext {
   sessionId: number;
-  recentActions: Array<{ actionType: string; data?: Record<string, unknown>; createdAt: string }>;
+  recentActions: Array<{
+    actionType: string;
+    data?: Record<string, unknown> | undefined;
+    createdAt: string;
+  }>;
   activePhase: { number: number; title: string; description: string } | null;
   openFiles: string[];
 }
