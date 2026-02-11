@@ -6,6 +6,16 @@ import { getDatabase } from '../../database/db.js';
 import { createSession } from '../../database/queries/sessions.js';
 import { getActiveSessionId, setActiveSessionId, clearActiveSessionId } from '../session.js';
 import { runSessionWrapUp } from '../../coaching/wrap-up.js';
+import { Observer } from '../../observer/observer.js';
+
+// ── Active Observer ────────────────────────────────────────────────────────────
+
+let activeObserver: Observer | null = null;
+
+/** Returns the active Observer instance, or null if no session is running. */
+export function getActiveObserver(): Observer | null {
+  return activeObserver;
+}
 
 /** Registers lifecycle tools (paige_start_session, paige_end_session) on the MCP server. */
 export function registerLifecycleTools(server: McpServer): void {
@@ -46,6 +56,10 @@ export function registerLifecycleTools(server: McpServer): void {
 
       setActiveSessionId(session.id);
 
+      // Create and start the Observer for this session
+      activeObserver = new Observer({ sessionId: session.id });
+      activeObserver.start();
+
       return {
         content: [
           {
@@ -74,6 +88,12 @@ export function registerLifecycleTools(server: McpServer): void {
     }
 
     try {
+      // Stop the Observer before wrap-up
+      if (activeObserver !== null) {
+        activeObserver.stop();
+        activeObserver = null;
+      }
+
       const result = await runSessionWrapUp(sessionId);
 
       clearActiveSessionId();
@@ -94,6 +114,12 @@ export function registerLifecycleTools(server: McpServer): void {
         ],
       };
     } catch (error: unknown) {
+      // Ensure Observer is stopped on error
+      if (activeObserver !== null) {
+        activeObserver.stop();
+        activeObserver = null;
+      }
+
       clearActiveSessionId();
 
       const message = error instanceof Error ? error.message : String(error);
