@@ -408,9 +408,15 @@ interface WebSocketMessage {
   id?: string;        // Optional correlation ID for request/response pairs
   timestamp: number;  // Unix ms
 }
+
+// Period type for dashboard stats
+type Period = "7d" | "30d" | "all";
+// "7d" = last 7 days (displayed as "This Week" in UI)
+// "30d" = last 30 days (displayed as "This Month" in UI)
+// "all" = all time (displayed as "All Time" in UI)
 ```
 
-#### Server → Client Messages (27 types)
+#### Server → Client Messages (32 types)
 
 **Connection**
 
@@ -425,7 +431,7 @@ interface WebSocketMessage {
 |------|---------|-------------|
 | `dashboard:dreyfus` | `{ skillAreas: [{ name, stage, score }], overallStage }` | Dreyfus radar data |
 | `dashboard:stats` | `{ period, stats: [{ key, value, label }] }` | Stats for requested period |
-| `dashboard:issues` | `{ issues: [{ number, title, description, labels, age }] }` | GitHub issues list |
+| `dashboard:issues` | `{ issues: [{ number, title, description, labels: [{ name, color }], age, url, readiness?, confidence? }] }` | GitHub issues list with full metadata |
 | `dashboard:in_progress` | `{ sessions: [{ id, issueTitle, phase, totalPhases, lastActive }] }` | Resumable sessions |
 | `dashboard:challenges` | `{ challenges: [{ id, title, difficulty, skillArea }] }` | Practice challenges |
 | `dashboard:materials` | `{ materials: [{ id, title, type, skillArea, url }] }` | Learning materials |
@@ -476,9 +482,25 @@ interface WebSocketMessage {
 | Type | Payload | Description |
 |------|---------|-------------|
 | `observer:nudge` | `{ signal, confidence, context }` | Nudge for PTY injection |
-| `observer:status` | `{ state }` | Observer state change |
+| `observer:status` | `{ active, muted, lastEvaluation }` | Observer state (active, mute toggle, last eval timestamp) |
 
-#### Client → Server Messages (21 types)
+**Explain & Review (Story 11)**
+
+| Type | Payload | Description |
+|------|---------|-------------|
+| `explain:response` | `{ explanation }` | Sonnet-generated explanation for selected code |
+| `review:response` | `{ review, suggestions }` | Sonnet-generated review of current work |
+
+**Practice Mode (Story 12)**
+
+| Type | Payload | Description |
+|------|---------|-------------|
+| `dashboard:state` | `{ dreyfus, stats, inProgress, issues, challenges, materials }` | Full dashboard state (consolidates all dashboard data) |
+| `dashboard:issues_error` | `{ error }` | GitHub issue fetch failed |
+| `practice:kata_load` | `{ kata: { id, title, description, scaffoldingCode, instructorNotes }, constraints: [{ title, description, minLevel }] }` | Practice kata with available constraints |
+| `practice:solution_review` | `{ review, level, passed, constraintsUnlocked: [{ title, description, minLevel }] }` | Solution feedback with unlocked constraints |
+
+#### Client → Server Messages (23 types)
 
 **Connection**
 
@@ -490,8 +512,9 @@ interface WebSocketMessage {
 
 | Type | Payload | Description |
 |------|---------|-------------|
-| `dashboard:request` | `{}` | Request all dashboard data |
-| `dashboard:stats_period` | `{ period }` | Switch stats time period |
+| `dashboard:request` | `{ statsPeriod?: Period }` | Request all dashboard data with optional stats period filter |
+| `dashboard:stats_period` | `{ period: Period }` | Switch stats time period |
+| `dashboard:refresh_issues` | `{}` | Re-fetch GitHub issues from repository |
 
 **Session**
 
@@ -557,6 +580,12 @@ interface WebSocketMessage {
 | Type | Payload | Description |
 |------|---------|-------------|
 | `observer:mute` | `{ muted }` | User toggled mute Paige |
+
+**Practice (Story 12)**
+
+| Type | Payload | Description |
+|------|---------|-------------|
+| `practice:submit_solution` | `{ kataId, code, activeConstraints: string[] }` | Submit practice kata solution for review |
 
 #### Debouncing Rules
 
