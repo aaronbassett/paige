@@ -264,14 +264,14 @@
 - [x] T127 [US3] Run /sdd:map incremental for Phase 5 changes (skipped: no .sdd/codebase/ exists yet)
 - [x] T128 [GIT] Commit: update codebase documents for phase 5
 - [x] T129 [US3] Review retro/P5.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T130 [GIT] Commit: finalize phase 5 retro
+- [x] T130 [GIT] Commit: finalize phase 5 retro
 
 ### Phase 5 Completion
 
-- [ ] T131 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T132 [GIT] Create/update PR to main with Phase 5 summary
-- [ ] T133 [GIT] Verify all CI checks pass
-- [ ] T134 [GIT] Report PR ready status
+- [x] T131 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T132 [GIT] Create/update PR to main with Phase 5 summary
+- [x] T133 [GIT] Verify all CI checks pass
+- [x] T134 [GIT] Report PR ready status
 
 **Checkpoint**: File system layer complete and independently functional
 
