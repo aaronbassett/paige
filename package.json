@@ -27,6 +27,12 @@
     "clean": "rm -rf dist/ node_modules/",
     "prepare": "husky"
   },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --max-warnings=0",
+      "prettier --check"
+    ]
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
     "@modelcontextprotocol/sdk": "^1.26.0",
