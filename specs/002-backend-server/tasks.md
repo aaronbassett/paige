@@ -192,9 +192,9 @@
 - [x] T086 [P] [US2] Create src/database/queries/plans.ts with CRUD functions (use devs:typescript-dev agent)
 - [x] T087 [P] [US2] Create src/database/queries/phases.ts with CRUD functions (use devs:typescript-dev agent)
 - [x] T088 [GIT] Commit: add session/plan/phase queries
-- [ ] T089 [P] [US2] Create src/database/queries/hints.ts with CRUD functions (use devs:typescript-dev agent)
-- [ ] T090 [P] [US2] Create src/database/queries/progress.ts with CRUD functions (use devs:typescript-dev agent)
-- [ ] T091 [GIT] Commit: add hint/progress queries
+- [x] T089 [P] [US2] Create src/database/queries/hints.ts with CRUD functions (use devs:typescript-dev agent)
+- [x] T090 [P] [US2] Create src/database/queries/progress.ts with CRUD functions (use devs:typescript-dev agent)
+- [x] T091 [GIT] Commit: add hint/progress queries
 - [ ] T092 [P] [US2] Create src/database/queries/dreyfus.ts with CRUD functions (use devs:typescript-dev agent)
 - [ ] T093 [P] [US2] Create src/database/queries/gaps.ts with CRUD functions (use devs:typescript-dev agent)
 - [ ] T094 [P] [US2] Create src/database/queries/katas.ts with CRUD functions (use devs:typescript-dev agent)
