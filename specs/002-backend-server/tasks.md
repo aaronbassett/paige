@@ -477,14 +477,14 @@
 
 ### Implementation for User Story 7
 
-- [ ] T234 [US7] Create src/api-client/models.ts with model alias resolution and pricing tables (use devs:typescript-dev agent)
-- [ ] T235 [GIT] Commit: add model resolution
-- [ ] T236 [US7] Create src/api-client/claude.ts with callApi function, retry logic, structured outputs (use devs:typescript-dev agent)
-- [ ] T237 [GIT] Commit: add Claude API client
-- [ ] T238 [US7] Add ApiRefusalError and ApiMaxTokensError custom error classes in src/api-client/claude.ts (use devs:typescript-dev agent)
-- [ ] T239 [GIT] Commit: add API error types
-- [ ] T240 [US7] Integrate API call logging with logApiCall in src/api-client/claude.ts (use devs:typescript-dev agent)
-- [ ] T241 [GIT] Commit: integrate API logging
+- [x] T234 [US7] Create src/api-client/models.ts with model alias resolution and pricing tables (use devs:typescript-dev agent)
+- [x] T235 [GIT] Commit: add model resolution
+- [x] T236 [US7] Create src/api-client/claude.ts with callApi function, retry logic, structured outputs (use devs:typescript-dev agent)
+- [x] T237 [GIT] Commit: add Claude API client
+- [x] T238 [US7] Add ApiRefusalError and ApiMaxTokensError custom error classes in src/api-client/claude.ts (use devs:typescript-dev agent)
+- [x] T239 [GIT] Commit: add API error types
+- [x] T240 [US7] Integrate API call logging with logApiCall in src/api-client/claude.ts (use devs:typescript-dev agent)
+- [x] T241 [GIT] Commit: integrate API logging
 - [ ] T242 [US7] Verify US7 tests now pass
 - [ ] T243 [GIT] Commit: verify US7 complete
 
