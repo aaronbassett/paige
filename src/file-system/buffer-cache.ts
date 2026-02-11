@@ -72,6 +72,14 @@ export function clearAll(): void {
 }
 
 /**
+ * Gets all buffer file paths (open files).
+ * @returns Array of absolute file paths in the buffer cache
+ */
+export function getAllPaths(): string[] {
+  return Array.from(buffers.keys());
+}
+
+/**
  * Gets all dirty buffer paths.
  * @returns Array of file paths with dirty buffers
  */
