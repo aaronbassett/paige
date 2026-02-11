@@ -1,0 +1,596 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Paige WebSocket Protocol",
+  "description": "55 WebSocket message types (23 client→server, 32 server→client) for Backend↔Electron communication",
+  "clientToServer": [
+    {
+      "type": "connection:hello",
+      "description": "Initial handshake from Electron on WebSocket connect",
+      "data": {
+        "version": { "type": "string", "description": "Electron app version" },
+        "platform": { "type": "string", "description": "OS platform" },
+        "windowSize": {
+          "type": "object",
+          "properties": {
+            "width": { "type": "integer" },
+            "height": { "type": "integer" }
+          }
+        }
+      }
+    },
+    {
+      "type": "file:open",
+      "description": "User opened a file in editor",
+      "data": {
+        "path": { "type": "string", "description": "File path (absolute or relative)" }
+      }
+    },
+    {
+      "type": "file:save",
+      "description": "User saved a file",
+      "data": {
+        "path": { "type": "string" },
+        "content": { "type": "string", "description": "Full file content" }
+      }
+    },
+    {
+      "type": "file:close",
+      "description": "User closed a file tab",
+      "data": {
+        "path": { "type": "string" }
+      }
+    },
+    {
+      "type": "file:create",
+      "description": "User created a new file",
+      "data": {
+        "path": { "type": "string" }
+      }
+    },
+    {
+      "type": "file:delete",
+      "description": "User deleted a file",
+      "data": {
+        "path": { "type": "string" }
+      }
+    },
+    {
+      "type": "buffer:update",
+      "description": "Editor buffer changed (debounced, 300ms)",
+      "data": {
+        "path": { "type": "string" },
+        "content": { "type": "string" },
+        "cursorPosition": { "type": "integer", "description": "Cursor character offset" },
+        "selections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": { "type": "integer" },
+              "end": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "editor:tab_switch",
+      "description": "User switched between file tabs",
+      "data": {
+        "fromPath": { "type": "string" },
+        "toPath": { "type": "string" }
+      }
+    },
+    {
+      "type": "editor:selection",
+      "description": "User selected text in editor",
+      "data": {
+        "path": { "type": "string" },
+        "range": {
+          "type": "object",
+          "properties": {
+            "startLine": { "type": "integer" },
+            "startColumn": { "type": "integer" },
+            "endLine": { "type": "integer" },
+            "endColumn": { "type": "integer" }
+          }
+        },
+        "selectedText": { "type": "string" }
+      }
+    },
+    {
+      "type": "hints:level_change",
+      "description": "User changed hint level via UI control",
+      "data": {
+        "from": { "type": "string", "enum": ["off", "low", "medium", "high"] },
+        "to": { "type": "string", "enum": ["off", "low", "medium", "high"] }
+      }
+    },
+    {
+      "type": "user:idle_start",
+      "description": "User went idle (no activity for 2 minutes)",
+      "data": {
+        "durationMs": { "type": "integer", "description": "Time since last activity" }
+      }
+    },
+    {
+      "type": "user:idle_end",
+      "description": "User returned from idle",
+      "data": {
+        "idleDurationMs": { "type": "integer", "description": "Total idle duration" }
+      }
+    },
+    {
+      "type": "user:explain",
+      "description": "User clicked 'Explain This' on selected code",
+      "data": {
+        "path": { "type": "string" },
+        "range": {
+          "type": "object",
+          "properties": {
+            "startLine": { "type": "integer" },
+            "endLine": { "type": "integer" }
+          }
+        },
+        "selectedText": { "type": "string" }
+      }
+    },
+    {
+      "type": "observer:mute",
+      "description": "User toggled Observer mute state",
+      "data": {
+        "muted": { "type": "boolean" }
+      }
+    },
+    {
+      "type": "practice:submit_solution",
+      "description": "User submitted kata solution for review",
+      "data": {
+        "kataId": { "type": "integer" },
+        "code": { "type": "string", "description": "User's solution code" },
+        "activeConstraints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Constraint IDs active for this attempt"
+        }
+      }
+    },
+    {
+      "type": "practice:request_hint",
+      "description": "User requested a hint for current kata",
+      "data": {
+        "kataId": { "type": "integer" }
+      }
+    },
+    {
+      "type": "practice:view_previous_attempts",
+      "description": "User opened previous attempts modal",
+      "data": {
+        "kataId": { "type": "integer" }
+      }
+    },
+    {
+      "type": "dashboard:request",
+      "description": "User opened dashboard (triggers 4 progressive flows)",
+      "data": {
+        "statsPeriod": { "type": "string", "enum": ["7d", "30d", "all"], "description": "Stats time period" }
+      }
+    },
+    {
+      "type": "dashboard:refresh_issues",
+      "description": "User clicked 'Refresh Issues' in dashboard",
+      "data": {}
+    },
+    {
+      "type": "terminal:command",
+      "description": "User executed command in terminal",
+      "data": {
+        "command": { "type": "string" }
+      }
+    },
+    {
+      "type": "tree:expand",
+      "description": "User expanded directory in file tree",
+      "data": {
+        "path": { "type": "string" }
+      }
+    },
+    {
+      "type": "tree:collapse",
+      "description": "User collapsed directory in file tree",
+      "data": {
+        "path": { "type": "string" }
+      }
+    },
+    {
+      "type": "review:request",
+      "description": "User requested 'Review My Work'",
+      "data": {
+        "phaseId": { "type": "integer", "description": "Current phase ID" }
+      }
+    }
+  ],
+  "serverToClient": [
+    {
+      "type": "connection:init",
+      "description": "Response to connection:hello with session context",
+      "data": {
+        "sessionId": { "type": "string", "description": "Active session ID (if any)" },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "chromadb_available": { "type": "boolean" },
+            "gh_cli_available": { "type": "boolean" }
+          }
+        },
+        "featureFlags": {
+          "type": "object",
+          "properties": {
+            "observer_enabled": { "type": "boolean" },
+            "practice_mode_enabled": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    {
+      "type": "connection:error",
+      "description": "Error response for malformed or unsupported messages",
+      "data": {
+        "code": { "type": "string", "enum": ["NOT_IMPLEMENTED", "INVALID_MESSAGE", "INTERNAL_ERROR"] },
+        "message": { "type": "string" },
+        "context": { "type": "object", "description": "Optional error context" }
+      }
+    },
+    {
+      "type": "fs:content",
+      "description": "File content response (for file:open)",
+      "data": {
+        "path": { "type": "string" },
+        "content": { "type": "string" },
+        "language": { "type": "string", "description": "Detected language ID" },
+        "lineCount": { "type": "integer" }
+      }
+    },
+    {
+      "type": "fs:save_ack",
+      "description": "File save confirmation",
+      "data": {
+        "path": { "type": "string" },
+        "success": { "type": "boolean" },
+        "timestamp": { "type": "string", "description": "ISO 8601 timestamp" }
+      }
+    },
+    {
+      "type": "fs:save_error",
+      "description": "File save failed",
+      "data": {
+        "path": { "type": "string" },
+        "error": { "type": "string" }
+      }
+    },
+    {
+      "type": "fs:tree_update",
+      "description": "File system change detected by watcher",
+      "data": {
+        "action": { "type": "string", "enum": ["add", "change", "unlink", "addDir", "unlinkDir"] },
+        "path": { "type": "string" },
+        "newPath": { "type": "string", "description": "For rename operations (optional)" }
+      }
+    },
+    {
+      "type": "editor:open_file",
+      "description": "Backend instructs Electron to open a file (from MCP tool)",
+      "data": {
+        "path": { "type": "string" },
+        "content": { "type": "string" },
+        "language": { "type": "string" },
+        "lineCount": { "type": "integer" }
+      }
+    },
+    {
+      "type": "editor:highlight_lines",
+      "description": "Apply line decorations (from MCP tool)",
+      "data": {
+        "path": { "type": "string" },
+        "ranges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": { "type": "integer" },
+              "end": { "type": "integer" },
+              "style": { "type": "string", "enum": ["info", "warning", "error"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "editor:clear_highlights",
+      "description": "Clear line decorations (from MCP tool)",
+      "data": {
+        "path": { "type": "string", "description": "If omitted, clears all files" }
+      }
+    },
+    {
+      "type": "explorer:hint_files",
+      "description": "Apply file tree decorations (from MCP tool)",
+      "data": {
+        "paths": { "type": "array", "items": { "type": "string" } },
+        "style": { "type": "string", "enum": ["suggested", "warning", "error"] }
+      }
+    },
+    {
+      "type": "explorer:clear_hints",
+      "description": "Clear all file tree decorations (from MCP tool)",
+      "data": {}
+    },
+    {
+      "type": "coaching:plan_ready",
+      "description": "Coaching pipeline completed, plan is ready",
+      "data": {
+        "plan": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "total_phases": { "type": "integer" },
+            "phases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "number": { "type": "integer" },
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "hint_level": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "coaching:phase_update",
+      "description": "Phase status changed (from MCP tool)",
+      "data": {
+        "phase": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "number": { "type": "integer" },
+            "title": { "type": "string" },
+            "status": { "type": "string", "enum": ["pending", "active", "complete"] },
+            "started_at": { "type": "string" },
+            "completed_at": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "type": "coaching:message",
+      "description": "Coaching message to display (from MCP tool)",
+      "data": {
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "error"] }
+      }
+    },
+    {
+      "type": "coaching:issue_context",
+      "description": "Issue context to display in sidebar (from MCP tool)",
+      "data": {
+        "title": { "type": "string" },
+        "summary": { "type": "string" }
+      }
+    },
+    {
+      "type": "observer:status",
+      "description": "Observer state changed",
+      "data": {
+        "active": { "type": "boolean" },
+        "muted": { "type": "boolean" }
+      }
+    },
+    {
+      "type": "observer:nudge",
+      "description": "Observer recommends nudging Claude",
+      "data": {
+        "signal": { "type": "string", "enum": ["stuck_on_implementation", "long_idle", "excessive_hints", "repeated_errors"] },
+        "confidence": { "type": "number", "description": "Confidence score (0.0-1.0)" },
+        "context": { "type": "string", "description": "Brief context for nudge" }
+      }
+    },
+    {
+      "type": "explain:response",
+      "description": "Response to user:explain request",
+      "data": {
+        "explanation": { "type": "string", "description": "Dreyfus-aware code explanation" },
+        "phaseConnection": { "type": "string", "description": "How code relates to current phase (optional)" }
+      }
+    },
+    {
+      "type": "explain:error",
+      "description": "Explain This request failed",
+      "data": {
+        "error": { "type": "string" }
+      }
+    },
+    {
+      "type": "practice:solution_review",
+      "description": "Response to practice:submit_solution",
+      "data": {
+        "review": { "type": "string", "description": "Sonnet's review feedback" },
+        "level": { "type": "integer", "description": "Assigned level (1-10)" },
+        "passed": { "type": "boolean", "description": "Whether solution meets requirements" },
+        "constraintsUnlocked": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Newly unlocked constraint IDs"
+        }
+      }
+    },
+    {
+      "type": "practice:hint",
+      "description": "Response to practice:request_hint",
+      "data": {
+        "hint": { "type": "string" }
+      }
+    },
+    {
+      "type": "practice:previous_attempts",
+      "description": "Response to practice:view_previous_attempts",
+      "data": {
+        "attempts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "review": { "type": "string" },
+              "level": { "type": "integer" },
+              "passed": { "type": "boolean" },
+              "constraints": { "type": "array", "items": { "type": "string" } },
+              "submitted_at": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "review:error",
+      "description": "Practice review request failed",
+      "data": {
+        "error": { "type": "string" }
+      }
+    },
+    {
+      "type": "dashboard:state",
+      "description": "Immediate dashboard state (Flow 1)",
+      "data": {
+        "dreyfus": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "skill_area": { "type": "string" },
+              "stage": { "type": "string" },
+              "confidence": { "type": "number" }
+            }
+          }
+        },
+        "stats": {
+          "type": "object",
+          "properties": {
+            "total_sessions": { "type": "integer" },
+            "total_actions": { "type": "integer" },
+            "total_api_calls": { "type": "integer" },
+            "total_cost": { "type": "number" }
+          }
+        },
+        "issues": { "type": "array", "description": "Placeholder, populated by Flow 2" },
+        "challenges": { "type": "array", "description": "Placeholder, populated by Flow 3" },
+        "learning_materials": { "type": "array", "description": "Placeholder, populated by Flow 4" }
+      }
+    },
+    {
+      "type": "dashboard:issues",
+      "description": "GitHub issues with suitability assessment (Flow 2)",
+      "data": {
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "number": { "type": "integer" },
+              "title": { "type": "string" },
+              "body": { "type": "string" },
+              "suitability": { "type": "string", "enum": ["excellent", "good", "fair", "poor"] },
+              "recommended_focus": { "type": "string" },
+              "labels": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "dashboard:challenges",
+      "description": "Active kata challenges (Flow 3)",
+      "data": {
+        "challenges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "attempts": { "type": "integer" },
+              "maxLevel": { "type": "integer" },
+              "gap": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "dashboard:learning_materials",
+      "description": "Web-searched learning resources (Flow 4)",
+      "data": {
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "gap": { "type": "string" },
+              "resources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": { "type": "string" },
+                    "url": { "type": "string" },
+                    "description": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "dashboard:issues_error",
+      "description": "Issues flow failed (Flow 2 error)",
+      "data": {
+        "error": { "type": "string" }
+      }
+    },
+    {
+      "type": "session:started",
+      "description": "Session created successfully",
+      "data": {
+        "sessionId": { "type": "integer" },
+        "project_dir": { "type": "string" }
+      }
+    },
+    {
+      "type": "session:completed",
+      "description": "Session wrap-up finished",
+      "data": {
+        "memories_added": { "type": "integer" },
+        "gaps_identified": { "type": "integer" },
+        "katas_generated": { "type": "integer" },
+        "assessments_updated": { "type": "integer" }
+      }
+    }
+  ],
+  "notes": [
+    "All messages are JSON with {type, data} structure",
+    "Client→Server messages trigger action logging (except buffer:update which is buffered)",
+    "Server→Client messages are broadcasts (all connected Electron clients receive)",
+    "observer:nudge is special: Electron receives it and writes to PTY stdin to inject into Claude Code session",
+    "Dashboard messages use progressive loading (4 flows: immediate state, issues, challenges, learning materials)"
+  ]
+}
