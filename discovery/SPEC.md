@@ -447,7 +447,7 @@ interface WebSocketMessage {
 
 | Type | Payload | Description |
 |------|---------|-------------|
-| `explorer:hint_files` | `{ paths: string[], style }` | File tree glow triggers |
+| `explorer:hint_files` | `{ hints: [{ path, style: 'subtle' \| 'obvious' \| 'unmissable', directories?: string[] }] }` | File tree glow triggers (per-file style + optional directory glow list) |
 | `explorer:clear_hints` | `{}` | Remove all file glows |
 
 **Session**
@@ -621,6 +621,350 @@ interface WebSocketMessage {
 | SC4.3 | Debouncing correct | `buffer:update` fires max once per 300ms under continuous typing |
 | SC4.4 | No data loss | File save → ack round-trip completes; no silent failures |
 
+### Story 5: Code Editor (Monaco) [P1] ✅
+
+**As a** developer working on an issue in Paige,
+**I want** a familiar, responsive code editor with tabs, syntax highlighting, and Paige-controlled decorations,
+**So that** I can read and edit code comfortably while seeing coaching hints directly in my workspace.
+
+**Priority**: P1 — The primary workspace surface; where the user spends most of their time.
+**Dependencies**: Story 1 (Visual Identity), Story 2 (App Shell), Story 4 (WebSocket).
+
+#### Tab System
+
+- Horizontal tab strip at top of editor area
+- Each tab shows: language icon (by file extension) + filename + close button (X)
+- Active tab: terracotta bottom border (`--accent-primary`), `--bg-surface` background
+- Inactive tabs: `--bg-base` background, `--text-secondary` text
+- Dirty (unsaved) state: dot indicator replaces the close icon (dot uses `--accent-primary`); hovering the dot reveals the close X
+- Closing a dirty tab: confirmation prompt ("Save changes to {filename}?" — Save / Don't Save / Cancel)
+- Tab overflow: horizontal scroll with subtle fade indicators at edges
+- No drag reorder, no tab context menu (KISS)
+- Clicking a file already open in a tab switches to that tab (no duplicate tabs)
+
+#### Monaco Configuration
+
+- Library: `@monaco-editor/react`
+- No minimap
+- Line numbers: on
+- Word wrap: off (standard code editing)
+- Bracket matching: on (Monaco default)
+- Auto-indent: on (Monaco default)
+- Cursor style: line, blinking
+- Cursor color: `--accent-primary` (#d97757)
+- Scrollbar: styled to match warm palette (thin, `--bg-elevated` thumb)
+- Font: Monaco default (inherits from system/Monaco — 14px, as per Story 1)
+
+#### Custom Monaco Theme: "Paige Dark"
+
+**Editor Chrome**
+
+| Element | Monaco Token | Value |
+|---------|-------------|-------|
+| Background | `editor.background` | `--bg-inset` (#141413) |
+| Foreground | `editor.foreground` | `--text-primary` (#faf9f5) |
+| Line numbers | `editorLineNumber.foreground` | `--text-muted` (#6b6960) |
+| Active line number | `editorLineNumber.activeForeground` | `--text-secondary` (#a8a69e) |
+| Cursor | `editorCursor.foreground` | `--accent-primary` (#d97757) |
+| Selection | `editor.selectionBackground` | rgba(217,119,87,0.25) |
+| Find match | `editor.findMatchHighlightBackground` | rgba(217,119,87,0.3) |
+| Current line | `editor.lineHighlightBackground` | rgba(48,48,46,0.5) |
+| Widget bg | `editorWidget.background` | `--bg-surface` (#252523) |
+| Widget border | `editorWidget.border` | `--border-subtle` (#30302e) |
+
+**Syntax Tokens** (warm-toned, no cold blues/purples)
+
+| Token Type | Color | Examples |
+|------------|-------|---------|
+| Keywords | `--accent-primary` (#d97757) | `const`, `function`, `return`, `if`, `import` |
+| Strings | `--status-success` (#7cb87c) | String/template literals |
+| Comments | `--text-muted` (#6b6960) | All comment forms |
+| Numbers | `--accent-warm` (#e8956a) | Numeric literals |
+| Types/Interfaces | `--status-info` (#6b9bd2) | Type annotations, interfaces, generics |
+| Functions | `--text-primary` (#faf9f5) | Function/method names |
+
+#### Decorations (Backend-Controlled)
+
+All decorations are applied from `editor:decorations` WebSocket messages. The editor never generates its own decorations.
+
+**Decoration type + style matrix**
+
+| Type | Style | Visual Treatment |
+|------|-------|-----------------|
+| `line-highlight` | `hint` | Full-line background: `--hint-glow` (rgba(217,119,87,0.4)) |
+| `line-highlight` | `error` | Full-line background: rgba(224,82,82,0.15) |
+| `line-highlight` | `success` | Full-line background: rgba(124,184,124,0.15) |
+| `gutter-marker` | `hint` | Terracotta dot in gutter: `--accent-primary` |
+| `gutter-marker` | `error` | Red dot in gutter: `--status-error` |
+| `gutter-marker` | `warning` | Yellow dot in gutter: `--status-warning` |
+| `squiggly` | `error` | Red wavy underline: `--status-error` |
+| `squiggly` | `warning` | Yellow wavy underline: `--status-warning` |
+
+**Hover hints** (`editor:hover_hint`) render as a tooltip positioned at the range:
+- Background: `--bg-elevated`
+- Border: `--border-active` (terracotta at 60%)
+- Text: `--text-primary`
+- Max width: 400px
+- Appears on hover over the decorated range
+
+#### Floating "Explain" Button
+
+- Appears when the user selects text (2+ characters)
+- Small circular button (24px) with Paige icon, positioned above-right of the selection end
+- Background: `--accent-primary`, icon: `--text-primary`
+- Hover: `--accent-warm` background
+- Click sends `user:explain` with `{ path, range, selectedText }`
+- Disappears when selection is cleared
+- Does not appear for single-click cursor placement (selection must have length)
+
+#### Empty State (No File Open)
+
+- Centered in the editor area
+- Figlet-rendered "PAIGE" ASCII art in `--accent-primary` (terracotta)
+- Below: "Open a file from the explorer to get started" in `--text-secondary`
+- Below that: keyboard shortcut hint — "Cmd+S to save" in `--text-muted`
+- Dot matrix background texture (consistent with design system)
+
+#### File Operations Flow
+
+| Action | Client Message | Server Response | Editor Behavior |
+|--------|---------------|-----------------|-----------------|
+| Open file | `file:open { path }` | `fs:content { path, content, language, lineCount }` | Opens new tab (or switches to existing), sets language mode |
+| Save file | `file:save { path, content }` | `fs:save_ack { path, success, timestamp }` | Clears dirty dot on success |
+| Save fails | `file:save { path, content }` | `fs:save_error { path, error }` | Dirty dot remains, error toast with message |
+| Close tab | (local only) | — | Removes tab; if dirty, prompt first |
+| Edit buffer | — | — | After 300ms debounce: `buffer:update { path, content, cursorPosition, selections }` |
+| Tab switch | (local + notify) | — | Sends `editor:tab_switch { fromPath, toPath }` |
+
+#### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| Cmd+S | Save current file (sends `file:save`) |
+| Cmd+W | Close current tab (with dirty check) |
+| All Monaco defaults | Undo, redo, find, replace, go to line, etc. |
+
+#### Acceptance Scenarios
+
+| # | Scenario | Expected Outcome |
+|---|----------|-----------------|
+| 5.1 | No file open | Figlet "PAIGE" splash with help text centered in editor area |
+| 5.2 | Click file in explorer | New tab opens, file content loads, correct syntax highlighting |
+| 5.3 | Click already-open file | Switches to existing tab (no duplicate) |
+| 5.4 | Edit a file | Dirty dot appears on tab. Buffer update sent after 300ms. |
+| 5.5 | Cmd+S on dirty file | `file:save` sent, `fs:save_ack` received, dirty dot cleared |
+| 5.6 | Cmd+W on clean tab | Tab closes immediately |
+| 5.7 | Cmd+W on dirty tab | "Save changes?" prompt appears with Save/Don't Save/Cancel |
+| 5.8 | Open 10+ files | Tab strip scrolls horizontally. Fade indicators at edges. |
+| 5.9 | Backend sends `editor:decorations` | Correct decoration type renders (glow, gutter dot, squiggly) |
+| 5.10 | Hover over decorated range | Hint tooltip appears with correct styling |
+| 5.11 | Backend sends `editor:clear_decorations` | All decorations removed (or per-file if path specified) |
+| 5.12 | Select code in editor | Floating Paige explain button appears above-right of selection |
+| 5.13 | Click explain button | `user:explain` sent with path, range, selected text. Button disappears. |
+| 5.14 | View editor background and syntax colors | Warm palette throughout — terracotta keywords, green strings, no cold hues |
+
+#### Edge Cases
+
+| ID | Scenario | Handling |
+|----|----------|----------|
+| E5.1 | File content >1MB | Pass to Monaco; it handles large files natively |
+| E5.2 | Binary file opened | Show "Binary file — cannot display" message in tab area |
+| E5.3 | File deleted while tab open | Tab remains with last content; show subtle "File deleted" indicator |
+| E5.4 | Save fails (backend error) | Dirty dot remains; brief error toast with backend error message |
+| E5.5 | Unknown file extension / no language | Monaco defaults to plain text mode |
+| E5.6 | Multiple files with same name | Tab shows `parent/filename` (e.g., `components/index.ts` vs `utils/index.ts`); tooltip shows full relative path |
+| E5.7 | Decorations for a file not currently open | Store decorations; apply when file tab becomes active |
+| E5.8 | Selection spans multiple lines for explain | Button anchored to end of selection; sends full selected text |
+
+#### Requirements
+
+| ID | Requirement |
+|----|-------------|
+| R5.1 | Editor MUST use `@monaco-editor/react` |
+| R5.2 | Custom Monaco theme ("Paige Dark") MUST use design tokens from Story 1 |
+| R5.3 | No raw hex color values in editor theme definition — all MUST reference design tokens or derive from them |
+| R5.4 | Minimap MUST be disabled |
+| R5.5 | All decorations MUST originate from backend via `editor:decorations` WebSocket messages |
+| R5.6 | Editor MUST NOT generate its own decorations (thin client principle) |
+| R5.7 | `buffer:update` MUST be debounced at 300ms per Story 4 |
+| R5.8 | Closing a dirty tab MUST show a save confirmation prompt |
+| R5.9 | Duplicate tabs MUST be prevented (opening an already-open file switches to its tab) |
+| R5.10 | Cmd+S MUST trigger `file:save` via WebSocket |
+| R5.11 | Language mode MUST be set from the `language` field in `fs:content` response |
+
+#### Success Criteria
+
+| ID | Criterion | Measurement |
+|----|-----------|-------------|
+| SC5.1 | Theme matches design system | Editor background is #141413, cursor is terracotta, no cold-hued syntax tokens |
+| SC5.2 | Decorations render correctly | All 4 decoration types display with correct visual treatment per style matrix |
+| SC5.3 | Tab system works | Open, switch, close, dirty indicator all function; no duplicate tabs |
+| SC5.4 | File round-trip works | Open → edit → save → ack completes; dirty state tracks correctly |
+| SC5.5 | Explain button works | Select text → button appears → click → `user:explain` sent with correct payload |
+
+### Story 6: File Explorer with Hint Glow [P1] ✅
+
+**As a** developer working on an issue in Paige,
+**I want** a file tree that shows project structure and subtly glows to guide me toward relevant files,
+**So that** I can navigate the codebase with optional coaching hints that feel like discovery, not instruction.
+
+**Priority**: P1 — Left sidebar panel; primary navigation and the "breakable wall" demo highlight.
+**Dependencies**: Story 1 (Visual Identity), Story 2 (App Shell), Story 4 (WebSocket).
+
+#### Tree Component
+
+- Library: `react-arborist` (virtualized, custom node rendering, keyboard nav)
+- File icons: `vscode-icons` (per file type, familiar to developers)
+- Panel width: 220px fixed (Story 2)
+- Background: `--bg-surface`
+
+**Header**: "EXPLORER" in uppercase `--text-muted` (12px, weight 500) at top of panel, with 8px padding.
+
+#### Node Rendering
+
+| Element | Style |
+|---------|-------|
+| Folder icon | Chevron (right when collapsed, down when expanded) + folder icon |
+| File icon | vscode-icons by file extension |
+| Filename text | `--text-primary` (14px) |
+| Indentation | 20px per nesting level |
+| Selected node | `--bg-elevated` background |
+| Hovered node | `--bg-elevated` at 50% opacity |
+| Active (open in editor) | `--text-primary` bold weight |
+
+#### Click Behavior
+
+- **Single click file**: Opens file in editor tab (sends `file:open` via WebSocket). If file already open, switches to its tab.
+- **Single click folder**: Expands or collapses. Sends `explorer:expand_dir` or `explorer:collapse_dir` to backend.
+- **Keyboard**: Arrow keys navigate, Enter opens/expands, Left collapses current or navigates to parent.
+
+#### Data Flow
+
+| Event | Message | Description |
+|-------|---------|-------------|
+| Session start | `fs:tree` (server → client) | `{ root: TreeNode }` — full tree structure |
+| File created/deleted/renamed | `fs:tree_update` (server → client) | `{ action: 'add' \| 'remove' \| 'rename', path, newPath? }` |
+| User expands directory | `explorer:expand_dir` (client → server) | `{ path }` — backend logs for Observer |
+| User collapses directory | `explorer:collapse_dir` (client → server) | `{ path }` — backend logs for Observer |
+
+**TreeNode structure** (from backend):
+```typescript
+interface TreeNode {
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  children?: TreeNode[];
+}
+```
+
+#### Three-Tier Hint Glow System
+
+Hints are triggered by `explorer:hint_files` from the backend. Three styles map to the hint level progression:
+
+**`explorer:hint_files` payload** (revised from Story 4):
+```typescript
+{
+  hints: Array<{
+    path: string;                  // file to hint
+    style: 'subtle' | 'obvious' | 'unmissable';
+    directories?: string[];        // directory paths to also glow (backend-determined)
+  }>
+}
+```
+
+**Style behaviors:**
+
+| Style | File Glow | Directory Glow | When Used |
+|-------|-----------|---------------|-----------|
+| `subtle` | Gentle breathing glow | None | Hint level: File — "look around here" |
+| `obvious` | Gentle breathing glow | Backend-selected directories glow at gentle breathing | Hint level: Line — "this area matters" |
+| `unmissable` | Gentle breathing glow | ALL directories in `directories[]` glow with distance-based intensity gradient | Hint level: Detail — "right here" |
+
+**Gentle breathing glow** (baseline for all styles):
+- Animation: `gentle` spring preset (stiffness: 120, damping: 14), looping
+- Color: `--hint-glow` (rgba(217,119,87,0.4))
+- Applied as a background glow on the tree node row
+
+**Unmissable gradient** (directory intensity based on distance from file):
+- Parent directory of hinted file: **brightest/fastest** — stiffness: 400, damping: 25, glow opacity: 0.7
+- Each ancestor further up: progressively slower and dimmer (linear interpolation)
+- Caps at gentle breathing baseline (stiffness: 120, damping: 14, opacity: 0.4) — stays there for all remaining ancestors
+- Frontend computes intensity per directory: `intensity = 1.0 - (distance / totalDepth)`, clamped to [0, 1]
+- Maps intensity to animation parameters:
+  - Stiffness: lerp(120, 400, intensity)
+  - Damping: lerp(14, 25, intensity)
+  - Glow opacity: lerp(0.4, 0.7, intensity)
+
+**When multiple hints affect the same directory**: highest intensity wins.
+
+**For `obvious` style**: backend sends `directories[]` with the meaningful ancestor directories (backend decides what's "generic" vs "meaningful" — no hardcoded list in the frontend). All directories glow at gentle breathing baseline.
+
+**`explorer:clear_hints`**: Removes all file and directory glows. Payload: `{}`.
+
+#### Auto-Expand on Hint
+
+When a hint arrives for a file inside a collapsed directory:
+- `subtle`: do NOT auto-expand (user discovers by exploring)
+- `obvious`: auto-expand to reveal the glowing top-level directory only
+- `unmissable`: auto-expand the full path to reveal the hinted file
+
+#### Acceptance Scenarios
+
+| # | Scenario | Expected Outcome |
+|---|----------|-----------------|
+| 6.1 | Session starts | File tree renders from `fs:tree` data with correct icons and nesting |
+| 6.2 | Click a file | File opens in editor tab, tree node shows selected/active state |
+| 6.3 | Click a folder | Folder expands/collapses with immediate response |
+| 6.4 | Backend sends `subtle` hint | Hinted file has gentle breathing terracotta glow. No directory glow. |
+| 6.5 | Backend sends `obvious` hint | Hinted file glows. Backend-specified directories also glow at gentle breathing. |
+| 6.6 | Backend sends `unmissable` hint | Hinted file glows. All ancestor directories glow with gradient — parent brightest, fading up. |
+| 6.7 | `unmissable` hint on collapsed tree | Path auto-expands to reveal the hinted file |
+| 6.8 | `subtle` hint on collapsed tree | Tree stays collapsed; user must manually expand to find the glow |
+| 6.9 | `explorer:clear_hints` received | All glows removed immediately across files and directories |
+| 6.10 | File created while session active | `fs:tree_update` with `add` action; new node appears in correct position |
+| 6.11 | File deleted while session active | `fs:tree_update` with `remove` action; node removed from tree |
+| 6.12 | File renamed | `fs:tree_update` with `rename` action; node updates in place |
+| 6.13 | Keyboard navigate tree | Arrow keys move selection, Enter opens file or toggles folder |
+| 6.14 | Many files (500+) | Tree remains responsive (react-arborist virtualization) |
+
+#### Edge Cases
+
+| ID | Scenario | Handling |
+|----|----------|----------|
+| E6.1 | Very deep nesting (10+ levels) | Indentation continues at 20px/level; horizontal scroll if needed |
+| E6.2 | Empty project (no files) | Tree shows "No files in project" in `--text-muted` |
+| E6.3 | Multiple hints for same file | Latest hint style wins (backend sends fresh hint set) |
+| E6.4 | Hint for file not in tree | Ignore hint silently (log warning) |
+| E6.5 | `fs:tree_update` for non-existent path | Ignore update (log warning) |
+| E6.6 | Multiple hints cause same directory to glow at different intensities | Highest intensity wins |
+| E6.7 | Very long filenames | Truncate with ellipsis; tooltip shows full name |
+| E6.8 | Hidden files (dotfiles) | Shown in tree (developers need .gitignore, .env, config files) |
+
+#### Requirements
+
+| ID | Requirement |
+|----|-------------|
+| R6.1 | File tree MUST use `react-arborist` with virtualized rendering |
+| R6.2 | File icons MUST use `vscode-icons` |
+| R6.3 | All tree data MUST come from backend via WebSocket (`fs:tree`, `fs:tree_update`) |
+| R6.4 | Tree MUST NOT access the filesystem directly (thin client) |
+| R6.5 | Hint glow MUST use Framer Motion with `gentle` spring preset as baseline |
+| R6.6 | `unmissable` directory gradient MUST interpolate from parent (brightest) to baseline (gentlest) |
+| R6.7 | Frontend MUST NOT hardcode "generic directory" names — backend determines which directories to glow |
+| R6.8 | Single click on file MUST open it in editor (sends `file:open`) |
+| R6.9 | `explorer:hint_files` format MUST support per-file style and optional directory list |
+| R6.10 | Auto-expand behavior MUST match hint style: none for subtle, top-level for obvious, full path for unmissable |
+
+#### Success Criteria
+
+| ID | Criterion | Measurement |
+|----|-----------|-------------|
+| SC6.1 | Tree renders correctly | Full project tree displays with correct icons, nesting, expand/collapse |
+| SC6.2 | Three hint styles visually distinct | subtle = file only; obvious = file + key dirs; unmissable = full path gradient |
+| SC6.3 | Gradient animation visible | `unmissable` parent directory visibly brighter/faster than distant ancestors |
+| SC6.4 | Auto-expand matches style | `subtle` stays collapsed; `unmissable` reveals file |
+| SC6.5 | Performance with large trees | 500+ files render and scroll without jank |
+
 ---
 
 ## Edge Cases
@@ -646,6 +990,22 @@ interface WebSocketMessage {
 | E4.4 | WebSocket backpressure | Backend handles; client processes ASAP | 4 |
 | E4.5 | Very large file (>1MB) | Pass to Monaco; it handles large files | 4 |
 | E4.6 | Rapid reconnect cycles | Cap at 30s, persistent error after 5 failures | 4 |
+| E5.1 | File content >1MB | Pass to Monaco; handles large files natively | 5 |
+| E5.2 | Binary file opened | Show "Binary file — cannot display" message | 5 |
+| E5.3 | File deleted while tab open | Tab remains with last content; subtle "File deleted" indicator | 5 |
+| E5.4 | Save fails (backend error) | Dirty dot remains; error toast with message | 5 |
+| E5.5 | Unknown file extension | Monaco defaults to plain text mode | 5 |
+| E5.6 | Multiple files with same name | Tab shows `parent/filename`; tooltip shows full path | 5 |
+| E5.7 | Decorations for unopened file | Store decorations; apply when tab becomes active | 5 |
+| E5.8 | Multi-line selection for explain | Button anchored to selection end; sends full text | 5 |
+| E6.1 | Very deep nesting (10+ levels) | Indentation continues; horizontal scroll if needed | 6 |
+| E6.2 | Empty project (no files) | "No files in project" message | 6 |
+| E6.3 | Multiple hints for same file | Latest hint set wins | 6 |
+| E6.4 | Hint for file not in tree | Ignore silently (log warning) | 6 |
+| E6.5 | `fs:tree_update` for non-existent path | Ignore (log warning) | 6 |
+| E6.6 | Multiple hints, same directory, different intensities | Highest intensity wins | 6 |
+| E6.7 | Very long filenames | Truncate with ellipsis; tooltip shows full name | 6 |
+| E6.8 | Hidden files (dotfiles) | Shown in tree | 6 |
 
 ---
 
@@ -690,6 +1050,27 @@ interface WebSocketMessage {
 | R4.8 | Unknown messages logged and ignored | 4 | 100% |
 | R4.9 | Per-type message handler registration | 4 | 100% |
 | R4.10 | Singleton WebSocket client service | 4 | 100% |
+| R5.1 | Editor MUST use `@monaco-editor/react` | 5 | 100% |
+| R5.2 | Custom Monaco theme MUST use design tokens from Story 1 | 5 | 100% |
+| R5.3 | No raw hex values in editor theme — reference design tokens | 5 | 100% |
+| R5.4 | Minimap MUST be disabled | 5 | 100% |
+| R5.5 | All decorations MUST originate from backend via WebSocket | 5 | 100% |
+| R5.6 | Editor MUST NOT generate its own decorations | 5 | 100% |
+| R5.7 | `buffer:update` MUST be debounced at 300ms | 5 | 100% |
+| R5.8 | Closing dirty tab MUST show save confirmation | 5 | 100% |
+| R5.9 | Duplicate tabs MUST be prevented | 5 | 100% |
+| R5.10 | Cmd+S MUST trigger `file:save` via WebSocket | 5 | 100% |
+| R5.11 | Language mode MUST be set from `fs:content` language field | 5 | 100% |
+| R6.1 | File tree MUST use `react-arborist` with virtualized rendering | 6 | 100% |
+| R6.2 | File icons MUST use `vscode-icons` | 6 | 100% |
+| R6.3 | All tree data MUST come from backend via WebSocket | 6 | 100% |
+| R6.4 | Tree MUST NOT access the filesystem directly | 6 | 100% |
+| R6.5 | Hint glow MUST use Framer Motion with `gentle` spring baseline | 6 | 100% |
+| R6.6 | `unmissable` gradient MUST interpolate parent (brightest) to baseline | 6 | 100% |
+| R6.7 | Frontend MUST NOT hardcode generic directory names | 6 | 100% |
+| R6.8 | Single click file MUST open in editor | 6 | 100% |
+| R6.9 | `explorer:hint_files` MUST support per-file style + optional directory list | 6 | 100% |
+| R6.10 | Auto-expand MUST match hint style | 6 | 100% |
 
 ### Key Entities
 
@@ -718,6 +1099,16 @@ interface WebSocketMessage {
 | SC4.2 | Reconnection works | Disconnect → reconnect → state restored | 4 |
 | SC4.3 | Debouncing correct | buffer:update max once per 300ms | 4 |
 | SC4.4 | No data loss | file:save → ack round-trip completes | 4 |
+| SC5.1 | Theme matches design system | Background #141413, terracotta cursor, warm syntax tokens | 5 |
+| SC5.2 | Decorations render correctly | All 4 types display per style matrix | 5 |
+| SC5.3 | Tab system works | Open, switch, close, dirty indicator all function | 5 |
+| SC5.4 | File round-trip works | Open → edit → save → ack; dirty state tracks | 5 |
+| SC5.5 | Explain button works | Select → button → click → correct `user:explain` payload | 5 |
+| SC6.1 | Tree renders correctly | Full tree with correct icons, nesting, expand/collapse | 6 |
+| SC6.2 | Three hint styles distinct | subtle = file only; obvious = file + dirs; unmissable = gradient | 6 |
+| SC6.3 | Gradient animation visible | Parent dir visibly brighter/faster than distant ancestors | 6 |
+| SC6.4 | Auto-expand matches style | subtle stays collapsed; unmissable reveals file | 6 |
+| SC6.5 | Performance with large trees | 500+ files render without jank | 6 |
 
 ---
 
@@ -727,4 +1118,4 @@ interface WebSocketMessage {
 
 | Date | Story | Change | Reason |
 |------|-------|--------|--------|
-| *No revisions yet* | - | - | - |
+| 2026-02-10 | 4 | `explorer:hint_files` payload changed from `{ paths, style }` to `{ hints: [{ path, style, directories? }] }` | Story 6 requires per-file hint styles and backend-controlled directory glow lists |

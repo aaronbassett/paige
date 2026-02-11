@@ -44,8 +44,8 @@ Paige's backend does the heavy intellectual lifting (coaching pipeline, memory, 
 | 2 | App Shell & Navigation | P1 | ✅ In SPEC | 20% | 1 |
 | 3 | Dashboard Home Screen | P1 | ✅ In SPEC | 30% | 1, 2, 4 |
 | 4 | WebSocket Client | P1 | ✅ In SPEC | 15% | - |
-| 5 | Code Editor (Monaco) | P1 | ⏳ Queued | 25% | 1, 2, 4 |
-| 6 | File Explorer with Hint Glow | P1 | ⏳ Queued | 20% | 1, 2, 4 |
+| 5 | Code Editor (Monaco) | P1 | ✅ In SPEC | 25% | 1, 2, 4 |
+| 6 | File Explorer with Hint Glow | P1 | ✅ In SPEC | 20% | 1, 2, 4 |
 | 7 | Terminal with Filter Pipeline | P1 | ⏳ Queued | 20% | 1, 2, 4 |
 | 8 | Coaching Sidebar (Issue + Phases) | P1 | ⏳ Queued | 20% | 1, 2, 4 |
 | 9 | Hinting System | P1 | ⏳ Queued | 15% | 5, 6, 8 |
@@ -89,24 +89,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 ## In-Progress Story Detail
 
-### Story 1: Visual Identity & Design System
-**Status**: Queued → will move to In Progress next
-**Focus**: Establish the Anthropic-adjacent design language as CSS variables, Tailwind config, and reusable primitives
-
-**Known so far**:
-- Warm dark palette (#131313 range with olive/brown undertones)
-- Anthropic-adjacent terracotta accent (#d97757 family)
-- Warm whites for light surfaces (#faf9f5, #f5f4ed)
-- Spring-based animations via Framer Motion (expressive defaults)
-- Faux-ASCII touches concentrated on coaching panels, ambient everywhere else
-- Typography: expressive display type for dashboard, clean body type for IDE
-
-**Open questions**:
-- Specific font choices (display + body)
-- Exact colour tokens for all states (hint glow, phase states, error/success/warning)
-- Animation spring constants (stiffness/damping values)
-- Where ASCII art appears specifically
-- Grain/texture treatment details
+*No story currently in progress. Next up: Story 7 (Terminal with Filter Pipeline).*
 
 ---
 
@@ -132,7 +115,6 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 ## Next Actions
 
-- Deep-dive Story 1: Visual Identity & Design System
-- Resolve open questions on colour tokens, font choices, animation constants
-- Develop acceptance scenarios for Story 1
-- Queue Story 2 (App Shell) and Story 4 (WebSocket) for development after Story 1 graduates
+- Deep-dive Story 7: Terminal with Filter Pipeline
+- Then Story 8: Coaching Sidebar (Issue + Phases)
+- Story 9 (Hinting System) unblocks once 5, 6, 8 are done
