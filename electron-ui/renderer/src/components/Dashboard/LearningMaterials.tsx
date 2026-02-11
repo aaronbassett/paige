@@ -101,7 +101,7 @@ const skeletonCardStyle: React.CSSProperties = {
   cursor: 'default',
   height: '40px',
   background: 'var(--bg-elevated)',
-  opacity: 0.5,
+  animation: 'breathe 2s ease-in-out infinite',
 };
 
 const emptyStyle: React.CSSProperties = {
@@ -118,16 +118,16 @@ const emptyStyle: React.CSSProperties = {
 
 export function LearningMaterials({ materials, onMaterialClick }: LearningMaterialsProps) {
   return (
-    <div style={containerStyle}>
+    <section style={containerStyle} aria-label="Learning materials">
       <pre className="figlet-header" style={{ fontSize: '18px' }}>
         MATERIALS
       </pre>
 
       {/* Loading state: skeleton placeholders */}
       {materials === null && (
-        <div style={listStyle}>
+        <div style={listStyle} role="status" aria-label="Loading materials">
           {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-            <div key={i} style={skeletonCardStyle} aria-hidden="true" />
+            <div key={i} style={{ ...skeletonCardStyle, animationDelay: `${i * 150}ms` }} aria-hidden="true" />
           ))}
         </div>
       )}
@@ -174,6 +174,6 @@ export function LearningMaterials({ materials, onMaterialClick }: LearningMateri
           })}
         </div>
       )}
-    </div>
+    </section>
   );
 }

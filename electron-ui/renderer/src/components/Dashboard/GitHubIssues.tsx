@@ -101,7 +101,7 @@ const skeletonCardStyle: React.CSSProperties = {
   cursor: 'default',
   height: '60px',
   background: 'var(--bg-elevated)',
-  opacity: 0.5,
+  animation: 'breathe 2s ease-in-out infinite',
 };
 
 const emptyStyle: React.CSSProperties = {
@@ -118,16 +118,16 @@ const emptyStyle: React.CSSProperties = {
 
 export function GitHubIssues({ issues, onIssueClick }: GitHubIssuesProps) {
   return (
-    <div style={containerStyle}>
+    <section style={containerStyle} aria-label="GitHub issues">
       <pre className="figlet-header" style={{ fontSize: '18px' }}>
         ISSUES
       </pre>
 
       {/* Loading state: skeleton placeholders */}
       {issues === null && (
-        <div style={listStyle}>
+        <div style={listStyle} role="status" aria-label="Loading issues">
           {[0, 1, 2].map((i) => (
-            <div key={i} style={skeletonCardStyle} />
+            <div key={i} style={{ ...skeletonCardStyle, animationDelay: `${i * 150}ms` }} aria-hidden="true" />
           ))}
         </div>
       )}
@@ -177,6 +177,6 @@ export function GitHubIssues({ issues, onIssueClick }: GitHubIssuesProps) {
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }
