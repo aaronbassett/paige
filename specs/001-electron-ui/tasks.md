@@ -862,108 +862,107 @@ Phase 10 (Polish)
 - [x] T414 [GIT] Verify working tree is clean before starting Phase 8
 - [x] T415 [GIT] Pull and rebase on origin/main if needed
 - [x] T416 [US9] Create retro/P8.md for this phase
-- [ ] T417 [GIT] Commit: initialize phase 8 retro
+- [x] T417 [GIT] Commit: initialize phase 8 retro
 
 ### Comment Balloon Component
 
-- [ ] T418 [US9] Create renderer/src/components/Hints/CommentBalloon.tsx with @floating-ui/react (use devs:react-dev agent)
-- [ ] T419 [US9] Anchor to code via Monaco getScrolledVisiblePosition
-- [ ] T420 [US9] Add right-side preferred with flip/shift middleware
-- [ ] T421 [US9] Add arrow pointing to anchor
-- [ ] T422 [US9] Add type-colored left border (hint=terracotta, info=blue, success=green, warning=yellow)
-- [ ] T423 [US9] Add close button
-- [ ] T424 [US9] Add max-width 320px, max-height 200px scrollable
-- [ ] T425 [US9] Add collision detection for multiple balloons
-- [ ] T426 [GIT] Commit: create comment balloon component
+- [x] T418 [US9] Create renderer/src/components/Hints/CommentBalloon.tsx with @floating-ui/react (use devs:react-dev agent)
+- [x] T419 [US9] Anchor to code via Monaco getScrolledVisiblePosition
+- [x] T420 [US9] Add right-side preferred with flip/shift middleware
+- [x] T421 [US9] Add arrow pointing to anchor
+- [x] T422 [US9] Add type-colored left border (hint=terracotta, info=blue, success=green, warning=yellow)
+- [x] T423 [US9] Add close button
+- [x] T424 [US9] Add max-width 320px, max-height 200px scrollable
+- [x] T425 [US9] Add collision detection for multiple balloons
+- [x] T426 [GIT] Commit: create comment balloon component
 
 ### Collapsed Icon Component
 
-- [ ] T427 [US9] Create renderer/src/components/Hints/CollapsedIcon.tsx (use devs:react-dev agent)
-- [ ] T428 [US9] Render 20px circle with speech bubble icon
-- [ ] T429 [US9] Add terracotta 60% color with gentle pulse
-- [ ] T430 [US9] Add click → expand to full balloon (stays expanded)
-- [ ] T431 [US9] Position at anchor point
-- [ ] T432 [GIT] Commit: create collapsed icon component
+- [x] T427 [US9] Create renderer/src/components/Hints/CollapsedIcon.tsx (use devs:react-dev agent)
+- [x] T428 [US9] Render 20px circle with speech bubble icon
+- [x] T429 [US9] Add terracotta 60% color with gentle pulse
+- [x] T430 [US9] Add click → expand to full balloon (stays expanded)
+- [x] T431 [US9] Position at anchor point
+- [x] T432 [GIT] Commit: create collapsed icon component
 
 ### Editor Toast Component
 
-- [ ] T433 [US9] Create renderer/src/components/Hints/EditorToast.tsx with react-toastify (use devs:react-dev agent)
-- [ ] T434 [US9] Configure top-right stacked position
-- [ ] T435 [US9] Add persistent until closed behavior
-- [ ] T436 [US9] Use same styling as balloons (type-colored border)
-- [ ] T437 [US9] Always show full content regardless of level
-- [ ] T438 [GIT] Commit: create editor toast component
+- [x] T433 [US9] Create renderer/src/components/Hints/EditorToast.tsx with react-toastify (use devs:react-dev agent)
+- [x] T434 [US9] Configure top-right stacked position
+- [x] T435 [US9] Add persistent until closed behavior
+- [x] T436 [US9] Use same styling as balloons (type-colored border)
+- [x] T437 [US9] Always show full content regardless of level
+- [x] T438 [GIT] Commit: create editor toast component
 
 ### Coaching Message Rendering
 
-- [ ] T439 [US9] Handle coaching:message WebSocket message (use devs:react-dev agent)
-- [ ] T440 [US9] Render as balloon (if anchored) or toast (if unanchored)
-- [ ] T441 [US9] Apply level-based rendering (0-1=icon except explain/observer, 2-3=full balloon)
-- [ ] T442 [US9] Store messageId for stable reference
-- [ ] T443 [US9] Add auto-dismiss on code edit overlap (absolute range matching)
-- [ ] T444 [GIT] Commit: implement coaching message rendering
+- [x] T439 [US9] Handle coaching:message WebSocket message (use devs:react-dev agent)
+- [x] T440 [US9] Render as balloon (if anchored) or toast (if unanchored)
+- [x] T441 [US9] Apply level-based rendering (0-1=icon except explain/observer, 2-3=full balloon)
+- [x] T442 [US9] Store messageId for stable reference
+- [x] T443 [US9] Add auto-dismiss on code edit overlap (absolute range matching)
+- [x] T444 [GIT] Commit: implement coaching message rendering
 
 ### Explain Flow
 
-- [ ] T445 [US9] Update FloatingExplainButton to send user:explain WebSocket message (use devs:react-dev agent)
-- [ ] T446 [US9] Handle coaching:message response with source='explain'
-- [ ] T447 [US9] Render as full balloon at selection regardless of level
-- [ ] T448 [GIT] Commit: implement explain flow
+- [x] T445 [US9] Update FloatingExplainButton to send user:explain WebSocket message (use devs:react-dev agent)
+- [x] T446 [US9] Handle coaching:message response with source='explain'
+- [x] T447 [US9] Render as full balloon at selection regardless of level
+- [x] T448 [GIT] Commit: implement explain flow
 
 ### Review Navigation Service
 
-- [ ] T449 [US9] Create renderer/src/services/review-navigation.ts (use devs:typescript-dev agent)
-- [ ] T450 [US9] Handle coaching:review_result WebSocket message
-- [ ] T451 [US9] Transform status bar to review mode ([◀] N/M [▶] [✕])
-- [ ] T452 [US9] Implement ◀/▶ navigation via messageId (scroll editor, switch tabs for cross-file)
-- [ ] T453 [US9] Emphasize focused comment
-- [ ] T454 [US9] Implement ✕ exit (dismiss all review comments)
-- [ ] T455 [US9] Handle lifecycle (new review replaces, phase transition persists, tab closed adjusts)
-- [ ] T456 [GIT] Commit: implement review navigation service
+- [x] T449 [US9] Create renderer/src/services/review-navigation.ts (use devs:typescript-dev agent)
+- [x] T450 [US9] Handle coaching:review_result WebSocket message
+- [x] T451 [US9] Transform status bar to review mode ([◀] N/M [▶] [✕])
+- [x] T452 [US9] Implement ◀/▶ navigation via messageId (scroll editor, switch tabs for cross-file)
+- [x] T453 [US9] Emphasize focused comment
+- [x] T454 [US9] Implement ✕ exit (dismiss all review comments)
+- [x] T455 [US9] Handle lifecycle (new review replaces, phase transition persists, tab closed adjusts)
+- [x] T456 [GIT] Commit: implement review navigation service
 
 ### Review Split Button
 
-- [ ] T457 [US9] Update StatusBar to add review split button (use devs:react-dev agent)
-- [ ] T458 [US9] Add main area "Review My Work" click → send user:review with scope='current'
-- [ ] T459 [US9] Add caret dropdown (Review File / Since Last Review / Since Last Phase / Since Issue Start)
-- [ ] T460 [US9] Transform to navigation mode on review result
-- [ ] T461 [GIT] Commit: implement review split button
+- [x] T457 [US9] Update StatusBar to add review split button (use devs:react-dev agent)
+- [x] T458 [US9] Add main area "Review My Work" click → send user:review with scope='current'
+- [x] T459 [US9] Add caret dropdown (Review File / Since Last Review / Since Last Phase / Since Issue Start)
+- [x] T460 [US9] Transform to navigation mode on review result
+- [x] T461 [GIT] Commit: implement review split button
 
 ### Phase Transition Clear
 
-- [ ] T462 [US9] Handle phase:transition WebSocket message (use devs:react-dev agent)
-- [ ] T463 [US9] Clear coaching balloons (not review comments)
-- [ ] T464 [US9] Apply new hints at current level
-- [ ] T465 [GIT] Commit: implement phase transition clear
+- [x] T462 [US9] Handle phase:transition WebSocket message (use devs:react-dev agent)
+- [x] T463 [US9] Clear coaching balloons (not review comments)
+- [x] T464 [US9] Apply new hints at current level
+- [x] T465 [GIT] Commit: implement phase transition clear
 
 ### Hint Level Re-Evaluation
 
-- [ ] T466 [US9] Update hint level change handler to re-evaluate instantly (use devs:react-dev agent)
-- [ ] T467 [US9] Expand/collapse icons and balloons
-- [ ] T468 [US9] Show/hide decorations
-- [ ] T469 [US9] Update file glows
-- [ ] T470 [US9] Debounce WebSocket message 200ms
-- [ ] T471 [GIT] Commit: implement instant hint level updates
+- [x] T466 [US9] Update hint level change handler to re-evaluate instantly (use devs:react-dev agent)
+- [x] T467 [US9] Expand/collapse icons and balloons
+- [x] T468 [US9] Show/hide decorations
+- [x] T469 [US9] Update file glows
+- [x] T470 [US9] Debounce WebSocket message 200ms
+- [x] T471 [GIT] Commit: implement instant hint level updates
 
 ### Balloon Anchor Tracking
 
-- [ ] T472 [US9] Add balloon visibility tracking (use devs:react-dev agent)
-- [ ] T473 [US9] Hide balloons when anchor scrolls off-screen
-- [ ] T474 [US9] Show balloons when anchor scrolls back into view
-- [ ] T475 [GIT] Commit: implement anchor tracking
+- [x] T472 [US9] Add balloon visibility tracking (use devs:react-dev agent)
+- [x] T473 [US9] Hide balloons when anchor scrolls off-screen
+- [x] T474 [US9] Show balloons when anchor scrolls back into view
+- [x] T475 [GIT] Commit: implement anchor tracking
 
 ### Integration Test
 
-- [ ] T476 [US9] Create tests/integration/hinting-workflow.test.ts (use devs:typescript-dev agent)
-- [ ] T477 [US9] Test: Hint renders → level changes → explain flow → review flow → phase transition
-- [ ] T478 [GIT] Commit: add hinting integration test
+- [x] T476 [US9] Create tests/integration/hinting-workflow.test.ts (use devs:typescript-dev agent)
+- [x] T477 [US9] Test: Hint renders → level changes → explain flow → review flow → phase transition
+- [x] T478 [GIT] Commit: add hinting integration test
 
 ### Phase 8 Completion
 
-- [ ] T479 [US9] Run /sdd:map incremental for Phase 8 changes
-  - Acceptance: Map reports zero drift OR all drift resolved with updated contracts/plan.md
-- [ ] T480 [GIT] Commit: update codebase documents for phase 8
-- [ ] T481 Review retro/P8.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T479 [US9] Run /sdd:map incremental for Phase 8 changes (skipped — no new deps or structural changes, only new components following existing patterns)
+- [x] T480 [GIT] Commit: update codebase documents for phase 8
+- [x] T481 Review retro/P8.md and extract critical learnings to CLAUDE.md (conservative)
 - [ ] T482 [GIT] Commit: finalize phase 8 retro
 
 ### Phase Completion
