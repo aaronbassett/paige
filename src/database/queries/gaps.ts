@@ -1,6 +1,7 @@
-// TDD stub — will be implemented in T093
 import type { AppDatabase } from '../db.js';
 import type { KnowledgeGap, GapSeverity } from '../../types/domain.js';
+
+// ── Input Types ─────────────────────────────────────────────────────────────
 
 export interface CreateGapInput {
   session_id: number;
@@ -11,14 +12,79 @@ export interface CreateGapInput {
   identified_at: string;
 }
 
-export function createGap(_db: AppDatabase, _input: CreateGapInput): Promise<KnowledgeGap> {
-  return Promise.reject(new Error('Not implemented'));
+// ── Queries ─────────────────────────────────────────────────────────────────
+
+/**
+ * Inserts a new knowledge gap row and returns the full persisted record.
+ *
+ * The `addressed` column defaults to 0 (unaddressed) via the database schema.
+ */
+export async function createGap(db: AppDatabase, input: CreateGapInput): Promise<KnowledgeGap> {
+  const result = await db
+    .insertInto('knowledge_gaps')
+    .values({
+      session_id: input.session_id,
+      topic: input.topic,
+      severity: input.severity,
+      evidence: input.evidence,
+      related_concepts: input.related_concepts,
+      identified_at: input.identified_at,
+    } as never)
+    .executeTakeFirstOrThrow();
+
+  const id = Number(result.insertId);
+
+  const gap = await db
+    .selectFrom('knowledge_gaps')
+    .selectAll()
+    .where('id', '=', id)
+    .executeTakeFirstOrThrow();
+
+  return gap as KnowledgeGap;
 }
 
-export function getGapsBySession(_db: AppDatabase, _sessionId: number): Promise<KnowledgeGap[]> {
-  return Promise.reject(new Error('Not implemented'));
+/**
+ * Retrieves all knowledge gaps for a given session, ordered by identification time.
+ *
+ * Returns an empty array when no gaps exist for the session.
+ */
+export async function getGapsBySession(
+  db: AppDatabase,
+  sessionId: number,
+): Promise<KnowledgeGap[]> {
+  const gaps = await db
+    .selectFrom('knowledge_gaps')
+    .selectAll()
+    .where('session_id', '=', sessionId)
+    .orderBy('identified_at', 'asc')
+    .execute();
+
+  return gaps as KnowledgeGap[];
 }
 
-export function markGapAddressed(_db: AppDatabase, _id: number): Promise<KnowledgeGap> {
-  return Promise.reject(new Error('Not implemented'));
+/**
+ * Marks a knowledge gap as addressed by setting `addressed` to 1.
+ *
+ * Returns the full updated record.
+ *
+ * @throws {Error} If no gap exists with the given ID
+ */
+export async function markGapAddressed(db: AppDatabase, id: number): Promise<KnowledgeGap> {
+  const result = await db
+    .updateTable('knowledge_gaps')
+    .set({ addressed: 1 } as never)
+    .where('id', '=', id)
+    .executeTakeFirst();
+
+  if (result.numUpdatedRows === 0n) {
+    throw new Error(`Knowledge gap not found (id=${id})`);
+  }
+
+  const gap = await db
+    .selectFrom('knowledge_gaps')
+    .selectAll()
+    .where('id', '=', id)
+    .executeTakeFirstOrThrow();
+
+  return gap as KnowledgeGap;
 }
