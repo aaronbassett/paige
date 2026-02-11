@@ -432,8 +432,8 @@
 - [x] T214 [GIT] Commit: register MCP tools
 - [x] T215 [US6] Integrate MCP server with HTTP server in src/index.ts (use devs:typescript-dev agent)
 - [x] T216 [GIT] Commit: integrate MCP server
-- [ ] T217 [US6] Verify US6 tests now pass
-- [ ] T218 [GIT] Commit: verify US6 complete
+- [x] T217 [US6] Verify US6 tests now pass
+- [x] T218 [GIT] Commit: verify US6 complete
 
 ### Phase 8 Wrap-Up
 
