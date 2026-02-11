@@ -1,8 +1,8 @@
 # Discovery State: electron-ui
 
-**Updated**: 2026-02-10 21:50 UTC
+**Updated**: 2026-02-11
 **Iteration**: 2
-**Phase**: Story Development (Phase 3)
+**Phase**: Complete (all stories graduated)
 
 ---
 
@@ -44,12 +44,12 @@ Paige's backend does the heavy intellectual lifting (coaching pipeline, memory, 
 | 2 | App Shell & Navigation | P1 | ✅ In SPEC | 20% | 1 |
 | 3 | Dashboard Home Screen | P1 | ✅ In SPEC | 30% | 1, 2, 4 |
 | 4 | WebSocket Client | P1 | ✅ In SPEC | 15% | - |
-| 5 | Code Editor (Monaco) | P1 | ⏳ Queued | 25% | 1, 2, 4 |
-| 6 | File Explorer with Hint Glow | P1 | ⏳ Queued | 20% | 1, 2, 4 |
-| 7 | Terminal with Filter Pipeline | P1 | ⏳ Queued | 20% | 1, 2, 4 |
-| 8 | Coaching Sidebar (Issue + Phases) | P1 | ⏳ Queued | 20% | 1, 2, 4 |
-| 9 | Hinting System | P1 | ⏳ Queued | 15% | 5, 6, 8 |
-| 10 | Placeholder / Coming Soon Page | P2 | ⏳ Queued | 40% | 1, 2 |
+| 5 | Code Editor (Monaco) | P1 | ✅ In SPEC | 25% | 1, 2, 4 |
+| 6 | File Explorer with Hint Glow | P1 | ✅ In SPEC | 20% | 1, 2, 4 |
+| 7 | Terminal with xterm.js | P1 | ✅ In SPEC (REV-9) | 20% | 1, 2, 4 |
+| 8 | Coaching Sidebar (Issue + Phases) | P1 | ✅ In SPEC | 95% | 1, 2, 4 |
+| 9 | Hinting System | P1 | ✅ In SPEC | 95% | 5, 6, 8 |
+| 10 | Placeholder / Coming Soon Page | P2 | ✅ In SPEC | 100% | 1, 2 |
 
 ### Story Dependencies
 ```
@@ -73,7 +73,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 ```
 
 ### Proto-Stories / Emerging Themes
-*All proto-stories have crystallized into the 10 stories above.*
+*All proto-stories have crystallized and graduated. No emerging themes.*
 
 ---
 
@@ -81,7 +81,9 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 | # | Story | Priority | Completed | Key Decisions | Revision Risk |
 |---|-------|----------|-----------|---------------|---------------|
-| *No completed stories yet* | - | - | - | - | - |
+| 8 | Coaching Sidebar | P1 | 2026-02-11 | Coaching messages NOT in sidebar (comment balloons + toasts in editor); hint levels None/Light/Medium/Heavy; SVG illustrations morph per level; phase detail frontend-filtered; editor status bar added (Story 2/5 revision) | Low |
+| 9 | Hinting System | P1 | 2026-02-11 | Frontend owns rendering decisions (filter by level, dismiss on code change); comment balloons via Floating UI; toasts via react-toastify stacked; collapsed icon at levels 0-1; split review button with 4 scopes; review navigation ◀/▶ in status bar; Cmd+Shift+H/[/] shortcuts; Story 4/5 revisions (level/source fields, review_result message, split button, review nav mode) | Low |
+| 10 | Placeholder / Coming Soon Page | P2 | 2026-02-11 | Single page for both practice/learning; playful Paige personality; simple fade transition (no zoom); static content, no backend data; Story 2 revised to three view states | None |
 
 *Full stories in SPEC.md*
 
@@ -89,24 +91,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 ## In-Progress Story Detail
 
-### Story 1: Visual Identity & Design System
-**Status**: Queued → will move to In Progress next
-**Focus**: Establish the Anthropic-adjacent design language as CSS variables, Tailwind config, and reusable primitives
-
-**Known so far**:
-- Warm dark palette (#131313 range with olive/brown undertones)
-- Anthropic-adjacent terracotta accent (#d97757 family)
-- Warm whites for light surfaces (#faf9f5, #f5f4ed)
-- Spring-based animations via Framer Motion (expressive defaults)
-- Faux-ASCII touches concentrated on coaching panels, ambient everywhere else
-- Typography: expressive display type for dashboard, clean body type for IDE
-
-**Open questions**:
-- Specific font choices (display + body)
-- Exact colour tokens for all states (hint glow, phase states, error/success/warning)
-- Animation spring constants (stiffness/damping values)
-- Where ASCII art appears specifically
-- Grain/texture treatment details
+*All stories graduated. Specification complete.*
 
 ---
 
@@ -114,7 +99,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 *Items that might affect graduated stories:*
 
-[Will be populated as graduated stories accumulate]
+*No watching items — all stories graduated.*
 
 ---
 
@@ -122,7 +107,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 - **Thin client**: UI that renders state received from elsewhere; owns no data, no business logic
 - **Breakable wall**: Video-game-inspired hint where files glow subtly to suggest they're worth exploring
-- **Thinking block pattern**: System nudges rendered as collapsible blocks (collapsed by default) to separate proactive coaching from user-initiated conversation
+- **Thinking block pattern**: *(Removed from MVP — see REV-9)* Originally system nudges rendered as collapsible blocks; now Observer nudges render as normal terminal output
 - **Phase**: A step in Paige's scaffolded coaching plan for an issue
 - **Hint level**: Progressive disclosure tier: off → file hints → line hints → detail hints
 - **Dreyfus radar**: Spider/radar chart visualizing the user's skill levels across multiple areas
@@ -132,7 +117,6 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 ## Next Actions
 
-- Deep-dive Story 1: Visual Identity & Design System
-- Resolve open questions on colour tokens, font choices, animation constants
-- Develop acceptance scenarios for Story 1
-- Queue Story 2 (App Shell) and Story 4 (WebSocket) for development after Story 1 graduates
+- All 10 stories graduated to SPEC.md
+- OPEN_QUESTIONS.md is empty
+- Specification ready for final review and validation
