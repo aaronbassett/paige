@@ -117,9 +117,17 @@ export function useCoachingMessages(): UseCoachingMessagesReturn {
       }
     });
 
+    // Phase transition: clear coaching balloons and toasts (but NOT review comments).
+    const unsubPhaseTransition = on('phase:transition', () => {
+      setMessages([]);
+      setExpandedIds(new Set());
+      dismissAllCoachingToasts();
+    });
+
     return () => {
       unsubMessage();
       unsubClear();
+      unsubPhaseTransition();
     };
   }, [on]);
 
