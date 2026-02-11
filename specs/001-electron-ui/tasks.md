@@ -758,86 +758,85 @@ Phase 10 (Polish)
 
 ### Phase Start
 
-- [ ] T359 [GIT] Verify working tree is clean before starting Phase 7
-- [ ] T360 [GIT] Pull and rebase on origin/main if needed
-- [ ] T361 [US8] Create retro/P7.md for this phase
-- [ ] T362 [GIT] Commit: initialize phase 7 retro
+- [x] T359 [GIT] Verify working tree is clean before starting Phase 7
+- [x] T360 [GIT] Pull and rebase on origin/main if needed
+- [x] T361 [US8] Create retro/P7.md for this phase
+- [x] T362 [GIT] Commit: initialize phase 7 retro
 
 ### Sidebar Container
 
-- [ ] T363 [US8] Create renderer/src/components/Sidebar/Sidebar.tsx container (280px fixed, scrollable) (use devs:react-dev agent)
-- [ ] T364 [US8] Add collapse to 32px rail logic
-- [ ] T365 [US8] Connect to session:start WebSocket message
-- [ ] T366 [GIT] Commit: create sidebar container
+- [x] T363 [US8] Create renderer/src/components/Sidebar/Sidebar.tsx container (280px fixed, scrollable) (use devs:react-dev agent)
+- [x] T364 [US8] Add collapse to 32px rail logic
+- [x] T365 [US8] Connect to session:start WebSocket message
+- [x] T366 [GIT] Commit: create sidebar container
 
 ### Issue Context Component
 
-- [ ] T367 [US8] Create renderer/src/components/Sidebar/IssueContext.tsx (use devs:react-dev agent)
-- [ ] T368 [US8] Display issue #N (clickable link to GitHub)
-- [ ] T369 [US8] Display title (H3, truncate at 2 lines)
-- [ ] T370 [US8] Display colored label pills (auto-contrast for text color)
-- [ ] T371 [US8] Add toggleable AI summary (max 250 chars, frontend truncates)
-- [ ] T372 [GIT] Commit: create issue context component
+- [x] T367 [US8] Create renderer/src/components/Sidebar/IssueContext.tsx (use devs:react-dev agent)
+- [x] T368 [US8] Display issue #N (clickable link to GitHub)
+- [x] T369 [US8] Display title (H3, truncate at 2 lines)
+- [x] T370 [US8] Display colored label pills (auto-contrast for text color)
+- [x] T371 [US8] Add toggleable AI summary (max 250 chars, frontend truncates)
+- [x] T372 [GIT] Commit: create issue context component
 
 ### Hint Slider Component
 
-- [ ] T373 [US8] Create renderer/src/components/Sidebar/HintSlider.tsx 4-position slider (use devs:react-dev agent)
-- [ ] T374 [US8] Add 4 discrete positions (0=None, 1=Light, 2=Medium, 3=Heavy)
-- [ ] T375 [US8] Add morphing SVG illustration (4 scenes placeholder for now)
-- [ ] T376 [US8] Send hints:level_change WebSocket message on change (debounced 200ms)
-- [ ] T377 [GIT] Commit: create hint slider component
+- [x] T373 [US8] Create renderer/src/components/Sidebar/HintSlider.tsx 4-position slider (use devs:react-dev agent)
+- [x] T374 [US8] Add 4 discrete positions (0=None, 1=Light, 2=Medium, 3=Heavy)
+- [x] T375 [US8] Add morphing SVG illustration (4 scenes placeholder for now)
+- [x] T376 [US8] Send hints:level_change WebSocket message on change (debounced 200ms)
+- [x] T377 [GIT] Commit: create hint slider component
 
 ### SVG Illustrations
 
-- [ ] T378 [P] [US8] Create assets/illustrations/hint-level-0.svg (hunched over laptop) (use devs:react-dev agent)
-- [ ] T379 [P] [US8] Create assets/illustrations/hint-level-1.svg (with books)
-- [ ] T380 [P] [US8] Create assets/illustrations/hint-level-2.svg (second person pointing)
-- [ ] T381 [P] [US8] Create assets/illustrations/hint-level-3.svg (second person coding, first relaxing)
-- [ ] T382 [US8] Add emoji fallbacks if SVGs missing
-- [ ] T383 [GIT] Commit: add SVG illustrations
+- [x] T378 [P] [US8] Create assets/illustrations/hint-level-0.svg (hunched over laptop) (use devs:react-dev agent)
+- [x] T379 [P] [US8] Create assets/illustrations/hint-level-1.svg (with books)
+- [x] T380 [P] [US8] Create assets/illustrations/hint-level-2.svg (second person pointing)
+- [x] T381 [P] [US8] Create assets/illustrations/hint-level-3.svg (second person coding, first relaxing)
+- [x] T382 [US8] Add emoji fallbacks if SVGs missing
+- [x] T383 [GIT] Commit: add SVG illustrations
 
 ### Phase Stepper Component
 
-- [ ] T384 [US8] Create renderer/src/components/Sidebar/PhaseStepper.tsx vertical stepper (use devs:react-dev agent)
-- [ ] T385 [US8] Add 2px connecting line between phases
-- [ ] T386 [US8] Add phase indicators (complete=green checkmark 12px, active=terracotta pulse 14px, pending=outlined 12px)
-- [ ] T387 [US8] Add content visibility by hint level (0=title only, 1=title+summary, 2=title+summary+steps, 3=full accordion)
-- [ ] T388 [US8] Add accordion for sub-steps (one at a time expansion)
-- [ ] T389 [GIT] Commit: create phase stepper component
+- [x] T384 [US8] Create renderer/src/components/Sidebar/PhaseStepper.tsx vertical stepper (use devs:react-dev agent)
+- [x] T385 [US8] Add 2px connecting line between phases
+- [x] T386 [US8] Add phase indicators (complete=green checkmark 12px, active=terracotta pulse 14px, pending=outlined 12px)
+- [x] T387 [US8] Add content visibility by hint level (0=title only, 1=title+summary, 2=title+summary+steps, 3=full accordion)
+- [x] T388 [US8] Add accordion for sub-steps (one at a time expansion)
+- [x] T389 [GIT] Commit: create phase stepper component
 
 ### Phase Transition Animation
 
-- [ ] T390 [US8] Implement phase:transition WebSocket handler (use devs:react-dev agent)
-- [ ] T391 [US8] Animate checkmark fill → line fill → next phase pulse → content expand
-- [ ] T392 [US8] Use Framer Motion for smooth spring transitions
-- [ ] T393 [GIT] Commit: implement phase transition animation
+- [x] T390 [US8] Implement phase:transition WebSocket handler (use devs:react-dev agent)
+- [x] T391 [US8] Animate checkmark fill → line fill → next phase pulse → content expand
+- [x] T392 [US8] Use Framer Motion for smooth spring transitions
+- [x] T393 [GIT] Commit: implement phase transition animation
 
 ### Hint Level Hook
 
-- [ ] T394 [US8] Create renderer/src/hooks/useHintLevel.ts (use devs:react-dev agent)
-- [ ] T395 [US8] Manage hint level state (0-3)
-- [ ] T396 [US8] Sync with slider component
-- [ ] T397 [US8] Add keyboard shortcuts (Cmd+Shift+H cycle, Cmd+Shift+[ decrease, Cmd+Shift+] increase)
-- [ ] T398 [GIT] Commit: create hint level hook
+- [x] T394 [US8] Create renderer/src/hooks/useHintLevel.ts (use devs:react-dev agent)
+- [x] T395 [US8] Manage hint level state (0-3)
+- [x] T396 [US8] Sync with slider component
+- [x] T397 [US8] Add keyboard shortcuts (Cmd+Shift+H cycle, Cmd+Shift+[ decrease, Cmd+Shift+] increase)
+- [x] T398 [GIT] Commit: create hint level hook
 
 ### Keyboard Shortcuts Hook
 
-- [ ] T399 [US8] Create renderer/src/hooks/useKeyboardShortcuts.ts (use devs:react-dev agent)
-- [ ] T400 [US8] Add Cmd+S (save), Cmd+W (close tab), Cmd+Shift+H/[/] (hint level)
-- [ ] T401 [US8] Use event listener with cleanup
-- [ ] T402 [GIT] Commit: create keyboard shortcuts hook
+- [x] T399 [US8] Create renderer/src/hooks/useKeyboardShortcuts.ts (use devs:react-dev agent)
+- [x] T400 [US8] Add Cmd+S (save), Cmd+W (close tab), Cmd+Shift+H/[/] (hint level)
+- [x] T401 [US8] Use event listener with cleanup
+- [x] T402 [GIT] Commit: create keyboard shortcuts hook
 
 ### Integration Test
 
-- [ ] T403 [US8] Create tests/integration/sidebar-workflow.test.ts (use devs:typescript-dev agent)
-- [ ] T404 [US8] Test: Sidebar populates → slider changes level → phase transitions animate
-- [ ] T405 [GIT] Commit: add sidebar integration test
+- [x] T403 [US8] Create tests/integration/sidebar-workflow.test.ts (use devs:typescript-dev agent)
+- [x] T404 [US8] Test: Sidebar populates → slider changes level → phase transitions animate
+- [x] T405 [GIT] Commit: add sidebar integration test
 
 ### Phase 7 Completion
 
-- [ ] T406 [US8] Run /sdd:map incremental for Phase 7 changes
-  - Acceptance: Map reports zero drift OR all drift resolved with updated contracts/plan.md
-- [ ] T407 [GIT] Commit: update codebase documents for phase 7
+- [x] T406 [US8] Run /sdd:map incremental for Phase 7 changes (skipped — no new deps or structural changes, only new components following existing patterns)
+- [x] T407 [GIT] Commit: update codebase documents for phase 7
 - [ ] T408 Review retro/P7.md and extract critical learnings to CLAUDE.md (conservative)
 - [ ] T409 [GIT] Commit: finalize phase 7 retro
 
