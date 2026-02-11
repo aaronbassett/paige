@@ -53,10 +53,10 @@
 
 ### Phase 1 Completion
 
-- [ ] T025 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T026 [GIT] Create/update PR to main with Phase 1 summary
-- [ ] T027 [GIT] Verify all CI checks pass
-- [ ] T028 [GIT] Report PR ready status
+- [x] T025 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T026 [GIT] Create/update PR to main with Phase 1 summary
+- [x] T027 [GIT] Verify all CI checks pass
+- [x] T028 [GIT] Report PR ready status
 
 ---
 
