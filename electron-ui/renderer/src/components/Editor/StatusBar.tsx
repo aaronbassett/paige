@@ -21,6 +21,18 @@ type ReviewScope = 'current' | 'file' | 'last_review' | 'last_phase' | 'issue_st
 
 export interface StatusBarProps {
   onReview?: (scope: ReviewScope) => void;
+  /** Whether a review is currently active (transforms the right side to nav controls). */
+  reviewActive?: boolean;
+  /** Zero-based index of the currently focused review comment. */
+  reviewCurrentIndex?: number;
+  /** Total number of review comments. */
+  reviewTotal?: number;
+  /** Navigate to the next review comment. */
+  onReviewNext?: () => void;
+  /** Navigate to the previous review comment. */
+  onReviewPrevious?: () => void;
+  /** Exit review mode. */
+  onReviewExit?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +196,89 @@ const dropdownItemStyle: React.CSSProperties = {
 // Sub-components
 // ---------------------------------------------------------------------------
 
+/** Styles for review navigation buttons. */
+const navButtonStyle: React.CSSProperties = {
+  background: 'var(--bg-elevated)',
+  border: '1px solid var(--border-subtle)',
+  borderRadius: '3px',
+  color: 'var(--text-secondary)',
+  fontFamily: 'var(--font-family, monospace), monospace',
+  fontSize: 'var(--font-small-size, 12px)',
+  padding: '1px 6px',
+  cursor: 'pointer',
+  lineHeight: '1.4',
+};
+
+/** Review navigation controls shown when a review is active. */
+function ReviewNavigation({
+  currentIndex,
+  total,
+  onNext,
+  onPrevious,
+  onExit,
+}: {
+  currentIndex: number;
+  total: number;
+  onNext: () => void;
+  onPrevious: () => void;
+  onExit: () => void;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <button
+        type="button"
+        onClick={onPrevious}
+        aria-label="Previous comment"
+        style={navButtonStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'var(--bg-base)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'var(--bg-elevated)';
+        }}
+      >
+        {'\u25C0'}
+      </button>
+      <span
+        style={{
+          color: 'var(--text-secondary)',
+          fontSize: 'var(--font-small-size, 12px)',
+        }}
+      >
+        {currentIndex + 1}/{total}
+      </span>
+      <button
+        type="button"
+        onClick={onNext}
+        aria-label="Next comment"
+        style={navButtonStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'var(--bg-base)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'var(--bg-elevated)';
+        }}
+      >
+        {'\u25B6'}
+      </button>
+      <button
+        type="button"
+        onClick={onExit}
+        aria-label="Exit review"
+        style={navButtonStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'var(--bg-base)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'var(--bg-elevated)';
+        }}
+      >
+        {'\u2715'}
+      </button>
+    </div>
+  );
+}
+
 /** Split button with main action and dropdown caret. */
 function ReviewSplitButton({ onReview }: { onReview?: (scope: ReviewScope) => void }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -284,7 +379,15 @@ function ReviewSplitButton({ onReview }: { onReview?: (scope: ReviewScope) => vo
 // Main component
 // ---------------------------------------------------------------------------
 
-export function StatusBar({ onReview }: StatusBarProps) {
+export function StatusBar({
+  onReview,
+  reviewActive,
+  reviewCurrentIndex,
+  reviewTotal,
+  onReviewNext,
+  onReviewPrevious,
+  onReviewExit,
+}: StatusBarProps) {
   const [activeTab, setActiveTab] = useState<TabState | undefined>(() =>
     editorState.getActiveTab(),
   );
@@ -319,7 +422,17 @@ export function StatusBar({ onReview }: StatusBarProps) {
         )}
       </div>
 
-      <ReviewSplitButton onReview={onReview} />
+      {reviewActive ? (
+        <ReviewNavigation
+          currentIndex={reviewCurrentIndex ?? 0}
+          total={reviewTotal ?? 0}
+          onNext={onReviewNext ?? (() => {})}
+          onPrevious={onReviewPrevious ?? (() => {})}
+          onExit={onReviewExit ?? (() => {})}
+        />
+      ) : (
+        <ReviewSplitButton onReview={onReview} />
+      )}
     </footer>
   );
 }
