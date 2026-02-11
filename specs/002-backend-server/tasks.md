@@ -206,10 +206,10 @@
 
 ### Phase 4 Wrap-Up
 
-- [ ] T100 [US2] Run /sdd:map incremental for Phase 4 changes
-- [ ] T101 [GIT] Commit: update codebase documents for phase 4
-- [ ] T102 [US2] Review retro/P4.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T103 [GIT] Commit: finalize phase 4 retro
+- [x] T100 [US2] Run /sdd:map incremental for Phase 4 changes (skipped: no .sdd/codebase/ exists yet)
+- [x] T101 [GIT] Commit: update codebase documents for phase 4
+- [x] T102 [US2] Review retro/P4.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T103 [GIT] Commit: finalize phase 4 retro
 
 ### Phase 4 Completion
 
