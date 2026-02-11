@@ -29,12 +29,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: [
-        'src/**/*.d.ts',
-        'src/**/types.ts',
-        'src/**/types/**',
-        'src/index.ts',
-      ],
+      exclude: ['src/**/*.d.ts', 'src/**/types.ts', 'src/**/types/**', 'src/index.ts'],
       reportsDirectory: 'coverage',
       reporter: ['text', 'html', 'lcov'],
     },
@@ -81,6 +76,11 @@ export default defineConfig({
 
           /* Contract tests are independent — run concurrently */
           fileParallelism: true,
+
+          /* Provide minimal env vars so loadEnv() passes in contract tests */
+          env: {
+            PROJECT_DIR: '/tmp',
+          },
         },
       },
     ],
