@@ -141,3 +141,18 @@ export const practiceReviewSchema = z.object({
   passed: z.boolean(),
 });
 export type PracticeReviewResponse = z.infer<typeof practiceReviewSchema>;
+
+// ── Issue Suitability (Haiku) ──────────────────────────────────────────────
+// Assesses GitHub issue suitability based on developer's Dreyfus skill levels.
+
+export const issueSuitabilitySchema = z.object({
+  assessments: z.array(
+    z.object({
+      issue_number: z.number().int(),
+      suitability: z.enum(['excellent', 'good', 'fair', 'poor']),
+      recommended_focus: z.string(),
+      confidence: z.number().min(0).max(1),
+    }),
+  ),
+});
+export type IssueSuitabilityResponse = z.infer<typeof issueSuitabilitySchema>;
