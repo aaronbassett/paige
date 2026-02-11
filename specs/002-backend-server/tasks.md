@@ -437,17 +437,17 @@
 
 ### Phase 8 Wrap-Up
 
-- [ ] T219 [US6] Run /sdd:map incremental for Phase 8 changes
-- [ ] T220 [GIT] Commit: update codebase documents for phase 8
-- [ ] T221 [US6] Review retro/P8.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T222 [GIT] Commit: finalize phase 8 retro
+- [x] T219 [US6] Run /sdd:map incremental for Phase 8 changes (skipped: no .sdd/codebase/ exists yet)
+- [x] T220 [GIT] Commit: update codebase documents for phase 8
+- [x] T221 [US6] Review retro/P8.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T222 [GIT] Commit: finalize phase 8 retro
 
 ### Phase 8 Completion
 
-- [ ] T223 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T224 [GIT] Create/update PR to main with Phase 8 summary
-- [ ] T225 [GIT] Verify all CI checks pass
-- [ ] T226 [GIT] Report PR ready status
+- [x] T223 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T224 [GIT] Create/update PR to main with Phase 8 summary
+- [x] T225 [GIT] Verify all CI checks pass (no CI configured)
+- [x] T226 [GIT] Report PR ready status
 
 **Checkpoint**: All P1 stories complete - MVP is functional
 
