@@ -353,9 +353,7 @@ describe('MCP tool surface (integration)', () => {
         name: 'paige_highlight_lines',
         arguments: {
           path: filePath,
-          start_line: 1,
-          end_line: 2,
-          style: 'info',
+          ranges: [{ start: 1, end: 2, style: 'info' }],
         },
       });
 
@@ -391,13 +389,8 @@ describe('MCP tool surface (integration)', () => {
       const result = await client.callTool({
         name: 'paige_hint_files',
         arguments: {
-          hints: [
-            {
-              path: 'src/index.ts',
-              style: 'suggested',
-              hover_text: 'Start here',
-            },
-          ],
+          paths: ['src/index.ts'],
+          style: 'suggested',
         },
       });
 
@@ -417,7 +410,7 @@ describe('MCP tool surface (integration)', () => {
         name: 'paige_show_message',
         arguments: {
           message: 'Great progress! Keep going.',
-          level: 'info',
+          type: 'info',
         },
       });
 

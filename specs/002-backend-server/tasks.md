@@ -417,19 +417,19 @@
 
 ### Implementation for User Story 6
 
-- [ ] T202 [US6] Create src/mcp/server.ts with Streamable HTTP transport on /mcp (use devs:typescript-dev agent)
-- [ ] T203 [GIT] Commit: add MCP server
-- [ ] T204 [US6] Create src/mcp/session.ts with active session tracking Map (use devs:typescript-dev agent)
-- [ ] T205 [GIT] Commit: add MCP session management
-- [ ] T206 [P] [US6] Create src/mcp/tools/lifecycle.ts with paige_start_session and paige_end_session (use devs:typescript-dev agent)
-- [ ] T207 [P] [US6] Create src/mcp/tools/read.ts with paige_get_buffer, paige_get_open_files, paige_get_diff, paige_get_session_state (use devs:typescript-dev agent)
-- [ ] T208 [GIT] Commit: add MCP read tools
-- [ ] T209 [P] [US6] Create src/mcp/tools/ui.ts with paige_open_file, paige_highlight_lines, paige_clear_highlights (use devs:typescript-dev agent)
-- [ ] T210 [P] [US6] Add paige_hint_files, paige_clear_hints to src/mcp/tools/ui.ts (use devs:typescript-dev agent)
-- [ ] T211 [P] [US6] Add paige_update_phase, paige_show_message, paige_show_issue_context to src/mcp/tools/ui.ts (use devs:typescript-dev agent)
-- [ ] T212 [GIT] Commit: add MCP UI control tools
-- [ ] T213 [US6] Register all 12 MCP tools in src/mcp/server.ts (use devs:typescript-dev agent)
-- [ ] T214 [GIT] Commit: register MCP tools
+- [x] T202 [US6] Create src/mcp/server.ts with Streamable HTTP transport on /mcp (use devs:typescript-dev agent)
+- [x] T203 [GIT] Commit: add MCP server
+- [x] T204 [US6] Create src/mcp/session.ts with active session tracking Map (use devs:typescript-dev agent)
+- [x] T205 [GIT] Commit: add MCP session management
+- [x] T206 [P] [US6] Create src/mcp/tools/lifecycle.ts with paige_start_session and paige_end_session (use devs:typescript-dev agent)
+- [x] T207 [P] [US6] Create src/mcp/tools/read.ts with paige_get_buffer, paige_get_open_files, paige_get_diff, paige_get_session_state (use devs:typescript-dev agent)
+- [x] T208 [GIT] Commit: add MCP read tools
+- [x] T209 [P] [US6] Create src/mcp/tools/ui.ts with paige_open_file, paige_highlight_lines, paige_clear_highlights (use devs:typescript-dev agent)
+- [x] T210 [P] [US6] Add paige_hint_files, paige_clear_hints to src/mcp/tools/ui.ts (use devs:typescript-dev agent)
+- [x] T211 [P] [US6] Add paige_update_phase, paige_show_message, paige_show_issue_context to src/mcp/tools/ui.ts (use devs:typescript-dev agent)
+- [x] T212 [GIT] Commit: add MCP UI control tools
+- [x] T213 [US6] Register all 12 MCP tools in src/mcp/server.ts (use devs:typescript-dev agent)
+- [x] T214 [GIT] Commit: register MCP tools
 - [ ] T215 [US6] Integrate MCP server with HTTP server in src/index.ts (use devs:typescript-dev agent)
 - [ ] T216 [GIT] Commit: integrate MCP server
 - [ ] T217 [US6] Verify US6 tests now pass
