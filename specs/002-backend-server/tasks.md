@@ -236,27 +236,27 @@
 ### Retro Initialization
 
 - [x] T110 [US3] Create retro/P5.md for this phase
-- [ ] T111 [GIT] Commit: initialize phase 5 retro
+- [x] T111 [GIT] Commit: initialize phase 5 retro
 
 ### Tests for User Story 3
 
-- [ ] T112 [P] [US3] Unit test for path traversal rejection in tests/unit/file-system/security.test.ts (use devs:typescript-dev agent)
-- [ ] T113 [P] [US3] Integration test for buffer cache in tests/integration/buffer-cache.test.ts (use devs:typescript-dev agent)
-- [ ] T114 [P] [US3] Integration test for diff computation in tests/integration/diff.test.ts (use devs:typescript-dev agent)
-- [ ] T115 [GIT] Commit: add US3 tests (failing)
+- [x] T112 [P] [US3] Unit test for path traversal rejection in tests/unit/file-system/security.test.ts (use devs:typescript-dev agent)
+- [x] T113 [P] [US3] Integration test for buffer cache in tests/integration/buffer-cache.test.ts (use devs:typescript-dev agent)
+- [x] T114 [P] [US3] Integration test for diff computation in tests/integration/diff.test.ts (use devs:typescript-dev agent)
+- [x] T115 [GIT] Commit: add US3 tests (failing)
 
 ### Implementation for User Story 3
 
-- [ ] T116 [P] [US3] Create src/file-system/file-ops.ts with readFile and writeFile with security validation (use devs:typescript-dev agent)
-- [ ] T117 [P] [US3] Create src/file-system/buffer-cache.ts with in-memory Map and BufferEntry type (use devs:typescript-dev agent)
-- [ ] T118 [GIT] Commit: add file ops and buffer cache
-- [ ] T119 [US3] Implement getDiff function with unified diff generation in src/file-system/file-ops.ts (use devs:typescript-dev agent)
-- [ ] T120 [GIT] Commit: add diff computation
-- [ ] T121 [US3] Create src/file-system/tree.ts with getProjectTree and noise filtering (use devs:typescript-dev agent)
-- [ ] T122 [GIT] Commit: add project tree scanning
-- [ ] T123 [US3] Create src/file-system/watcher.ts with Chokidar and event emission (use devs:typescript-dev agent)
-- [ ] T124 [GIT] Commit: add file system watcher
-- [ ] T125 [US3] Verify US3 tests now pass
+- [x] T116 [P] [US3] Create src/file-system/file-ops.ts with readFile and writeFile with security validation (use devs:typescript-dev agent)
+- [x] T117 [P] [US3] Create src/file-system/buffer-cache.ts with in-memory Map and BufferEntry type (use devs:typescript-dev agent)
+- [x] T118 [GIT] Commit: add file ops and buffer cache
+- [x] T119 [US3] Implement getDiff function with unified diff generation in src/file-system/file-ops.ts (use devs:typescript-dev agent)
+- [x] T120 [GIT] Commit: add diff computation
+- [x] T121 [US3] Create src/file-system/tree.ts with getProjectTree and noise filtering (use devs:typescript-dev agent)
+- [x] T122 [GIT] Commit: add project tree scanning
+- [x] T123 [US3] Create src/file-system/watcher.ts with Chokidar and event emission (use devs:typescript-dev agent)
+- [x] T124 [GIT] Commit: add file system watcher
+- [x] T125 [US3] Verify US3 tests now pass
 - [ ] T126 [GIT] Commit: verify US3 complete
 
 ### Phase 5 Wrap-Up
