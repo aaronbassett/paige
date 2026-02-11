@@ -48,6 +48,14 @@ export async function createKata(db: AppDatabase, input: CreateKataInput): Promi
 }
 
 /**
+ * Retrieves a single kata spec by its ID. Returns `null` if no kata exists
+ * with the given ID.
+ */
+export function getKataById(_db: AppDatabase, _id: number): Promise<KataSpec | null> {
+  return Promise.reject(new Error('Not implemented'));
+}
+
+/**
  * Retrieves all kata specs belonging to the given knowledge gap, ordered by
  * `created_at` ascending (chronological order). Returns an empty array if
  * no katas exist for the gap.
