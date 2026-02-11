@@ -490,10 +490,10 @@
 
 ### Phase 9 Wrap-Up
 
-- [ ] T244 [US7] Run /sdd:map incremental for Phase 9 changes
-- [ ] T245 [GIT] Commit: update codebase documents for phase 9
-- [ ] T246 [US7] Review retro/P9.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T247 [GIT] Commit: finalize phase 9 retro
+- [x] T244 [US7] Run /sdd:map incremental for Phase 9 changes
+- [x] T245 [GIT] Commit: update codebase documents for phase 9
+- [x] T246 [US7] Review retro/P9.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T247 [GIT] Commit: finalize phase 9 retro
 
 ### Phase 9 Completion
 
