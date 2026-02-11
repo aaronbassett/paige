@@ -984,10 +984,10 @@ Phase 10 (Polish)
 
 ### Phase Start
 
-- [ ] T487 [GIT] Verify working tree is clean before starting Phase 9
-- [ ] T488 [GIT] Pull and rebase on origin/main if needed
-- [ ] T489 [US10] Create retro/P9.md for this phase
-- [ ] T490 [GIT] Commit: initialize phase 9 retro
+- [x] T487 [GIT] Verify working tree is clean before starting Phase 9
+- [x] T488 [GIT] Pull and rebase on origin/main if needed
+- [x] T489 [US10] Create retro/P9.md for this phase
+- [x] T490 [GIT] Commit: initialize phase 9 retro
 
 ### Placeholder Page
 
