@@ -130,6 +130,30 @@
 
 ---
 
+## REV-9: Story 7 — Terminal switches from Full React to xterm.js; thinking blocks removed — 2026-02-11
+
+**Revision Type**: Structural
+
+**Story Affected**: Story 7 (Terminal with Filter Pipeline → Terminal with xterm.js)
+
+**What Changed**:
+- **Rendering approach**: "Full React (No xterm.js)" → xterm.js terminal emulator
+- **Thinking blocks**: Entire thinking block system removed (detection, ThinkingBlock component, synthetic tag injection, block splitting)
+- **Observer nudge UI**: No visual distinction between user and observer interactions. Main process writes nudge prompt to PTY stdin; Claude Code responds normally. Nudge prompt includes instructions for Claude to adjust tone.
+- **Data pipeline**: Simplified from 8-stage (PTY → batcher → ANSI parser → block detector → splitter → React) to 4-stage (PTY → IPC → xterm.write)
+- **Requirements**: R7.1-R7.11 (11 items) → R7.1-R7.7 (7 items). React rendering, ANSI parsing, thinking blocks, data batching all removed. Added xterm.js FitAddon and WebLinksAddon requirements.
+- **Edge cases**: E7.1-E7.8 (8 items) → E7.1-E7.6 (6 items). Thinking block edge cases removed. Added scrollback buffer limit.
+- **Success criteria**: SC7.1-SC7.5 (5 items) → SC7.1-SC7.4 (4 items). Thinking block and interleaving criteria removed. Added TUI rendering criterion.
+- **Acceptance scenarios**: 12 → 8. Thinking block scenarios (7.5-7.8, 7.10, 7.11) replaced with observer nudge as normal output (7.5) and TUI rendering (7.8).
+
+**Why**: PoC validation failed. Claude Code outputs complex TUI content (cursor positioning, alternate screen buffer, box-drawing characters, powerline glyphs) that a simple ANSI-to-React parser cannot render correctly. The PoC test app showed severely broken rendering. xterm.js is a full terminal emulator that handles all of this natively.
+
+**Impact**: Significant simplification of Story 7. No cascade to other stories — Observer backend/plugin flow unchanged; only frontend rendering affected. WebSocket messages `terminal:ready` and `terminal:resize` still required (Story 4 unaffected).
+
+**Triggered By**: PoC validation of Full React terminal approach — rendering was "very broken" with Claude Code's TUI output.
+
+---
+
 ## REV-8: Story 2 — Three view states (was two) — 2026-02-11
 
 **Revision Type**: Modificative

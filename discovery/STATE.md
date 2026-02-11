@@ -46,7 +46,7 @@ Paige's backend does the heavy intellectual lifting (coaching pipeline, memory, 
 | 4 | WebSocket Client | P1 | ✅ In SPEC | 15% | - |
 | 5 | Code Editor (Monaco) | P1 | ✅ In SPEC | 25% | 1, 2, 4 |
 | 6 | File Explorer with Hint Glow | P1 | ✅ In SPEC | 20% | 1, 2, 4 |
-| 7 | Terminal with Filter Pipeline | P1 | ✅ In SPEC | 20% | 1, 2, 4 |
+| 7 | Terminal with xterm.js | P1 | ✅ In SPEC (REV-9) | 20% | 1, 2, 4 |
 | 8 | Coaching Sidebar (Issue + Phases) | P1 | ✅ In SPEC | 95% | 1, 2, 4 |
 | 9 | Hinting System | P1 | ✅ In SPEC | 95% | 5, 6, 8 |
 | 10 | Placeholder / Coming Soon Page | P2 | ✅ In SPEC | 100% | 1, 2 |
@@ -107,7 +107,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 - **Thin client**: UI that renders state received from elsewhere; owns no data, no business logic
 - **Breakable wall**: Video-game-inspired hint where files glow subtly to suggest they're worth exploring
-- **Thinking block pattern**: System nudges rendered as collapsible blocks (collapsed by default) to separate proactive coaching from user-initiated conversation
+- **Thinking block pattern**: *(Removed from MVP — see REV-9)* Originally system nudges rendered as collapsible blocks; now Observer nudges render as normal terminal output
 - **Phase**: A step in Paige's scaffolded coaching plan for an issue
 - **Hint level**: Progressive disclosure tier: off → file hints → line hints → detail hints
 - **Dreyfus radar**: Spider/radar chart visualizing the user's skill levels across multiple areas

@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feature/electron-ui`
 **Created**: 2026-02-10
-**Last Updated**: 2026-02-11
+**Last Updated**: 2026-02-11 (REV-9: Story 7 terminal approach revised)
 **Status**: Complete (10/10 stories graduated)
 **Discovery**: See `discovery/` folder for full context
 
@@ -990,33 +990,30 @@ When a hint arrives for a file inside a collapsed directory:
 | SC6.4 | Auto-expand matches style | `subtle` stays collapsed; `unmissable` reveals file |
 | SC6.5 | Performance with large trees | 500+ files render and scroll without jank |
 
-### Story 7: Terminal with Filter Pipeline [P1] ✅
+### Story 7: Terminal with xterm.js [P1] ✅ *(Revised: REV-9)*
 
 **As a** developer working on an issue in Paige,
-**I want** a terminal panel where I talk to Claude Code and see Observer nudges rendered as collapsible thinking blocks,
-**So that** I can have a conversational coaching experience where proactive guidance is visible but non-intrusive.
+**I want** a terminal panel where I talk to Claude Code and receive coaching guidance inline,
+**So that** I can have a conversational coaching experience in a familiar terminal environment.
 
 **Priority**: P1 — The conversational coaching surface; where the user interacts with Paige.
 **Dependencies**: Story 1 (Visual Identity), Story 2 (App Shell), Story 4 (WebSocket).
 
-#### Rendering Approach: Full React (No xterm.js)
+#### Rendering Approach: xterm.js
 
-The terminal does NOT use xterm.js. Instead:
+The terminal uses xterm.js for rendering. The original "Full React (No xterm.js)" approach was invalidated by PoC — Claude Code's TUI output (cursor positioning, alternate screen buffer, box-drawing characters, powerline glyphs) requires a full terminal emulator, not ANSI-to-React parsing.
+
 - PTY spawned via `node-pty` in Electron main process
 - Raw PTY data sent to renderer via Electron IPC
-- Renderer parses ANSI escape sequences into styled React components
-- Output organized into visual blocks (one per command+output)
-- `<thinking>` tags in the data stream trigger collapsible thinking block components
-
-This gives full control over styling, enables native thinking block interleaving, and integrates with the design system.
-
-**Note**: This approach is subject to PoC validation. If the PoC reveals issues (latency, ANSI edge cases, performance), we fall back to xterm.js with thinking blocks rendered above the terminal.
+- Renderer writes data directly to xterm.js instance via `terminal.write(data)`
+- xterm.js handles all ANSI parsing, cursor movement, screen management, and rendering
+- xterm.js `FitAddon` manages automatic terminal sizing to container
 
 #### Terminal Panel Layout
 
-- **Header**: "TERMINAL" in uppercase `--text-muted` (12px, weight 500) + Observer status indicator (right-aligned)
-- **Output area**: Scrollable, fills remaining panel height
-- **Input**: Captured via focused container; keystrokes forwarded to PTY. User types inline — PTY echo provides visible feedback in the output stream.
+- **Header**: "TERMINAL" in uppercase `--text-muted` (12px, weight 500)
+- **Terminal area**: xterm.js canvas, fills remaining panel height
+- **Input**: xterm.js captures keystrokes when focused; forwarded to PTY via `terminal.onData()` → IPC → `pty.write()`
 
 Background: `--bg-inset` (#141413). Font: JetBrains Mono 14px.
 
@@ -1026,18 +1023,24 @@ Background: `--bg-inset` (#141413). Font: JetBrains Mono 14px.
 PTY (node-pty)
   → pty.onData()
   → Electron main process
-  → [synthetic <thinking> tag injection for nudges]
   → IPC to renderer
-  → data batcher (16ms / requestAnimationFrame)
-  → ANSI parser → styled segments
-  → thinking block detector (tag scanning)
-  → block splitter (prompt pattern detection)
-  → React component tree
+  → xterm.write(data)
 ```
+
+#### Observer Nudge Flow
+
+Observer nudges are invisible to the user from a UI perspective:
+
+1. Backend sends `observer:nudge` via WebSocket: `{ signal, confidence, context }`
+2. Electron main process writes nudge prompt to PTY stdin (Claude Code processes it as Paige)
+3. The nudge prompt includes instructions telling Claude it was an automated prompt, so it adjusts response language accordingly
+4. Claude Code's response streams through PTY → renders in xterm.js as normal output
+5. Any MCP tool calls triggered by the nudge render their results normally
+6. No visual distinction between user-initiated and observer-initiated interactions
 
 #### Warm-Mapped ANSI Color Palette
 
-All 16 ANSI colors remapped to warm-toned variants:
+All 16 ANSI colors remapped to warm-toned variants, applied as an xterm.js `ITheme`:
 
 **Standard 8**
 
@@ -1065,118 +1068,66 @@ All 16 ANSI colors remapped to warm-toned variants:
 | 14 | Bright Cyan | #96c4b8 | lighter warm sage |
 | 15 | Bright White | #faf9f5 | `--text-primary` |
 
-Foreground default: `--text-primary` (#faf9f5). Background default: `--bg-inset` (#141413). Cursor: `--accent-primary` (#d97757).
+Foreground default: `--text-primary` (#faf9f5). Background default: `--bg-inset` (#141413). Cursor: `--accent-primary` (#d97757). Selection: `--accent-primary` at 30% opacity.
 
 #### PTY Size Management
 
-The PTY needs cols/rows for programs that use terminal dimensions (e.g., `ls` column layout, `less` pagination):
-- Calculate cols from container width / monospace character width
-- Calculate rows from container height / line height
-- Update PTY dimensions on container resize
+- xterm.js `FitAddon` calculates cols/rows from container dimensions automatically
+- `FitAddon.fit()` called on container resize (via `ResizeObserver`)
+- On fit, new dimensions written to PTY via `pty.resize(cols, rows)`
 - Send `terminal:ready` (on init) and `terminal:resize` (on change) to backend via WebSocket
-
-#### Thinking Block Detection
-
-The renderer scans the incoming data stream for `<thinking>` / `</thinking>` tags:
-
-- On `<thinking>`: begins buffering content into a separate thinking block buffer
-- On `</thinking>`: creates a ThinkingBlock component with the buffered content
-- Content between tags is parsed with the ANSI parser (formatting preserved inside thinking blocks)
-- Tags themselves are stripped from rendered output
-- Tags may be split across IPC data chunks — the detector must handle partial tags
-
-**ThinkingBlock component:**
-- **Collapsed** (default): single line — "Paige is thinking..." with chevron icon. Background: `--bg-surface`. Left border: 2px `--accent-primary`.
-- **Expanded**: full content rendered with ANSI formatting. Same background/border treatment.
-- Click anywhere on the block to toggle.
-- Scanline overlay on background (consistent with coaching aesthetic from Story 1).
-
-#### Observer Nudge Flow
-
-1. Backend sends `observer:nudge` via WebSocket: `{ signal, confidence, context }`
-2. Electron main process injects `<thinking>\n` into IPC data stream to renderer
-3. Main process writes nudge prompt to PTY stdin (Claude Code processes it as Paige)
-4. Claude Code's response streams through PTY → captured inside the thinking block buffer
-5. Main process detects response complete (prompt pattern detection — looks for Claude Code's idle prompt)
-6. Main process injects `\n</thinking>` into IPC data stream
-7. Renderer closes the thinking block; subsequent output renders normally
-
-**Observer status indicator** (in terminal header):
-- Idle: no indicator visible
-- Active nudge in progress: small pulsing dot in `--phase-active` (terracotta) + "Observing..." text in `--text-muted`
-- Muted: "Muted" in `--text-muted`
 
 #### Input Handling
 
-- Renderer captures all keyboard events when terminal panel is focused
-- Each keystroke sent to main process via IPC → `pty.write()`
-- PTY echo provides visible character feedback in output stream
-- Control sequences forwarded: Ctrl+C (SIGINT), Ctrl+D (EOF), Ctrl+Z (SIGTSTP)
-- Arrow keys, Tab sent as appropriate escape sequences for shell completion/history
-
-#### Block Splitting
-
-Terminal output is split into visual blocks for readability:
-- Each prompt line (detected by heuristic: line ending with `$`, `%`, `>`, or Claude Code's prompt pattern) starts a new block
-- Blocks have subtle visual separation (4px gap or faint `--border-subtle` divider)
-- New blocks auto-scroll into view
-- Thinking blocks are standalone blocks in the stream
+- xterm.js captures keyboard events natively when the terminal element is focused
+- `terminal.onData(data)` fires for each user input → sent to main process via IPC → `pty.write(data)`
+- xterm.js handles control sequences (Ctrl+C, Ctrl+D, Ctrl+Z), arrow keys, Tab, and all standard terminal input natively
+- Terminal only captures input when its container element has focus
 
 #### Acceptance Scenarios
 
 | # | Scenario | Expected Outcome |
 |---|----------|-----------------|
-| 7.1 | Session starts, terminal initializes | Shell prompt appears, user can type commands |
-| 7.2 | Run `ls --color` | Colored output rendered with warm-mapped ANSI colors as React components |
-| 7.3 | Run a command producing 1000+ lines | Output scrolls smoothly without freezing |
+| 7.1 | Session starts, terminal initializes | Shell prompt appears in xterm.js, user can type commands |
+| 7.2 | Run `ls --color` | Colored output rendered with warm-mapped ANSI colors in xterm.js |
+| 7.3 | Run a command producing 1000+ lines | xterm.js scrollback handles output without freezing |
 | 7.4 | Type Ctrl+C during a running command | SIGINT sent, command interrupted |
-| 7.5 | Observer nudge arrives | Main process injects thinking tags, thinking block appears collapsed in output stream |
-| 7.6 | Click a thinking block | Block expands to show full Paige thinking content with ANSI formatting |
-| 7.7 | Output continues after thinking block | Normal terminal output renders below the thinking block |
-| 7.8 | Multiple thinking blocks in a session | Each renders independently, collapsible, properly interleaved |
-| 7.9 | Terminal panel resized (sidebar collapse) | PTY dimensions update, subsequent output reflows correctly |
-| 7.10 | Observer muted | Status indicator shows "Muted", no nudges injected |
-| 7.11 | View terminal header | "TERMINAL" label + observer status indicator visible |
-| 7.12 | Interactive command (`read` prompt, etc.) | User can type input to running script, echoed correctly |
+| 7.5 | Observer nudge arrives | Main process writes prompt to PTY; Claude Code responds; output appears as normal terminal text |
+| 7.6 | Terminal panel resized (sidebar collapse) | FitAddon recalculates dimensions, PTY resized, subsequent output reflows |
+| 7.7 | Interactive command (`read` prompt, etc.) | User can type input to running script, echoed correctly |
+| 7.8 | Claude Code TUI renders (welcome screen, status bars) | Full TUI renders correctly via xterm.js (cursor positioning, box-drawing, powerline) |
 
 #### Edge Cases
 
 | ID | Scenario | Handling |
 |----|----------|----------|
-| E7.1 | `<thinking>` tag split across IPC data chunks | Detector buffers partial tags, only commits when full tag recognized |
-| E7.2 | Very large thinking block content | Thinking block content scrollable when expanded; collapsed stays one line |
-| E7.3 | Rapid successive output (>10KB/s) | Data batcher aggregates at 16ms intervals; React updates batched |
-| E7.4 | PTY exits (user types `exit`) | Terminal shows "Process exited" message; no crash |
-| E7.5 | Non-UTF8 output (binary data) | Best-effort rendering; don't crash |
-| E7.6 | Unclosed `<thinking>` tag | After 30s timeout with no `</thinking>`, flush buffer as normal output |
-| E7.7 | Terminal focused while typing in editor | Only capture input when terminal panel is explicitly focused |
-| E7.8 | `prefers-reduced-motion` active | Thinking block expand/collapse instant; observer dot static |
+| E7.1 | Rapid successive output (>10KB/s) | xterm.js handles rendering performance natively |
+| E7.2 | PTY exits (user types `exit`) | Terminal shows "Process exited" message; no crash |
+| E7.3 | Non-UTF8 output (binary data) | xterm.js best-effort rendering; don't crash |
+| E7.4 | Terminal focused while typing in editor | xterm.js only captures input when its element has focus |
+| E7.5 | `prefers-reduced-motion` active | No animated elements in terminal (cursor blink can be disabled) |
+| E7.6 | Very long scrollback (10k+ lines) | xterm.js scrollback buffer capped at configurable limit (default 5000 lines) |
 
 #### Requirements
 
 | ID | Requirement |
 |----|-------------|
-| R7.1 | Terminal MUST render PTY output as React components (no xterm.js) |
-| R7.2 | ANSI escape sequences MUST be parsed and rendered as CSS styles |
-| R7.3 | All 16 ANSI colors MUST be remapped to warm palette variants |
-| R7.4 | `<thinking>` / `</thinking>` tags MUST trigger collapsible thinking block components |
-| R7.5 | Thinking block tags MUST be injected synthetically by main process (not actual PTY output) |
-| R7.6 | Thinking blocks MUST be collapsed by default |
-| R7.7 | Observer nudge flow MUST use synthetic tag injection around PTY responses |
-| R7.8 | Data batching MUST aggregate incoming data at ~16ms intervals |
-| R7.9 | PTY dimensions MUST be calculated from container size and updated on resize |
-| R7.10 | Control characters (Ctrl+C, Ctrl+D, Ctrl+Z) MUST be forwarded to PTY |
-| R7.11 | Terminal MUST only capture keyboard input when focused |
+| R7.1 | Terminal MUST use xterm.js for rendering |
+| R7.2 | All 16 ANSI colors MUST be remapped to warm palette variants via xterm.js `ITheme` |
+| R7.3 | PTY dimensions MUST be managed via xterm.js `FitAddon` with `ResizeObserver` |
+| R7.4 | Observer nudges MUST be written to PTY stdin by main process (no UI treatment) |
+| R7.5 | Control characters (Ctrl+C, Ctrl+D, Ctrl+Z) MUST be forwarded to PTY via xterm.js `onData` |
+| R7.6 | Terminal MUST only capture keyboard input when focused |
+| R7.7 | xterm.js `WebLinksAddon` MUST be enabled for clickable URLs |
 
 #### Success Criteria
 
 | ID | Criterion | Measurement |
 |----|-----------|-------------|
-| SC7.1 | ANSI rendering fidelity | Colored command output renders correctly with warm-mapped colors |
-| SC7.2 | Thinking blocks work | Observer nudge → collapsed block appears → click expands → content visible |
+| SC7.1 | ANSI rendering fidelity | Colored output renders correctly with warm-mapped colors in xterm.js |
+| SC7.2 | TUI rendering | Claude Code welcome screen, status bars, and powerline render correctly |
 | SC7.3 | Input responsiveness | Typing feels immediate (PTY echo latency <50ms perceptible) |
 | SC7.4 | Large output performance | 1000+ lines scroll without jank |
-| SC7.5 | Interleaving works | Normal output → thinking block → normal output renders in correct order |
 
 ### Story 8: Coaching Sidebar (Issue + Phases) [P1] ✅
 
@@ -1947,14 +1898,12 @@ Centered content, vertically and horizontally, within the app shell. Background:
 | E6.6 | Multiple hints, same directory, different intensities | Highest intensity wins | 6 |
 | E6.7 | Very long filenames | Truncate with ellipsis; tooltip shows full name | 6 |
 | E6.8 | Hidden files (dotfiles) | Shown in tree | 6 |
-| E7.1 | `<thinking>` tag split across IPC chunks | Detector buffers partial tags; commits on full tag | 7 |
-| E7.2 | Very large thinking block content | Scrollable when expanded; collapsed stays one line | 7 |
-| E7.3 | Rapid successive output (>10KB/s) | Data batcher aggregates at 16ms intervals | 7 |
-| E7.4 | PTY exits (user types `exit`) | "Process exited" message; no crash | 7 |
-| E7.5 | Non-UTF8 output (binary data) | Best-effort rendering; don't crash | 7 |
-| E7.6 | Unclosed `<thinking>` tag | 30s timeout → flush buffer as normal output | 7 |
-| E7.7 | Terminal focused while typing in editor | Only capture input when terminal explicitly focused | 7 |
-| E7.8 | `prefers-reduced-motion` active | Thinking block transitions instant; observer dot static | 7 |
+| E7.1 | Rapid successive output (>10KB/s) | xterm.js handles rendering performance natively | 7 |
+| E7.2 | PTY exits (user types `exit`) | "Process exited" message; no crash | 7 |
+| E7.3 | Non-UTF8 output (binary data) | xterm.js best-effort rendering; don't crash | 7 |
+| E7.4 | Terminal focused while typing in editor | xterm.js only captures input when its element has focus | 7 |
+| E7.5 | `prefers-reduced-motion` active | Cursor blink disabled; no animated terminal elements | 7 |
+| E7.6 | Very long scrollback (10k+ lines) | xterm.js scrollback buffer capped at configurable limit (default 5000) | 7 |
 | E8.1 | Issue has no labels | Labels row hidden entirely | 8 |
 | E8.2 | Issue summary >250 chars | Frontend truncates at 250 with ellipsis | 8 |
 | E8.3 | Very long phase title | Truncate with ellipsis; tooltip for full title | 8 |
@@ -2048,17 +1997,13 @@ Centered content, vertically and horizontally, within the app shell. Background:
 | R6.8 | Single click file MUST open in editor | 6 | 100% |
 | R6.9 | `explorer:hint_files` MUST support per-file style + optional directory list | 6 | 100% |
 | R6.10 | Auto-expand MUST match hint style | 6 | 100% |
-| R7.1 | Terminal MUST render PTY output as React components (no xterm.js) | 7 | 100% |
-| R7.2 | ANSI escape sequences MUST be parsed and rendered as CSS styles | 7 | 100% |
-| R7.3 | All 16 ANSI colors MUST be remapped to warm palette variants | 7 | 100% |
-| R7.4 | `<thinking>` / `</thinking>` tags MUST trigger collapsible thinking block components | 7 | 100% |
-| R7.5 | Thinking block tags MUST be injected synthetically by main process | 7 | 100% |
-| R7.6 | Thinking blocks MUST be collapsed by default | 7 | 100% |
-| R7.7 | Observer nudge flow MUST use synthetic tag injection around PTY responses | 7 | 100% |
-| R7.8 | Data batching MUST aggregate incoming data at ~16ms intervals | 7 | 100% |
-| R7.9 | PTY dimensions MUST be calculated from container size and updated on resize | 7 | 100% |
-| R7.10 | Control characters (Ctrl+C, Ctrl+D, Ctrl+Z) MUST be forwarded to PTY | 7 | 100% |
-| R7.11 | Terminal MUST only capture keyboard input when focused | 7 | 100% |
+| R7.1 | Terminal MUST use xterm.js for rendering | 7 | 100% |
+| R7.2 | All 16 ANSI colors MUST be remapped to warm palette variants via xterm.js `ITheme` | 7 | 100% |
+| R7.3 | PTY dimensions MUST be managed via xterm.js `FitAddon` with `ResizeObserver` | 7 | 100% |
+| R7.4 | Observer nudges MUST be written to PTY stdin by main process (no UI treatment) | 7 | 100% |
+| R7.5 | Control characters (Ctrl+C, Ctrl+D, Ctrl+Z) MUST be forwarded to PTY via xterm.js `onData` | 7 | 100% |
+| R7.6 | Terminal MUST only capture keyboard input when focused | 7 | 100% |
+| R7.7 | xterm.js `WebLinksAddon` MUST be enabled for clickable URLs | 7 | 100% |
 | R8.1 | Sidebar MUST be 280px fixed width with independent scrolling | 8 | 100% |
 | R8.2 | Issue number MUST be clickable link opening GitHub URL via `shell.openExternal` | 8 | 100% |
 | R8.3 | Issue summary MUST be toggleable and max 250 characters | 8 | 100% |
@@ -2146,11 +2091,10 @@ Centered content, vertically and horizontally, within the app shell. Background:
 | SC6.3 | Gradient animation visible | Parent dir visibly brighter/faster than distant ancestors | 6 |
 | SC6.4 | Auto-expand matches style | subtle stays collapsed; unmissable reveals file | 6 |
 | SC6.5 | Performance with large trees | 500+ files render without jank | 6 |
-| SC7.1 | ANSI rendering fidelity | Colored output renders correctly with warm-mapped colors | 7 |
-| SC7.2 | Thinking blocks work | Nudge → collapsed block → click expands → content visible | 7 |
+| SC7.1 | ANSI rendering fidelity | Colored output renders correctly with warm-mapped colors in xterm.js | 7 |
+| SC7.2 | TUI rendering | Claude Code welcome screen, status bars, powerline render correctly | 7 |
 | SC7.3 | Input responsiveness | Typing feels immediate (<50ms PTY echo latency) | 7 |
 | SC7.4 | Large output performance | 1000+ lines scroll without jank | 7 |
-| SC7.5 | Interleaving works | Normal → thinking block → normal renders in correct order | 7 |
 | SC8.1 | Issue context renders | Number (linked), title, labels, toggleable summary display from backend | 8 |
 | SC8.2 | Hint slider controls detail | 4 levels visibly change active phase content | 8 |
 | SC8.3 | Illustrations morph | 4 distinct SVG scenes with spring transitions | 8 |
