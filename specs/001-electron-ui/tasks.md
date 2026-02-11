@@ -415,9 +415,9 @@ Phase 10 (Polish)
 
 ### Integration Test
 
-- [ ] T179 [US3] Create tests/integration/dashboard-workflow.test.ts (use devs:typescript-dev agent)
-- [ ] T180 [US3] Test: Dashboard loads → sections populate → issue card click → zoom to IDE
-- [ ] T181 [GIT] Commit: add dashboard integration test
+- [x] T179 [US3] Create tests/integration/dashboard-workflow.test.ts (use devs:typescript-dev agent)
+- [x] T180 [US3] Test: Dashboard loads → sections populate → issue card click → zoom to IDE
+- [x] T181 [GIT] Commit: add dashboard integration test
 
 ### Phase 3 Completion
 
