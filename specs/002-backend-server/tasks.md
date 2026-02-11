@@ -569,39 +569,39 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T279 [GIT] Verify working tree is clean before starting Phase 11
-- [ ] T280 [GIT] Pull and rebase on origin/main if needed
+- [x] T279 [GIT] Verify working tree is clean before starting Phase 11
+- [x] T280 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T281 [US9] Create retro/P11.md for this phase
-- [ ] T282 [GIT] Commit: initialize phase 11 retro
+- [x] T281 [US9] Create retro/P11.md for this phase
+- [x] T282 [GIT] Commit: initialize phase 11 retro
 
 ### Tests for User Story 9
 
-- [ ] T283 [P] [US9] Integration test for coaching pipeline in tests/integration/coaching-pipeline.test.ts (use devs:typescript-dev agent)
-- [ ] T284 [P] [US9] Integration test for session wrap-up in tests/integration/session-wrapup.test.ts (use devs:typescript-dev agent)
-- [ ] T285 [GIT] Commit: add US9 tests (failing)
+- [x] T283 [P] [US9] Integration test for coaching pipeline in tests/integration/coaching-pipeline.test.ts (use devs:typescript-dev agent)
+- [x] T284 [P] [US9] Integration test for session wrap-up in tests/integration/session-wrapup.test.ts (use devs:typescript-dev agent)
+- [x] T285 [GIT] Commit: add US9 tests (failing)
 
 ### Implementation for User Story 9
 
-- [ ] T286 [US9] Create src/api-client/schemas.ts with Zod schemas for Coach, Reflection, Gap, Dreyfus agents (use devs:typescript-dev agent)
-- [ ] T287 [GIT] Commit: add agent schemas
-- [ ] T288 [P] [US9] Create src/coaching/agents/coach.ts with Coach Agent API call (use devs:typescript-dev agent)
-- [ ] T289 [P] [US9] Create src/coaching/agents/reflection.ts with Reflection Agent API call (use devs:typescript-dev agent)
-- [ ] T290 [P] [US9] Create src/coaching/agents/knowledge-gap.ts with Knowledge Gap Agent API call (use devs:typescript-dev agent)
-- [ ] T291 [P] [US9] Create src/coaching/agents/dreyfus.ts with Dreyfus Agent API call (use devs:typescript-dev agent)
-- [ ] T292 [GIT] Commit: add agent implementations
-- [ ] T293 [US9] Create src/coaching/pipeline.ts with paige_run_coaching_pipeline MCP tool (use devs:typescript-dev agent)
-- [ ] T294 [GIT] Commit: add coaching pipeline
-- [ ] T295 [US9] Create src/coaching/wrap-up.ts with paige_end_session wrap-up logic (use devs:typescript-dev agent)
-- [ ] T296 [GIT] Commit: add session wrap-up
-- [ ] T297 [US9] Wire paige_run_coaching_pipeline to MCP tool registry in src/mcp/tools/lifecycle.ts (use devs:typescript-dev agent)
-- [ ] T298 [GIT] Commit: register coaching pipeline tool
-- [ ] T299 [US9] Wire paige_end_session wrap-up logic to MCP tool in src/mcp/tools/lifecycle.ts (use devs:typescript-dev agent)
-- [ ] T300 [GIT] Commit: register wrap-up logic
-- [ ] T301 [US9] Verify US9 tests now pass
-- [ ] T302 [GIT] Commit: verify US9 complete
+- [x] T286 [US9] Create src/api-client/schemas.ts with Zod schemas for Coach, Reflection, Gap, Dreyfus agents (use devs:typescript-dev agent)
+- [x] T287 [GIT] Commit: add agent schemas
+- [x] T288 [P] [US9] Create src/coaching/agents/coach.ts with Coach Agent API call (use devs:typescript-dev agent)
+- [x] T289 [P] [US9] Create src/coaching/agents/reflection.ts with Reflection Agent API call (use devs:typescript-dev agent)
+- [x] T290 [P] [US9] Create src/coaching/agents/knowledge-gap.ts with Knowledge Gap Agent API call (use devs:typescript-dev agent)
+- [x] T291 [P] [US9] Create src/coaching/agents/dreyfus.ts with Dreyfus Agent API call (use devs:typescript-dev agent)
+- [x] T292 [GIT] Commit: add agent implementations
+- [x] T293 [US9] Create src/coaching/pipeline.ts with paige_run_coaching_pipeline MCP tool (use devs:typescript-dev agent)
+- [x] T294 [GIT] Commit: add coaching pipeline
+- [x] T295 [US9] Create src/coaching/wrap-up.ts with paige_end_session wrap-up logic (use devs:typescript-dev agent)
+- [x] T296 [GIT] Commit: add session wrap-up
+- [x] T297 [US9] Wire paige_run_coaching_pipeline to MCP tool registry in src/mcp/tools/lifecycle.ts (use devs:typescript-dev agent)
+- [x] T298 [GIT] Commit: register coaching pipeline tool
+- [x] T299 [US9] Wire paige_end_session wrap-up logic to MCP tool in src/mcp/tools/lifecycle.ts (use devs:typescript-dev agent)
+- [x] T300 [GIT] Commit: register wrap-up logic
+- [x] T301 [US9] Verify US9 tests now pass
+- [x] T302 [GIT] Commit: verify US9 complete
 
 ### Phase 11 Wrap-Up
 
