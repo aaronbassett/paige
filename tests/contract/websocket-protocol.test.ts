@@ -91,7 +91,7 @@ function waitForMessage<T = unknown>(ws: WebSocket, timeoutMs = 2000): Promise<T
 }
 
 /** Send a typed message (JSON stringified). */
-function sendMessage(ws: WebSocket, message: Record<string, unknown>): void {
+function sendMessage(ws: WebSocket, message: object): void {
   ws.send(JSON.stringify(message));
 }
 
