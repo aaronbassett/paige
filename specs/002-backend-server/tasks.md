@@ -182,9 +182,9 @@
 
 ### Tests for User Story 2
 
-- [ ] T082 [P] [US2] Integration test for database initialization in tests/integration/database-init.test.ts (use devs:typescript-dev agent)
-- [ ] T083 [P] [US2] Integration test for session lifecycle in tests/integration/session-lifecycle.test.ts (use devs:typescript-dev agent)
-- [ ] T084 [GIT] Commit: add US2 tests (failing)
+- [x] T082 [P] [US2] Integration test for database initialization in tests/integration/database-init.test.ts (use devs:typescript-dev agent)
+- [x] T083 [P] [US2] Integration test for session lifecycle in tests/integration/session-lifecycle.test.ts (use devs:typescript-dev agent)
+- [x] T084 [GIT] Commit: add US2 tests (failing)
 
 ### Implementation for User Story 2
 
