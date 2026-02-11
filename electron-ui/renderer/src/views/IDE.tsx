@@ -30,6 +30,11 @@ import { useFileOperations } from '../hooks/useFileOperations';
 import { useFileTree } from '../hooks/useFileTree';
 import { useFileExplorerHints } from '../hooks/useFileExplorerHints';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useCoachingMessages } from '../hooks/useCoachingMessages';
+import { useHintLevel } from '../hooks/useHintLevel';
+import { useReviewNavigation } from '../hooks/useReviewNavigation';
+import { CoachingOverlay } from '../components/Hints/CoachingOverlay';
+import { CoachingToastContainer } from '../components/Hints/EditorToast';
 import { TerminalPanel } from '../components/Terminal/Terminal';
 import { CoachingSidebar } from '../components/Sidebar/Sidebar';
 import { editorState } from '../services/editor-state';
@@ -139,11 +144,22 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
     () => window.innerHeight < AUTO_HIDE_TERMINAL_HEIGHT,
   );
 
-  // Ref to the Monaco editor instance (shared with FloatingExplainButton)
-  const editorInstanceRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
-
-  // Active tab path for FloatingExplainButton
+  // Active tab path for FloatingExplainButton and coaching overlay
   const activeTabPath = useActiveTabPath();
+
+  // Ref to the Monaco editor instance (shared with FloatingExplainButton and effects).
+  // The ref is used by FloatingExplainButton and auto-dismiss effect. The state
+  // variable is used by CoachingOverlay during render (refs can't be read during render).
+  const editorInstanceRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
+  const [editorInstance, setEditorInstance] =
+    useState<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
+
+  // Sync ref to state after editor mounts. The CodeEditor onMount callback sets
+  // the ref; this effect detects the change and syncs it into React state so
+  // CoachingOverlay can consume it during render.
+  useEffect(() => {
+    setEditorInstance(editorInstanceRef.current);
+  }, [activeTabPath]);
 
   // Wire file operations (Cmd+S, Cmd+W, WebSocket flows)
   useFileOperations();
@@ -156,6 +172,15 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
 
   // Convert ReadonlyMap to Map for FileTree prop compatibility
   const hintsMap = fileHints instanceof Map ? fileHints : new Map(fileHints);
+
+  // Hint level (coaching verbosity 0-3)
+  const { hintLevel } = useHintLevel();
+
+  // Coaching messages (anchored balloons + unanchored toasts)
+  const { messages, dismissMessage, expandedIds, expandMessage } = useCoachingMessages();
+
+  // Review navigation (prev/next/exit for review comments)
+  const { reviewState, focusedMessageId, next, previous, exitReview } = useReviewNavigation();
 
   // WebSocket send for review and explain
   const { send } = useWebSocket();
@@ -175,6 +200,45 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [handleResize]);
+
+  // -------------------------------------------------------------------------
+  // Auto-dismiss coaching messages on code edit overlap (T443)
+  // -------------------------------------------------------------------------
+
+  useEffect(() => {
+    const editor = editorInstanceRef.current;
+    if (!editor) return;
+
+    const disposable = editor.onDidChangeModelContent(
+      (event: MonacoEditorNS.IModelContentChangedEvent) => {
+        if (messages.length === 0) return;
+
+        for (const change of event.changes) {
+          const editStartLine = change.range.startLineNumber;
+          const editEndLine = change.range.endLineNumber;
+          const editStartCol = change.range.startColumn;
+          const editEndCol = change.range.endColumn;
+
+          for (const msg of messages) {
+            if (!msg.anchor || msg.anchor.path !== activeTabPath) continue;
+
+            const { startLine, endLine, startColumn, endColumn } = msg.anchor;
+
+            // Standard interval overlap check
+            if (editStartLine <= endLine && editEndLine >= startLine) {
+              // Boundary line column check
+              if (editStartLine === endLine && editStartCol > endColumn) continue;
+              if (editEndLine === startLine && editEndCol < startColumn) continue;
+
+              dismissMessage(msg.messageId);
+            }
+          }
+        }
+      },
+    );
+
+    return () => disposable.dispose();
+  }, [messages, activeTabPath, dismissMessage]);
 
   // -------------------------------------------------------------------------
   // Callbacks
@@ -273,11 +337,29 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
                 onExplain={handleExplain}
               />
             )}
+            <CoachingOverlay
+              messages={messages}
+              hintLevel={hintLevel}
+              expandedIds={expandedIds}
+              activeFilePath={activeTabPath}
+              editor={editorInstance}
+              onDismiss={dismissMessage}
+              onExpand={expandMessage}
+              focusedMessageId={focusedMessageId}
+            />
           </div>
         </div>
 
         {/* Status bar */}
-        <StatusBar onReview={handleReview} />
+        <StatusBar
+          onReview={handleReview}
+          reviewActive={reviewState.active}
+          reviewCurrentIndex={reviewState.currentIndex}
+          reviewTotal={reviewState.total}
+          onReviewNext={next}
+          onReviewPrevious={previous}
+          onReviewExit={exitReview}
+        />
 
         {/* Terminal area */}
         {!terminalHidden && (
@@ -320,6 +402,9 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
         </div>
         {!rightCollapsed && <CoachingSidebar />}
       </motion.div>
+
+      {/* Toast container for unanchored coaching messages */}
+      <CoachingToastContainer />
     </div>
   );
 }
