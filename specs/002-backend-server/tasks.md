@@ -302,13 +302,13 @@
 ### Implementation for User Story 4
 
 - [x] T142 [US4] Implement logAction with 27 action types in src/logger/action-log.ts (use devs:typescript-dev agent)
-- [ ] T143 [GIT] Commit: implement action logging
+- [x] T143 [GIT] Commit: implement action logging
 - [x] T144 [US4] Add EventEmitter for Observer subscriptions in src/logger/action-log.ts (use devs:typescript-dev agent)
-- [ ] T145 [GIT] Commit: add Observer event emission
+- [x] T145 [GIT] Commit: add Observer event emission
 - [x] T146 [US4] Implement buffer summary timer (30s) with significant change detection in src/logger/action-log.ts (use devs:typescript-dev agent)
-- [ ] T147 [GIT] Commit: add buffer summary logging
+- [x] T147 [GIT] Commit: add buffer summary logging
 - [x] T148 [US4] Implement logApiCall with cost estimation in src/logger/api-log.ts (use devs:typescript-dev agent)
-- [ ] T149 [GIT] Commit: add API call logging
+- [x] T149 [GIT] Commit: add API call logging
 - [x] T150 [US4] Add query functions for action timeline in src/database/queries/actions.ts (use devs:typescript-dev agent)
 - [ ] T151 [GIT] Commit: add action queries
 - [ ] T152 [US4] Verify US4 tests now pass
