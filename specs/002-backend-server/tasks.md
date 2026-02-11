@@ -285,12 +285,12 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T135 [GIT] Verify working tree is clean before starting Phase 6
-- [ ] T136 [GIT] Pull and rebase on origin/main if needed
+- [x] T135 [GIT] Verify working tree is clean before starting Phase 6
+- [x] T136 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T137 [US4] Create retro/P6.md for this phase
+- [x] T137 [US4] Create retro/P6.md for this phase
 - [ ] T138 [GIT] Commit: initialize phase 6 retro
 
 ### Tests for User Story 4
