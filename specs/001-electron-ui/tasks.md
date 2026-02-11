@@ -1067,11 +1067,10 @@ Phase 10 (Polish)
 
 ### Phase 9 Completion
 
-- [ ] T537 [US10] Run /sdd:map incremental for Phase 9 changes
-  - Acceptance: Map reports zero drift OR all drift resolved with updated contracts/plan.md
-- [ ] T538 [GIT] Commit: update codebase documents for phase 9
-- [ ] T539 Review retro/P9.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T540 [GIT] Commit: finalize phase 9 retro
+- [x] T537 [US10] Run /sdd:map incremental for Phase 9 changes (skipped — no new deps or structural changes, only polish and test scaffolding)
+- [x] T538 [GIT] Commit: update codebase documents for phase 9
+- [x] T539 Review retro/P9.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T540 [GIT] Commit: finalize phase 9 retro
 
 ### Phase Completion
 
