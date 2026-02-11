@@ -5,9 +5,9 @@
   "type": "module",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --config renderer/vite.config.ts",
     "dev:electron": "tsc -p tsconfig.main.json && electron .",
-    "build": "tsc -p tsconfig.main.json && vite build",
+    "build": "tsc -p tsconfig.main.json && vite build --config renderer/vite.config.ts",
     "build:electron": "npm run build && electron-builder",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
