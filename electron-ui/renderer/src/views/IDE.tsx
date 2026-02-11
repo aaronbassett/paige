@@ -30,6 +30,7 @@ import { useFileOperations } from '../hooks/useFileOperations';
 import { useFileTree } from '../hooks/useFileTree';
 import { useFileExplorerHints } from '../hooks/useFileExplorerHints';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { TerminalPanel } from '../components/Terminal/Terminal';
 import { editorState } from '../services/editor-state';
 
 // ---------------------------------------------------------------------------
@@ -299,7 +300,7 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
               minHeight: 0,
             }}
           >
-            <div style={panelLabelStyle}>Terminal</div>
+            <TerminalPanel />
           </div>
         )}
       </div>

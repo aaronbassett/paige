@@ -83,7 +83,7 @@ const TERMINAL_OPTIONS = {
  */
 export function TerminalPanel() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { send } = useWebSocket();
+  const { send, on } = useWebSocket();
 
   useEffect(() => {
     const container = containerRef.current;
@@ -142,9 +142,10 @@ export function TerminalPanel() {
     // Resize handling
     // -----------------------------------------------------------------------
 
-    // Sync PTY dimensions when terminal resizes
+    // Sync PTY dimensions when terminal resizes and notify backend
     const resizeDisposable = term.onResize(({ cols, rows }) => {
       ptyBridge.resize(cols, rows);
+      void send('terminal:resize', { cols, rows });
     });
 
     // Observe container size changes and refit
@@ -157,16 +158,28 @@ export function TerminalPanel() {
     resizeObserver.observe(container);
 
     // -----------------------------------------------------------------------
+    // Observer nudges: backend sends text to write into PTY stdin
+    // -----------------------------------------------------------------------
+
+    const unsubNudge = on('observer:nudge', (msg) => {
+      const payload = msg.payload as { message: string };
+      if (payload.message) {
+        ptyBridge.write(payload.message);
+      }
+    });
+
+    // -----------------------------------------------------------------------
     // Cleanup
     // -----------------------------------------------------------------------
 
     return () => {
+      unsubNudge();
       resizeObserver.disconnect();
       resizeDisposable.dispose();
       userDataDisposable.dispose();
       term.dispose();
     };
-  }, [send]);
+  }, [send, on]);
 
   return (
     <div
