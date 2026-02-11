@@ -629,40 +629,40 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T311 [GIT] Verify working tree is clean before starting Phase 12
-- [ ] T312 [GIT] Pull and rebase on origin/main if needed
+- [x] T311 [GIT] Verify working tree is clean before starting Phase 12
+- [x] T312 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T313 [US10] Create retro/P12.md for this phase
-- [ ] T314 [GIT] Commit: initialize phase 12 retro
+- [x] T313 [US10] Create retro/P12.md for this phase
+- [x] T314 [GIT] Commit: initialize phase 12 retro
 
 ### Tests for User Story 10
 
-- [ ] T315 [P] [US10] Integration test for Observer triage in tests/integration/observer-triage.test.ts (use devs:typescript-dev agent)
-- [ ] T316 [P] [US10] Integration test for nudge suppression in tests/integration/observer-suppression.test.ts (use devs:typescript-dev agent)
-- [ ] T317 [GIT] Commit: add US10 tests (failing)
+- [x] T315 [P] [US10] Integration test for Observer triage in tests/integration/observer-triage.test.ts (use devs:typescript-dev agent)
+- [x] T316 [P] [US10] Integration test for nudge suppression in tests/integration/observer-suppression.test.ts (use devs:typescript-dev agent)
+- [x] T317 [GIT] Commit: add US10 tests (failing)
 
 ### Implementation for User Story 10
 
-- [ ] T318 [US10] Add Triage schema to src/api-client/schemas.ts (use devs:typescript-dev agent)
-- [ ] T319 [GIT] Commit: add triage schema
-- [ ] T320 [US10] Create src/observer/triage.ts with Haiku triage model wrapper (use devs:typescript-dev agent)
-- [ ] T321 [GIT] Commit: add triage model
-- [ ] T322 [US10] Create src/observer/observer.ts with Observer class (start, stop, evaluate, suppressionRules) (use devs:typescript-dev agent)
-- [ ] T323 [GIT] Commit: add Observer class
-- [ ] T324 [US10] Implement flow state detection in src/observer/observer.ts (use devs:typescript-dev agent)
-- [ ] T325 [GIT] Commit: add flow state detection
-- [ ] T326 [US10] Create src/observer/nudge.ts with nudge delivery via WebSocket broadcast (use devs:typescript-dev agent)
-- [ ] T327 [GIT] Commit: add nudge delivery
-- [ ] T328 [US10] Wire Observer start to paige_start_session in src/mcp/tools/lifecycle.ts (use devs:typescript-dev agent)
-- [ ] T329 [GIT] Commit: integrate Observer start
-- [ ] T330 [US10] Wire Observer stop to paige_end_session in src/mcp/tools/lifecycle.ts (use devs:typescript-dev agent)
-- [ ] T331 [GIT] Commit: integrate Observer stop
-- [ ] T332 [US10] Add observer:mute handler in src/websocket/handlers/observer.ts (use devs:typescript-dev agent)
-- [ ] T333 [GIT] Commit: add mute handler
-- [ ] T334 [US10] Verify US10 tests now pass
-- [ ] T335 [GIT] Commit: verify US10 complete
+- [x] T318 [US10] Add Triage schema to src/api-client/schemas.ts (use devs:typescript-dev agent)
+- [x] T319 [GIT] Commit: add triage schema
+- [x] T320 [US10] Create src/observer/triage.ts with Haiku triage model wrapper (use devs:typescript-dev agent)
+- [x] T321 [GIT] Commit: add triage model
+- [x] T322 [US10] Create src/observer/observer.ts with Observer class (start, stop, evaluate, suppressionRules) (use devs:typescript-dev agent)
+- [x] T323 [GIT] Commit: add Observer class
+- [x] T324 [US10] Implement flow state detection in src/observer/observer.ts (use devs:typescript-dev agent)
+- [x] T325 [GIT] Commit: add flow state detection
+- [x] T326 [US10] Create src/observer/nudge.ts with nudge delivery via WebSocket broadcast (use devs:typescript-dev agent)
+- [x] T327 [GIT] Commit: add nudge delivery
+- [x] T328 [US10] Wire Observer start to paige_start_session in src/mcp/tools/lifecycle.ts (use devs:typescript-dev agent)
+- [x] T329 [GIT] Commit: integrate Observer start
+- [x] T330 [US10] Wire Observer stop to paige_end_session in src/mcp/tools/lifecycle.ts (use devs:typescript-dev agent)
+- [x] T331 [GIT] Commit: integrate Observer stop
+- [x] T332 [US10] Add observer:mute handler in src/websocket/handlers/observer.ts (use devs:typescript-dev agent)
+- [x] T333 [GIT] Commit: add mute handler
+- [x] T334 [US10] Verify US10 tests now pass
+- [x] T335 [GIT] Commit: verify US10 complete
 
 ### Phase 12 Wrap-Up
 
