@@ -125,26 +125,26 @@
 ### Retro Initialization
 
 - [x] T057 [US1] Create retro/P3.md for this phase
-- [ ] T058 [GIT] Commit: initialize phase 3 retro
+- [x] T058 [GIT] Commit: initialize phase 3 retro
 
 ### Tests for User Story 1
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T059 [P] [US1] Contract test for server startup in tests/contract/server-startup.test.ts (use devs:typescript-dev agent)
-- [ ] T060 [P] [US1] Integration test for health endpoint in tests/integration/health.test.ts (use devs:typescript-dev agent)
-- [ ] T061 [GIT] Commit: add US1 tests (failing)
+- [x] T059 [P] [US1] Contract test for server startup in tests/contract/server-startup.test.ts (use devs:typescript-dev agent)
+- [x] T060 [P] [US1] Integration test for health endpoint in tests/integration/health.test.ts (use devs:typescript-dev agent)
+- [x] T061 [GIT] Commit: add US1 tests (failing)
 
 ### Implementation for User Story 1
 
-- [ ] T062 [US1] Create src/index.ts with HTTP server setup on configurable port (use devs:typescript-dev agent)
-- [ ] T063 [GIT] Commit: add HTTP server entry point
-- [ ] T064 [US1] Implement GET /health endpoint with uptime tracking in src/index.ts (use devs:typescript-dev agent)
-- [ ] T065 [GIT] Commit: add health endpoint
-- [ ] T066 [US1] Add SIGINT/SIGTERM handlers for graceful shutdown in src/index.ts (use devs:typescript-dev agent)
-- [ ] T067 [GIT] Commit: add graceful shutdown
-- [ ] T068 [US1] Verify US1 tests now pass
-- [ ] T069 [GIT] Commit: verify US1 complete
+- [x] T062 [US1] Create src/index.ts with HTTP server setup on configurable port (use devs:typescript-dev agent)
+- [x] T063 [GIT] Commit: add HTTP server entry point
+- [x] T064 [US1] Implement GET /health endpoint with uptime tracking in src/index.ts (use devs:typescript-dev agent)
+- [x] T065 [GIT] Commit: add health endpoint
+- [x] T066 [US1] Add SIGINT/SIGTERM handlers for graceful shutdown in src/index.ts (use devs:typescript-dev agent)
+- [x] T067 [GIT] Commit: add graceful shutdown
+- [x] T068 [US1] Verify US1 tests now pass
+- [x] T069 [GIT] Commit: verify US1 complete
 
 ### Phase 3 Wrap-Up
 
