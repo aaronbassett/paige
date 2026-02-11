@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80" fill="none">
+  <!-- Two people: student + coach pointing -->
+  <!-- Student -->
+  <circle cx="50" cy="20" r="6" stroke="#d97757" stroke-width="2" fill="none"/>
+  <line x1="50" y1="26" x2="50" y2="48" stroke="#d97757" stroke-width="2" stroke-linecap="round"/>
+  <line x1="50" y1="48" x2="44" y2="64" stroke="#d97757" stroke-width="2" stroke-linecap="round"/>
+  <line x1="50" y1="48" x2="56" y2="64" stroke="#d97757" stroke-width="2" stroke-linecap="round"/>
+  <path d="M50 34 L42 28" stroke="#d97757" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M50 34 L56 42" stroke="#d97757" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Coach -->
+  <circle cx="100" cy="18" r="7" stroke="#81b29a" stroke-width="2" fill="none"/>
+  <line x1="100" y1="25" x2="100" y2="48" stroke="#81b29a" stroke-width="2" stroke-linecap="round"/>
+  <line x1="100" y1="48" x2="94" y2="64" stroke="#81b29a" stroke-width="2" stroke-linecap="round"/>
+  <line x1="100" y1="48" x2="106" y2="64" stroke="#81b29a" stroke-width="2" stroke-linecap="round"/>
+  <path d="M100 34 L80 28" stroke="#81b29a" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <circle cx="78" cy="27" r="2" fill="#81b29a" opacity="0.6"/>
+  <path d="M100 34 L108 42" stroke="#81b29a" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Speech lines -->
+  <line x1="84" y1="22" x2="86" y2="22" stroke="#81b29a" stroke-width="1.5" opacity="0.4"/>
+  <line x1="84" y1="26" x2="88" y2="26" stroke="#81b29a" stroke-width="1.5" opacity="0.4"/>
+  <!-- Screen -->
+  <rect x="64" y="38" width="22" height="14" rx="2" stroke="#d97757" stroke-width="1.5" fill="none" opacity="0.4"/>
+  <line x1="68" y1="42" x2="82" y2="42" stroke="#d97757" stroke-width="1" opacity="0.3"/>
+  <line x1="68" y1="46" x2="78" y2="46" stroke="#d97757" stroke-width="1" opacity="0.3"/>
+</svg>
