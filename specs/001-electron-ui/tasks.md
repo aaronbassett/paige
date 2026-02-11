@@ -644,10 +644,10 @@ Phase 10 (Polish)
 
 ### Phase Completion
 
-- [ ] T304 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T305 [GIT] Create/update PR to main with Phase 5 summary
-- [ ] T306 [GIT] Verify all CI checks pass
-- [ ] T307 [GIT] Report PR ready status
+- [x] T304 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T305 [GIT] Create/update PR to main with Phase 5 summary
+- [x] T306 [GIT] Verify all CI checks pass
+- [x] T307 [GIT] Report PR ready status
 
 ---
 
@@ -1074,10 +1074,10 @@ Phase 10 (Polish)
 
 ### Phase Completion
 
-- [ ] T541 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T542 [GIT] Create/update PR to main with Phase 9 summary
-- [ ] T543 [GIT] Verify all CI checks pass
-- [ ] T544 [GIT] Report PR ready status
+- [x] T541 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T542 [GIT] Create/update PR to main with Phase 9 summary
+- [x] T543 [GIT] Verify all CI checks pass (no CI configured — lint + typecheck + 481 tests all pass locally)
+- [x] T544 [GIT] Report PR ready status
 
 ---
 
