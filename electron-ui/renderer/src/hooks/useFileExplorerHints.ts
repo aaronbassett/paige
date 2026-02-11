@@ -53,8 +53,12 @@ export function useFileExplorerHints(): UseFileExplorerHintsReturn {
 
   useEffect(() => {
     const unsubscribe = hintManager.subscribe(() => {
-      setHints(hintManager.getAllHints());
-      setAutoExpandPaths(hintManager.getAutoExpandPaths());
+      // Create new Map/Set instances so React detects the state change.
+      // hintManager.getAllHints() returns the same internal Map reference
+      // after mutations, so passing it directly would cause React to skip
+      // the re-render (Object.is equality check on the same reference).
+      setHints(new Map(hintManager.getAllHints()));
+      setAutoExpandPaths(new Set(hintManager.getAutoExpandPaths()));
     });
     return unsubscribe;
   }, []);
