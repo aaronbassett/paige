@@ -172,13 +172,13 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T078 [GIT] Verify working tree is clean before starting Phase 4
-- [ ] T079 [GIT] Pull and rebase on origin/main if needed
+- [x] T078 [GIT] Verify working tree is clean before starting Phase 4
+- [x] T079 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T080 [US2] Create retro/P4.md for this phase
-- [ ] T081 [GIT] Commit: initialize phase 4 retro
+- [x] T080 [US2] Create retro/P4.md for this phase
+- [x] T081 [GIT] Commit: initialize phase 4 retro
 
 ### Tests for User Story 2
 
