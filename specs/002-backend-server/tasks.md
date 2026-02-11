@@ -524,23 +524,23 @@
 
 ### Tests for User Story 8
 
-- [ ] T256 [P] [US8] Integration test for memory storage and retrieval in tests/integration/chromadb.test.ts (use devs:typescript-dev agent)
-- [ ] T257 [P] [US8] Integration test for graceful degradation in tests/integration/chromadb-degradation.test.ts (use devs:typescript-dev agent)
-- [ ] T258 [GIT] Commit: add US8 tests (failing)
+- [x] T256 [P] [US8] Integration test for memory storage and retrieval in tests/integration/chromadb.test.ts (use devs:typescript-dev agent)
+- [x] T257 [P] [US8] Integration test for graceful degradation in tests/integration/chromadb-degradation.test.ts (use devs:typescript-dev agent)
+- [x] T258 [GIT] Commit: add US8 tests (failing)
 
 ### Implementation for User Story 8
 
-- [ ] T259 [US8] Create src/memory/chromadb.ts with ChromaDB client and lazy connection (use devs:typescript-dev agent)
-- [ ] T260 [GIT] Commit: add ChromaDB client
-- [ ] T261 [US8] Create src/memory/queries.ts with addMemories and queryMemories functions (use devs:typescript-dev agent)
-- [ ] T262 [GIT] Commit: add memory queries
-- [ ] T263 [US8] Implement isMemoryAvailable() with lazy recovery logic in src/memory/chromadb.ts (use devs:typescript-dev agent)
-- [ ] T264 [GIT] Commit: add graceful degradation
-- [ ] T265 [US8] Add project filtering to queryMemories in src/memory/queries.ts (use devs:typescript-dev agent)
-- [ ] T266 [GIT] Commit: add project filtering
-- [ ] T267 [US8] Initialize ChromaDB connection on server startup in src/index.ts (use devs:typescript-dev agent)
-- [ ] T268 [GIT] Commit: integrate ChromaDB initialization
-- [ ] T269 [US8] Verify US8 tests now pass
+- [x] T259 [US8] Create src/memory/chromadb.ts with ChromaDB client and lazy connection (use devs:typescript-dev agent)
+- [x] T260 [GIT] Commit: add ChromaDB client
+- [x] T261 [US8] Create src/memory/queries.ts with addMemories and queryMemories functions (use devs:typescript-dev agent)
+- [x] T262 [GIT] Commit: add memory queries
+- [x] T263 [US8] Implement isMemoryAvailable() with lazy recovery logic in src/memory/chromadb.ts (use devs:typescript-dev agent)
+- [x] T264 [GIT] Commit: add graceful degradation
+- [x] T265 [US8] Add project filtering to queryMemories in src/memory/queries.ts (use devs:typescript-dev agent)
+- [x] T266 [GIT] Commit: add project filtering
+- [x] T267 [US8] Initialize ChromaDB connection on server startup in src/index.ts (use devs:typescript-dev agent)
+- [x] T268 [GIT] Commit: integrate ChromaDB initialization
+- [x] T269 [US8] Verify US8 tests now pass
 - [ ] T270 [GIT] Commit: verify US8 complete
 
 ### Phase 10 Wrap-Up
