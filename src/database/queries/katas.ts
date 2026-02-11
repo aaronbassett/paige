@@ -1,6 +1,7 @@
-// TDD stub — will be implemented in T094
 import type { AppDatabase } from '../db.js';
 import type { KataSpec } from '../../types/domain.js';
+
+// ── Input Types ─────────────────────────────────────────────────────────────
 
 export interface CreateKataInput {
   gap_id: number;
@@ -12,18 +13,82 @@ export interface CreateKataInput {
   created_at: string;
 }
 
-export function createKata(_db: AppDatabase, _input: CreateKataInput): Promise<KataSpec> {
-  return Promise.reject(new Error('Not implemented'));
+// ── Queries ─────────────────────────────────────────────────────────────────
+
+/**
+ * Inserts a new kata spec into the `kata_specs` table and returns the full
+ * persisted row.
+ *
+ * The `user_attempts` column defaults to `'[]'` (empty JSON array) via the
+ * database schema default.
+ */
+export async function createKata(db: AppDatabase, input: CreateKataInput): Promise<KataSpec> {
+  const result = await db
+    .insertInto('kata_specs')
+    .values({
+      gap_id: input.gap_id,
+      title: input.title,
+      description: input.description,
+      scaffolding_code: input.scaffolding_code,
+      instructor_notes: input.instructor_notes,
+      constraints: input.constraints,
+      created_at: input.created_at,
+    } as never)
+    .executeTakeFirstOrThrow();
+
+  const id = Number(result.insertId);
+
+  const kata = await db
+    .selectFrom('kata_specs')
+    .selectAll()
+    .where('id', '=', id)
+    .executeTakeFirstOrThrow();
+
+  return kata as KataSpec;
 }
 
-export function getKatasByGap(_db: AppDatabase, _gapId: number): Promise<KataSpec[]> {
-  return Promise.reject(new Error('Not implemented'));
+/**
+ * Retrieves all kata specs belonging to the given knowledge gap, ordered by
+ * `created_at` ascending (chronological order). Returns an empty array if
+ * no katas exist for the gap.
+ */
+export async function getKatasByGap(db: AppDatabase, gapId: number): Promise<KataSpec[]> {
+  const katas = await db
+    .selectFrom('kata_specs')
+    .selectAll()
+    .where('gap_id', '=', gapId)
+    .orderBy('created_at', 'asc')
+    .execute();
+
+  return katas as KataSpec[];
 }
 
-export function updateKataAttempts(
-  _db: AppDatabase,
-  _id: number,
-  _userAttempts: string,
+/**
+ * Updates the `user_attempts` JSON field on a kata spec and returns the full
+ * updated row.
+ *
+ * @throws {Error} If no kata spec exists with the given ID
+ */
+export async function updateKataAttempts(
+  db: AppDatabase,
+  id: number,
+  userAttempts: string,
 ): Promise<KataSpec> {
-  return Promise.reject(new Error('Not implemented'));
+  const result = await db
+    .updateTable('kata_specs')
+    .set({ user_attempts: userAttempts } as never)
+    .where('id', '=', id)
+    .executeTakeFirst();
+
+  if (result.numUpdatedRows === 0n) {
+    throw new Error(`Kata spec not found (id=${id})`);
+  }
+
+  const kata = await db
+    .selectFrom('kata_specs')
+    .selectAll()
+    .where('id', '=', id)
+    .executeTakeFirstOrThrow();
+
+  return kata as KataSpec;
 }

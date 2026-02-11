@@ -195,10 +195,10 @@
 - [x] T089 [P] [US2] Create src/database/queries/hints.ts with CRUD functions (use devs:typescript-dev agent)
 - [x] T090 [P] [US2] Create src/database/queries/progress.ts with CRUD functions (use devs:typescript-dev agent)
 - [x] T091 [GIT] Commit: add hint/progress queries
-- [ ] T092 [P] [US2] Create src/database/queries/dreyfus.ts with CRUD functions (use devs:typescript-dev agent)
-- [ ] T093 [P] [US2] Create src/database/queries/gaps.ts with CRUD functions (use devs:typescript-dev agent)
-- [ ] T094 [P] [US2] Create src/database/queries/katas.ts with CRUD functions (use devs:typescript-dev agent)
-- [ ] T095 [GIT] Commit: add dreyfus/gap/kata queries
+- [x] T092 [P] [US2] Create src/database/queries/dreyfus.ts with CRUD functions (use devs:typescript-dev agent)
+- [x] T093 [P] [US2] Create src/database/queries/gaps.ts with CRUD functions (use devs:typescript-dev agent)
+- [x] T094 [P] [US2] Create src/database/queries/katas.ts with CRUD functions (use devs:typescript-dev agent)
+- [x] T095 [GIT] Commit: add dreyfus/gap/kata queries
 - [ ] T096 [US2] Initialize database on server startup in src/index.ts (use devs:typescript-dev agent)
 - [ ] T097 [GIT] Commit: integrate database initialization
 - [ ] T098 [US2] Verify US2 tests now pass
