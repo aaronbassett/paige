@@ -541,13 +541,13 @@
 - [x] T267 [US8] Initialize ChromaDB connection on server startup in src/index.ts (use devs:typescript-dev agent)
 - [x] T268 [GIT] Commit: integrate ChromaDB initialization
 - [x] T269 [US8] Verify US8 tests now pass
-- [ ] T270 [GIT] Commit: verify US8 complete
+- [x] T270 [GIT] Commit: verify US8 complete
 
 ### Phase 10 Wrap-Up
 
-- [ ] T271 [US8] Run /sdd:map incremental for Phase 10 changes
+- [x] T271 [US8] Run /sdd:map incremental for Phase 10 changes (skipped: no .sdd/codebase/ exists yet)
 - [ ] T272 [GIT] Commit: update codebase documents for phase 10
-- [ ] T273 [US8] Review retro/P10.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T273 [US8] Review retro/P10.md and extract critical learnings to CLAUDE.md (conservative)
 - [ ] T274 [GIT] Commit: finalize phase 10 retro
 
 ### Phase 10 Completion
