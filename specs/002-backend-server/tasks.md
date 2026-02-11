@@ -546,16 +546,16 @@
 ### Phase 10 Wrap-Up
 
 - [x] T271 [US8] Run /sdd:map incremental for Phase 10 changes (skipped: no .sdd/codebase/ exists yet)
-- [ ] T272 [GIT] Commit: update codebase documents for phase 10
+- [x] T272 [GIT] Commit: update codebase documents for phase 10
 - [x] T273 [US8] Review retro/P10.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T274 [GIT] Commit: finalize phase 10 retro
+- [x] T274 [GIT] Commit: finalize phase 10 retro
 
 ### Phase 10 Completion
 
-- [ ] T275 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T276 [GIT] Create/update PR to main with Phase 10 summary
-- [ ] T277 [GIT] Verify all CI checks pass
-- [ ] T278 [GIT] Report PR ready status
+- [x] T275 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T276 [GIT] Create/update PR to main with Phase 10 summary
+- [x] T277 [GIT] Verify all CI checks pass (no CI configured)
+- [x] T278 [GIT] Report PR ready status
 
 **Checkpoint**: Semantic memory ready for coaching pipeline
 
