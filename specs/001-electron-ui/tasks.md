@@ -428,10 +428,10 @@ Phase 10 (Polish)
 
 ### Phase Completion
 
-- [ ] T186 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T187 [GIT] Create/update PR to main with Phase 3 summary
-- [ ] T188 [GIT] Verify all CI checks pass
-- [ ] T189 [GIT] Report PR ready status
+- [x] T186 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T187 [GIT] Create/update PR to main with Phase 3 summary
+- [x] T188 [GIT] Verify all CI checks pass (no CI configured — lint + typecheck + tests all pass locally)
+- [x] T189 [GIT] Report PR ready status
 
 ---
 
