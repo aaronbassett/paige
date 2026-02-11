@@ -186,6 +186,8 @@ export function TerminalPanel() {
       ref={containerRef}
       style={{ width: '100%', height: '100%' }}
       data-testid="terminal-panel"
+      role="region"
+      aria-label="Terminal"
     />
   );
 }

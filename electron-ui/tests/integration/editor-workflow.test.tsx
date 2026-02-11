@@ -23,20 +23,34 @@ import type { WebSocketMessage } from '@shared/types/websocket-messages';
 // Mock framer-motion — replace motion.div with plain div
 // ---------------------------------------------------------------------------
 
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({
+vi.mock('framer-motion', () => {
+  function passthrough(Tag: string) {
+    function MotionPassthrough({
       children,
       animate: _animate,
       transition: _transition,
       ...rest
-    }: React.HTMLAttributes<HTMLDivElement> & {
+    }: React.HTMLAttributes<HTMLElement> & {
       animate?: unknown;
       transition?: unknown;
-    }) => <div {...rest}>{children}</div>,
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
+    }) {
+      const El = Tag as React.ElementType;
+      return <El {...rest}>{children}</El>;
+    }
+    MotionPassthrough.displayName = `motion.${Tag}`;
+    return MotionPassthrough;
+  }
+
+  return {
+    motion: {
+      div: passthrough('div'),
+      nav: passthrough('nav'),
+      aside: passthrough('aside'),
+      button: passthrough('button'),
+    },
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Mock Monaco Editor — textarea-based stub
