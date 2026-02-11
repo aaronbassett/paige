@@ -775,10 +775,10 @@
 - [x] T389 [P] [US12] Create src/dashboard/flows/challenges.ts with active kata loading (use devs:typescript-dev agent)
 - [x] T390 [P] [US12] Create src/dashboard/flows/learning.ts with web search for knowledge gaps (use devs:typescript-dev agent)
 - [x] T391 [GIT] Commit: add dashboard flows (challenges, learning)
-- [ ] T392 [US12] Wire dashboard:request handler in src/websocket/handlers/dashboard.ts (use devs:typescript-dev agent)
-- [ ] T393 [GIT] Commit: wire dashboard handler
-- [ ] T394 [US12] Wire dashboard:refresh_issues handler in src/websocket/handlers/dashboard.ts (use devs:typescript-dev agent)
-- [ ] T395 [GIT] Commit: wire dashboard refresh handler
+- [x] T392 [US12] Wire dashboard:request handler in src/websocket/handlers/dashboard.ts (use devs:typescript-dev agent)
+- [x] T393 [GIT] Commit: wire dashboard handler
+- [x] T394 [US12] Wire dashboard:refresh_issues handler in src/websocket/handlers/dashboard.ts (use devs:typescript-dev agent)
+- [x] T395 [GIT] Commit: wire dashboard refresh handler
 - [ ] T396 [US12] Verify US12 tests now pass
 - [ ] T397 [GIT] Commit: verify US12 complete
 
