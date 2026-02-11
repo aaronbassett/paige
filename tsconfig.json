@@ -27,16 +27,17 @@
 
     /* Emit */
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "noEmit": true,
 
     /* Performance & Compatibility */
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "tests"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
