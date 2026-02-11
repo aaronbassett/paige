@@ -257,13 +257,13 @@
 - [x] T123 [US3] Create src/file-system/watcher.ts with Chokidar and event emission (use devs:typescript-dev agent)
 - [x] T124 [GIT] Commit: add file system watcher
 - [x] T125 [US3] Verify US3 tests now pass
-- [ ] T126 [GIT] Commit: verify US3 complete
+- [x] T126 [GIT] Commit: verify US3 complete
 
 ### Phase 5 Wrap-Up
 
-- [ ] T127 [US3] Run /sdd:map incremental for Phase 5 changes
-- [ ] T128 [GIT] Commit: update codebase documents for phase 5
-- [ ] T129 [US3] Review retro/P5.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T127 [US3] Run /sdd:map incremental for Phase 5 changes (skipped: no .sdd/codebase/ exists yet)
+- [x] T128 [GIT] Commit: update codebase documents for phase 5
+- [x] T129 [US3] Review retro/P5.md and extract critical learnings to CLAUDE.md (conservative)
 - [ ] T130 [GIT] Commit: finalize phase 5 retro
 
 ### Phase 5 Completion
