@@ -32,25 +32,28 @@ export const MODEL_MAP: Record<ModelTier, ModelEntry> = {
  * Resolves a model tier to the full model ID.
  * @throws Error if tier is not recognized.
  */
-export function resolveModel(_tier: ModelTier): string {
-  return Promise.reject(new Error('Not implemented')) as unknown as string;
+export function resolveModel(tier: ModelTier): string {
+  return MODEL_MAP[tier].modelId;
 }
 
 /**
  * Returns the pricing for a model tier.
  * @throws Error if tier is not recognized.
  */
-export function getModelPricing(_tier: ModelTier): ModelPricing {
-  return Promise.reject(new Error('Not implemented')) as unknown as ModelPricing;
+export function getModelPricing(tier: ModelTier): ModelPricing {
+  return MODEL_MAP[tier].pricing;
 }
 
 /**
  * Computes cost estimate in USD from token counts and model tier.
  */
 export function calculateCostEstimate(
-  _tier: ModelTier,
-  _inputTokens: number,
-  _outputTokens: number,
+  tier: ModelTier,
+  inputTokens: number,
+  outputTokens: number,
 ): number {
-  return Promise.reject(new Error('Not implemented')) as unknown as number;
+  const pricing = MODEL_MAP[tier].pricing;
+  return (
+    (inputTokens * pricing.inputPerMillion + outputTokens * pricing.outputPerMillion) / 1_000_000
+  );
 }
