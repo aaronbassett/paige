@@ -963,14 +963,14 @@ Phase 10 (Polish)
 - [x] T479 [US9] Run /sdd:map incremental for Phase 8 changes (skipped — no new deps or structural changes, only new components following existing patterns)
 - [x] T480 [GIT] Commit: update codebase documents for phase 8
 - [x] T481 Review retro/P8.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T482 [GIT] Commit: finalize phase 8 retro
+- [x] T482 [GIT] Commit: finalize phase 8 retro
 
 ### Phase Completion
 
-- [ ] T483 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T484 [GIT] Create/update PR to main with Phase 8 summary
-- [ ] T485 [GIT] Verify all CI checks pass
-- [ ] T486 [GIT] Report PR ready status
+- [x] T483 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T484 [GIT] Create/update PR to main with Phase 8 summary
+- [x] T485 [GIT] Verify all CI checks pass (no CI configured — lint + typecheck + 463 tests all pass locally)
+- [x] T486 [GIT] Report PR ready status
 
 ---
 
