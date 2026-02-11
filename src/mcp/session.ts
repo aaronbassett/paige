@@ -1,5 +1,4 @@
 // MCP Session tracking — maps MCP transport sessions to Paige coaching sessions
-// TDD stub — will be implemented in Phase 8
 
 /** Active MCP session state. */
 export interface McpSession {
@@ -32,7 +31,32 @@ export function getMcpSessionCount(): number {
   return sessions.size;
 }
 
-/** Clear all MCP sessions (for testing). */
+/** Clear all MCP sessions (for testing). Also clears the active session ID. */
 export function clearMcpSessions(): void {
   sessions.clear();
+  activeSessionId = null;
+}
+
+// ── Active Session Tracking ────────────────────────────────────────────────
+
+/**
+ * Simple module-level active session ID.
+ * Tracks the currently active Paige coaching session (database primary key).
+ * Only one session may be active at a time.
+ */
+let activeSessionId: number | null = null;
+
+/** Returns the currently active session ID, or null if no session is active. */
+export function getActiveSessionId(): number | null {
+  return activeSessionId;
+}
+
+/** Sets the active session ID. */
+export function setActiveSessionId(id: number): void {
+  activeSessionId = id;
+}
+
+/** Clears the active session ID. */
+export function clearActiveSessionId(): void {
+  activeSessionId = null;
 }
