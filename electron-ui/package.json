@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Paige Electron UI — coaching IDE for junior developers",
   "type": "module",
-  "main": "dist/main.js",
+  "main": "dist/src/main.js",
   "scripts": {
     "dev": "vite --config renderer/vite.config.ts",
     "dev:electron": "tsc -p tsconfig.main.json && electron .",
