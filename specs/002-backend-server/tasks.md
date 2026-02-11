@@ -340,13 +340,13 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T162 [GIT] Verify working tree is clean before starting Phase 7
-- [ ] T163 [GIT] Pull and rebase on origin/main if needed
+- [x] T162 [GIT] Verify working tree is clean before starting Phase 7
+- [x] T163 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T164 [US5] Create retro/P7.md for this phase
-- [ ] T165 [GIT] Commit: initialize phase 7 retro
+- [x] T164 [US5] Create retro/P7.md for this phase
+- [x] T165 [GIT] Commit: initialize phase 7 retro
 
 ### Tests for User Story 5
 
