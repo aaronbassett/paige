@@ -111,3 +111,14 @@ export const memorySummarisationSchema = z.object({
   ),
 });
 export type MemorySummarisationResponse = z.infer<typeof memorySummarisationSchema>;
+
+// ── Observer Triage (Haiku) ──────────────────────────────────────────────
+// Fast nudge/no-nudge binary decision for the Observer system.
+
+export const triageSchema = z.object({
+  should_nudge: z.boolean(),
+  confidence: z.number().min(0).max(1),
+  signal: z.string(),
+  reasoning: z.string(),
+});
+export type TriageResponse = z.infer<typeof triageSchema>;
