@@ -8,8 +8,9 @@ import { handleFileOpen, handleFileSave } from './handlers/file.js';
 import { handleBufferUpdate } from './handlers/buffer.js';
 import { handleEditorTabSwitch, handleEditorSelection } from './handlers/editor.js';
 import { handleHintsLevelChange } from './handlers/hints.js';
-import { handleUserIdleStart, handleUserIdleEnd } from './handlers/user.js';
+import { handleUserIdleStart, handleUserIdleEnd, handleUserExplain } from './handlers/user.js';
 import { handleObserverMute } from './handlers/observer.js';
+import { handlePracticeSubmitSolution } from './handlers/practice.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -67,9 +68,9 @@ const handlers = new Map<string, MessageHandler>([
   ['file:close', notImplementedHandler('file:close')],
   ['file:create', notImplementedHandler('file:create')],
   ['file:delete', notImplementedHandler('file:delete')],
-  ['user:explain', notImplementedHandler('user:explain')],
+  ['user:explain', handleUserExplain],
   ['observer:mute', handleObserverMute],
-  ['practice:submit_solution', notImplementedHandler('practice:submit_solution')],
+  ['practice:submit_solution', handlePracticeSubmitSolution],
   ['practice:request_hint', notImplementedHandler('practice:request_hint')],
   ['practice:view_previous_attempts', notImplementedHandler('practice:view_previous_attempts')],
   ['dashboard:request', notImplementedHandler('dashboard:request')],

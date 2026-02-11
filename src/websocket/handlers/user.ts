@@ -1,12 +1,15 @@
 // WebSocket handlers for user-related messages from Electron clients.
-// Handles user:idle_start and user:idle_end. user:explain is stubbed for a later phase.
+// Handles user:idle_start, user:idle_end, and user:explain.
 
 import type { WebSocket as WsWebSocket } from 'ws';
 
 import { getDatabase } from '../../database/db.js';
 import { logAction } from '../../logger/action-log.js';
+import { getActiveSessionId } from '../../mcp/session.js';
+import { handleExplainThis } from '../../ui-apis/explain.js';
+import { broadcast } from '../server.js';
 import type { ActionType } from '../../types/domain.js';
-import type { UserIdleEndData, UserIdleStartData } from '../../types/websocket.js';
+import type { UserExplainData, UserIdleEndData, UserIdleStartData } from '../../types/websocket.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -50,10 +53,26 @@ export function handleUserIdleEnd(_ws: WsWebSocket, data: unknown, _connectionId
 
 /**
  * Handles `user:explain` messages from Electron clients.
- * Stub — will be implemented in a later phase (UI-APIs: Explain This).
+ * Calls the Explain This API and broadcasts the response.
  */
-export function handleUserExplain(_ws: WsWebSocket, _data: unknown, _connectionId: string): void {
-  // TODO: Implement in Explain This phase — will use _data as UserExplainData
-  // eslint-disable-next-line no-console
-  console.warn('[ws-handler:user] user:explain not yet implemented');
+export function handleUserExplain(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
+  const sessionId = getActiveSessionId();
+  if (sessionId === null) return;
+
+  const explainData = data as UserExplainData;
+
+  void handleExplainThis(explainData, sessionId)
+    .then((result) => {
+      broadcast({
+        type: 'explain:response',
+        data: {
+          explanation: result.explanation,
+          phaseConnection: result.phaseConnection ?? undefined,
+        },
+      });
+    })
+    .catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : 'Explain request failed';
+      broadcast({ type: 'explain:error', data: { error: message } });
+    });
 }
