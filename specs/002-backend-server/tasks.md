@@ -791,10 +791,10 @@
 
 ### Phase 14 Completion
 
-- [ ] T402 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T403 [GIT] Create/update PR to main with Phase 14 summary
-- [ ] T404 [GIT] Verify all CI checks pass
-- [ ] T405 [GIT] Report PR ready status
+- [x] T402 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T403 [GIT] Create/update PR to main with Phase 14 summary
+- [x] T404 [GIT] Verify all CI checks pass (no CI configured — local tests pass)
+- [x] T405 [GIT] Report PR ready status
 
 **Checkpoint**: All user stories complete
 
