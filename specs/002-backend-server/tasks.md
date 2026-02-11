@@ -356,10 +356,10 @@
 
 ### Implementation for User Story 5
 
-- [ ] T169 [US5] Create src/websocket/server.ts with WebSocket upgrade on /ws (use devs:typescript-dev agent)
-- [ ] T170 [GIT] Commit: add WebSocket server
-- [ ] T171 [US5] Create src/websocket/router.ts with message type dispatcher (use devs:typescript-dev agent)
-- [ ] T172 [GIT] Commit: add message router
+- [x] T169 [US5] Create src/websocket/server.ts with WebSocket upgrade on /ws (use devs:typescript-dev agent)
+- [x] T170 [GIT] Commit: add WebSocket server
+- [x] T171 [US5] Create src/websocket/router.ts with message type dispatcher (use devs:typescript-dev agent)
+- [x] T172 [GIT] Commit: add message router
 - [ ] T173 [P] [US5] Create src/websocket/handlers/connection.ts for connection:hello (use devs:typescript-dev agent)
 - [ ] T174 [P] [US5] Create src/websocket/handlers/file.ts for file:open, file:save (use devs:typescript-dev agent)
 - [ ] T175 [P] [US5] Create src/websocket/handlers/buffer.ts for buffer:update (use devs:typescript-dev agent)
