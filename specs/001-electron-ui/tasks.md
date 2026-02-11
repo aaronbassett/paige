@@ -546,10 +546,10 @@ Phase 10 (Polish)
 
 ### Phase Completion
 
-- [ ] T252 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T253 [GIT] Create/update PR to main with Phase 4 summary
-- [ ] T254 [GIT] Verify all CI checks pass
-- [ ] T255 [GIT] Report PR ready status
+- [x] T252 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T253 [GIT] Create/update PR to main with Phase 4 summary
+- [x] T254 [GIT] Verify all CI checks pass (no CI configured — lint + typecheck + tests all pass locally)
+- [x] T255 [GIT] Report PR ready status
 
 ---
 
