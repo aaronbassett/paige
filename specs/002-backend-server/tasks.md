@@ -841,10 +841,10 @@
 
 ### Phase 15 Completion
 
-- [ ] T429 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T430 [GIT] Create/update PR to main with Phase 15 summary
-- [ ] T431 [GIT] Verify all CI checks pass
-- [ ] T432 [GIT] Report PR ready status
+- [x] T429 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T430 [GIT] Create/update PR to main with Phase 15 summary
+- [x] T431 [GIT] Verify all CI checks pass (364 tests, lint clean, typecheck clean)
+- [x] T432 [GIT] Report PR ready status
 
 ---
 
