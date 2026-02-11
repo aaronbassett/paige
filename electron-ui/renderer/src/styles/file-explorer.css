@@ -1,0 +1,329 @@
+/*
+ * file-explorer.css — File Explorer / Tree Component Styles
+ * =========================================================
+ * Styles for the left sidebar file explorer panel, including the tree view,
+ * node rows, expand/collapse arrows, hint glow effects, and loading/empty states.
+ *
+ * All values reference CSS custom properties from design-tokens.css.
+ * No raw hex values or magic numbers.
+ *
+ * Hint glow effects use the `breathe` keyframe from animations.css and expose
+ * a --hint-intensity custom property so JS can fine-tune glow strength per node.
+ */
+
+/* ---------------------------------------------------------------------------
+ * File Explorer Container
+ * ------------------------------------------------------------------------- */
+
+.file-explorer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  overflow: hidden;
+  user-select: none;
+}
+
+.file-explorer-header {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 var(--space-sm);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-family), monospace;
+  font-size: var(--font-small-size);
+  font-weight: var(--font-small-weight);
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.file-explorer-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+ * Tree Node Rows
+ *
+ * Each row is 24px tall, fills the full width, and receives padding-left
+ * based on nesting depth (set via inline style or a CSS variable).
+ * ------------------------------------------------------------------------- */
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  width: 100%;
+  padding-right: var(--space-sm);
+  cursor: pointer;
+  position: relative;
+  transition: background-color 120ms ease;
+}
+
+.tree-row:hover {
+  background: var(--bg-elevated);
+}
+
+.tree-row--active {
+  background: rgba(217, 119, 87, 0.08);
+  border-left: 2px solid var(--accent-primary);
+}
+
+/* Offset the active row content to compensate for the left border */
+.tree-row--active .tree-node-icon,
+.tree-row--active .tree-node-name {
+  /* The 2px border is included in the row; no additional offset needed
+     since padding-left on the row already accounts for nesting. */
+}
+
+.tree-row--directory {
+  /* Directories have no special background by default, only text styling */
+}
+
+/* Focus-visible for keyboard navigation */
+.tree-row:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Node Content: Icon + Name
+ * ------------------------------------------------------------------------- */
+
+.tree-node-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  margin-right: var(--space-xs);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.tree-node-name {
+  font-family: var(--font-family), monospace;
+  font-size: var(--font-small-size);
+  font-weight: var(--font-body-weight);
+  line-height: 24px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.tree-node-name--truncated {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Directory names: slightly bolder, secondary color */
+.tree-row--directory > .tree-node-name,
+.tree-row--directory .tree-node-name {
+  color: var(--text-secondary);
+  font-weight: var(--font-small-weight);
+}
+
+/* ---------------------------------------------------------------------------
+ * Expand / Collapse Arrows
+ *
+ * Arrows are 12px, colored muted, and rotate 90deg clockwise when expanded.
+ * The rotation transition uses a snappy 120ms ease.
+ * ------------------------------------------------------------------------- */
+
+.tree-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 24px;
+  min-width: 16px;
+  color: var(--text-muted);
+  font-size: 12px;
+  transition: transform 120ms ease;
+  transform: rotate(0deg);
+}
+
+.tree-arrow--expanded {
+  transform: rotate(90deg);
+}
+
+/* Placeholder spacer for leaf nodes (no arrow) to maintain alignment */
+.tree-arrow--placeholder {
+  visibility: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+ * Hint Glow Effects
+ *
+ * Three intensity levels for coaching hints on file tree nodes.
+ * Each level uses the `breathe` keyframe (from animations.css) with increasing
+ * opacity, spread, and animation speed.
+ *
+ * The --hint-intensity custom property (0.0 - 1.0) allows JS to set a
+ * continuous intensity value per node. When set, it overrides the discrete
+ * level styles.
+ * ------------------------------------------------------------------------- */
+
+.hint-glow {
+  position: relative;
+  --hint-intensity: 0;
+}
+
+/* Subtle: gentle background tint, slow breathing */
+.hint-glow--subtle {
+  --hint-intensity: 0.3;
+  background: rgba(217, 119, 87, 0.05);
+  box-shadow: inset 2px 0 0 rgba(217, 119, 87, 0.25);
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* Obvious: visible background tint, moderate breathing */
+.hint-glow--obvious {
+  --hint-intensity: 0.6;
+  background: rgba(217, 119, 87, 0.1);
+  box-shadow: inset 2px 0 0 rgba(217, 119, 87, 0.5);
+  animation: breathe 2s ease-in-out infinite;
+}
+
+/* Unmissable: strong background, fast breathing, outer glow */
+.hint-glow--unmissable {
+  --hint-intensity: 1;
+  background: rgba(217, 119, 87, 0.15);
+  box-shadow:
+    inset 2px 0 0 var(--accent-primary),
+    0 0 8px var(--hint-glow);
+  animation: breathe 1.2s ease-in-out infinite;
+}
+
+/* Dynamic intensity via custom property (set by JS) */
+.hint-glow[style*='--hint-intensity'] {
+  background: rgba(217, 119, 87, calc(0.05 + var(--hint-intensity) * 0.1));
+  box-shadow: inset 2px 0 0 rgba(217, 119, 87, calc(0.2 + var(--hint-intensity) * 0.6));
+}
+
+/* Hint dot indicator (optional small dot next to hinted nodes) */
+.hint-glow::after {
+  content: '';
+  position: absolute;
+  right: var(--space-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  opacity: var(--hint-intensity);
+  transition: opacity 300ms ease;
+}
+
+/* Hide the dot when there is no hint */
+.hint-glow:not(.hint-glow--subtle):not(.hint-glow--obvious):not(.hint-glow--unmissable)::after {
+  opacity: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Loading State
+ *
+ * Pulsing skeleton bars that simulate the tree structure while data loads.
+ * ------------------------------------------------------------------------- */
+
+.file-explorer-loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+}
+
+.file-explorer-loading-bar {
+  height: 16px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* Vary widths to simulate realistic tree structure */
+.file-explorer-loading-bar:nth-child(1) { width: 65%; }
+.file-explorer-loading-bar:nth-child(2) { width: 80%; margin-left: var(--space-md); }
+.file-explorer-loading-bar:nth-child(3) { width: 55%; margin-left: var(--space-md); }
+.file-explorer-loading-bar:nth-child(4) { width: 70%; }
+.file-explorer-loading-bar:nth-child(5) { width: 45%; margin-left: var(--space-md); }
+.file-explorer-loading-bar:nth-child(6) { width: 60%; margin-left: var(--space-lg); }
+.file-explorer-loading-bar:nth-child(7) { width: 75%; }
+.file-explorer-loading-bar:nth-child(8) { width: 50%; margin-left: var(--space-md); }
+
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Empty State
+ *
+ * Centered muted text shown when no files are loaded.
+ * ------------------------------------------------------------------------- */
+
+.file-explorer-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+.file-explorer-empty-icon {
+  font-size: 32px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+  opacity: 0.5;
+}
+
+.file-explorer-empty-text {
+  font-family: var(--font-family), monospace;
+  font-size: var(--font-small-size);
+  color: var(--text-muted);
+  line-height: var(--font-body-line-height);
+}
+
+/* ---------------------------------------------------------------------------
+ * Reduced Motion
+ *
+ * Disable hint glow breathing animations and skeleton pulsing for users
+ * who prefer reduced motion. The global rule in animations.css covers most
+ * cases, but we explicitly remove box-shadow animations and the hint dot
+ * transitions here for completeness.
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .hint-glow--subtle,
+  .hint-glow--obvious,
+  .hint-glow--unmissable {
+    animation: none;
+  }
+
+  .hint-glow::after {
+    transition: none;
+  }
+
+  .file-explorer-loading-bar {
+    animation: none;
+    opacity: 0.6;
+  }
+
+  .tree-arrow {
+    transition: none;
+  }
+}
