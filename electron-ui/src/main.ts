@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
+import { setupPtyIpc } from './pty/pty-service.js';
 
 function createWindow(): BrowserWindow {
   const isMac = process.platform === 'darwin';
@@ -24,6 +25,13 @@ function createWindow(): BrowserWindow {
   } else {
     void window.loadFile(path.join(__dirname, 'renderer/index.html'));
   }
+
+  // Set up PTY ↔ renderer IPC bridge
+  const cleanupPty = setupPtyIpc(window);
+
+  window.on('closed', () => {
+    cleanupPty();
+  });
 
   return window;
 }
