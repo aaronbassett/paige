@@ -2,8 +2,8 @@
 
 **Feature Branch**: `feature/electron-ui`
 **Created**: 2026-02-10
-**Last Updated**: 2026-02-10
-**Status**: In Progress
+**Last Updated**: 2026-02-11
+**Status**: Complete (10/10 stories graduated)
 **Discovery**: See `discovery/` folder for full context
 
 ---
@@ -152,9 +152,10 @@ Paige's backend does the heavy intellectual lifting (coaching pipeline, memory, 
 
 #### Layout Architecture
 
-**Two Views**
+**Three Views**
 1. **Dashboard** — Full-screen home view (Story 3 details content)
 2. **IDE** — Five-panel workspace layout
+3. **Placeholder** — Lightweight "Coming Soon" page for unbuilt features (Story 10)
 
 **Header Bar** (shared across both views)
 - Height: 48px fixed
@@ -165,6 +166,7 @@ Paige's backend does the heavy intellectual lifting (coaching pipeline, memory, 
 **Electron Window**
 - `titleBarStyle: 'hiddenInset'` on macOS
 - Header accounts for traffic light inset (~70px left padding on macOS)
+- Back/home button visible in IDE and Placeholder views
 
 **IDE Panel Layout** (fixed proportions, no drag resize)
 
@@ -230,7 +232,7 @@ Paige's backend does the heavy intellectual lifting (coaching pipeline, memory, 
 
 | ID | Requirement |
 |----|-------------|
-| R2.1 | App MUST have exactly two view states: Dashboard and IDE |
+| R2.1 | App MUST have three view states: Dashboard, IDE, and Placeholder |
 | R2.2 | Header MUST be 48px and persist across both views |
 | R2.3 | IDE layout MUST use CSS Grid with fixed column/row proportions (no JavaScript-based sizing) |
 | R2.4 | Sidebar collapse MUST use Framer Motion with the `standard` spring preset |
@@ -1427,6 +1429,483 @@ When sidebar is collapsed to 32px rail (Story 2):
 | SC8.5 | Phase transition animates | Completing a phase shows checkmark → line fill → next activation sequence |
 | SC8.6 | Accordion works at level 3 | Click sub-step title → expands description; click another → previous collapses |
 
+### Story 9: Hinting System [P1] ✅
+
+**As a** developer working on an issue in Paige,
+**I want** a unified hinting system that coordinates coaching messages, editor decorations, and file tree glows based on my chosen hint level,
+**So that** I receive progressively detailed guidance across the entire IDE surface — from subtle file breadcrumbs to inline coaching comments — all controlled by a single slider.
+
+**Priority**: P1 — The crown jewel of the coaching UX; ties the entire coaching surface together.
+**Dependencies**: Story 5 (Editor decorations, explain button), Story 6 (Explorer glow), Story 8 (Sidebar hint slider).
+
+#### Rendering Responsibility Model
+
+The backend is the source of truth for *what hints exist*. The frontend owns *all rendering decisions*.
+
+- Backend sends all hints with level metadata (once per phase or coaching event)
+- Frontend filters display based on current hint level (instant, no round-trip)
+- Frontend auto-dismisses comment balloons when anchored code is modified (instant via Monaco `onDidChangeModelContent`)
+- Frontend shows/hides hints when the slider moves (re-evaluates all stored hints)
+
+This is consistent with Story 8's phase detail filtering — same data, different presentation based on user preference.
+
+#### Hint Level → IDE Surface Mapping
+
+| Level | Label | Explorer (Story 6) | Editor Decorations (Story 5) | Comment Balloons | Sidebar (Story 8) |
+|-------|-------|---------------------|------------------------------|------------------|--------------------|
+| 0 | None | No glow | No decorations | Collapsed to icon | Phase titles only |
+| 1 | Light | `subtle` glow (file only) | No decorations | Collapsed to icon | Phase + summary |
+| 2 | Medium | `obvious` glow (file + dirs) | Line highlights + gutter markers | Fully expanded | Phase + summary + sub-step titles |
+| 3 | Heavy | `unmissable` glow (gradient) | Line highlights + gutter + hover hints | Fully expanded | Phase + summary + sub-step accordion |
+
+**Level metadata on messages:**
+- `editor:decorations` items include a `level` field (minimum hint level to display)
+- `coaching:message` includes a `level` field and `source` field
+- `explorer:hint_files` styles map implicitly: `subtle`=1, `obvious`=2, `unmissable`=3
+- `editor:hover_hint` is implicitly level 3 — frontend registers the Monaco hover provider only when hint level is 3; deregisters below 3. Hover hint data is stored regardless.
+
+**Exceptions — always fully displayed regardless of level:**
+- Review comments (`coaching:review_result`) — user-initiated
+- Explain responses (`coaching:message` with `source: 'explain'`) — user-initiated
+- Editor toasts (unanchored `coaching:message`) — already lightweight, not in code view
+
+#### Comment Balloons (Anchored Coaching Messages)
+
+Rendered when `coaching:message` arrives with an `anchor: { path, range }`.
+
+**Library**: `@floating-ui/react`
+
+**Monaco integration**:
+- Convert anchor range to screen coordinates via `editor.getScrolledVisiblePosition(position)`
+- Create Floating UI virtual reference element at those coordinates
+- Listen to Monaco's `onDidScrollChange` to reposition
+- Hide balloon when anchor scrolls out of the visible editor area; show when scrolled back into view
+
+**Positioning**:
+- Preferred placement: right side of the editor area
+- `flip` middleware: repositions to left side when right-side space is insufficient
+- `shift` middleware: keeps balloon within editor bounds
+- Arrow pointing toward the anchored code range
+
+**Visual treatment**:
+
+| Element | Style |
+|---------|-------|
+| Background | `--bg-elevated` |
+| Border | 1px `--border-subtle` |
+| Left border | 3px, color by message type (see below) |
+| Text | `--text-primary` (14px) |
+| Arrow | `--bg-elevated` fill, `--border-subtle` border |
+| Max width | 320px |
+| Max height | 200px (scrollable if content overflows) |
+| Close button | 16px `✕` in `--text-muted`, hover: `--text-secondary` |
+| Border radius | 6px |
+
+**Left border color by message type**:
+
+| Type | Left Border | Use Case |
+|------|-------------|----------|
+| `hint` | `--accent-primary` | Coaching guidance |
+| `info` | `--status-info` | Neutral information |
+| `success` | `--status-success` | "This looks good" |
+| `warning` | `--status-warning` | "Watch out here" |
+
+**Multiple balloons**: Multiple comment balloons can be visible simultaneously. Floating UI collision detection prevents overlap.
+
+**Dismissal**:
+- Click the close button (✕)
+- Auto-dismiss when the anchored code range is modified (Monaco `onDidChangeModelContent` — if change range overlaps balloon anchor range, dismiss immediately)
+- Phase transition: frontend clears all non-review coaching messages when `coaching:phase_update` arrives with a new active phase (see Lifecycle section)
+
+#### Collapsed Icon (Levels 0-1)
+
+When hint level is 0 or 1, coaching comment balloons (except user-initiated) render as a collapsed icon instead of the full balloon.
+
+| Element | Style |
+|---------|-------|
+| Shape | 20px circle |
+| Icon | Paige speech bubble glyph |
+| Background | `--accent-primary` at 60% opacity |
+| Animation | `gentle` spring pulse (stiffness: 120, damping: 14), looping |
+| Position | At the anchor point via Floating UI (same positioning logic as full balloon) |
+
+- Click: expands to full comment balloon (overrides level filtering for that specific message)
+- Once expanded by click, stays expanded until dismissed (✕ or code modification)
+- Multiple collapsed icons visible simultaneously
+- Hidden when anchor scrolls out of view (same as full balloons)
+
+#### Editor Toasts (Unanchored Coaching Messages)
+
+Rendered when `coaching:message` arrives without an `anchor` field.
+
+**Library**: `react-toastify` with `stacked` prop
+
+**Configuration**:
+
+| Setting | Value |
+|---------|-------|
+| Position | top-right |
+| Auto-close | disabled (persist until closed) |
+| Stacked | `true` |
+| Close on click | `false` (must click ✕) |
+| Close button | `true` |
+| Draggable | `false` |
+| Progress bar | disabled |
+
+**Styling** (override react-toastify defaults to match design system):
+
+| Element | Style |
+|---------|-------|
+| Background | `--bg-elevated` |
+| Text | `--text-primary` (14px) |
+| Left border | 3px, color by message type (same as comment balloons) |
+| Close button | `--text-muted`, hover: `--text-secondary` |
+| Max width | 360px |
+| Border radius | 6px |
+| Shadow | subtle drop shadow (`--bg-base` at 40%) |
+
+Toasts always show full content regardless of hint level.
+
+#### "Explain This" Response
+
+When the user clicks the floating explain button (Story 5), `user:explain` is sent with `{ path, range, selectedText }`.
+
+Backend responds with a `coaching:message`:
+```typescript
+{
+  message: string;          // The explanation
+  type: 'info';             // Explanations are informational
+  anchor: { path, range };  // Anchored to the selected range
+  level: 0;                 // N/A — always shown (source overrides)
+  source: 'explain';        // User-initiated → always fully displayed
+}
+```
+
+Renders as a comment balloon at the selected range, always fully expanded regardless of hint level.
+
+#### "Review My Work" System
+
+##### Split Button
+
+The "Review My Work" button in the editor status bar (Story 5) is a split button, following the GitHub merge button pattern:
+
+```
+┌──────────────────────┬───┐
+│  Review My Work      │ ▾ │
+└──────────────────────┴───┘
+```
+
+- **Main area**: Click triggers review with the currently selected scope
+- **Caret area (▾)**: Click opens dropdown to change scope (does not trigger review)
+- **Separator**: 1px `--border-subtle` vertical line between main area and caret
+- **Main area styling**: `--accent-primary` text, hover: `--accent-warm` background
+- **Caret styling**: Same as main area; `--accent-primary` chevron
+
+**Dropdown** (opens upward from status bar):
+
+| Option | Description |
+|--------|-------------|
+| Review File | Review the currently active file |
+| Since Last Review | Review all changes since your last review |
+| Since Last Phase | Review all changes since the current phase started |
+| Since Issue Start | Review all changes since this issue began |
+
+- Background: `--bg-elevated`
+- Border: `--border-subtle`, border-radius 6px
+- Shadow: subtle drop shadow
+- Checked item: `--accent-primary` checkmark icon + bold title text
+- Unchecked item: `--text-primary` title, `--text-secondary` description (12px)
+- Hover: `--bg-surface` background
+- Default checked: "Review File"
+- Selecting an option sets it as the new default (checkmark moves) but does NOT trigger the review
+
+##### Review Payload
+
+```typescript
+// Revised client → server
+'user:review' → {
+  scope: 'file' | 'since_last_review' | 'since_last_phase' | 'since_issue_start';
+  path?: string;  // included when scope is 'file' (active file path)
+}
+```
+
+##### Review Response
+
+```typescript
+// New server → client message type
+'coaching:review_result' → {
+  comments: Array<{
+    message: string;
+    type: 'info' | 'hint' | 'success' | 'warning';
+    anchor: { path: string; range: Range };
+  }>;
+}
+```
+
+Review comments are always fully displayed regardless of hint level.
+
+##### Review Navigation Mode
+
+When `coaching:review_result` arrives, the status bar transforms:
+
+```
+Normal:  │  src/auth.tsx    Ln 42, Col 18   TypeScript   [Review My Work ▾] │
+Review:  │  src/auth.tsx    Ln 42, Col 18   TypeScript     [◀] 2/7 [▶] [✕] │
+```
+
+- **◀ / ▶**: Navigate to previous/next review comment. Scrolls editor to center the comment's anchor range. If the comment is in a different file, auto-switches to that tab (opens it if not already open).
+- **2/7**: Current comment index / total count. Text in `--text-primary`.
+- **✕**: Exit review mode. Dismisses all review comment balloons. Restores "Review My Work ▾" button.
+- **Current comment emphasis**: The currently focused review comment balloon has a brighter left border (full opacity) and a subtle `--bg-surface` highlight. Non-focused review balloons show left border at 60% opacity.
+
+##### Review Lifecycle
+
+- New review requested while previous review active: previous review comments dismissed, replaced by new results
+- Phase transition during review: review comments persist (user-initiated); new phase coaching hints layer alongside
+- Tab closed containing review comments: counter adjusts; ◀/▶ skip those comments. If all remaining comments are in closed tabs, review mode exits.
+- Session ends: review mode exits, all comments dismissed
+
+#### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+Shift+H` | Cycle hint level (0→1→2→3→0) |
+| `Cmd+Shift+[` | Decrease hint level (min 0) |
+| `Cmd+Shift+]` | Increase hint level (max 3) |
+
+All three update the sidebar slider position and trigger the same frontend re-evaluation as clicking the slider. The `hints:level_change` WebSocket message is debounced at 200ms for rapid changes; frontend rendering updates instantly per slider position.
+
+#### Phase Transition Hint Lifecycle
+
+When a phase completes and the next phase becomes active:
+
+1. Backend sends `explorer:clear_hints` — frontend removes all file/directory glows
+2. Backend sends `editor:clear_decorations` — frontend removes all editor decorations
+3. Frontend clears all non-review coaching message balloons (triggered by `coaching:phase_update` with new active phase)
+4. Backend sends new `explorer:hint_files` for the new phase
+5. Backend sends new `editor:decorations` for the new phase (with level metadata)
+6. Backend sends new `coaching:message`(s) for the new phase guidance
+
+Frontend applies new hints according to the current hint level. No level change needed.
+
+Review comments are NOT cleared by phase transitions.
+
+#### Revised WebSocket Messages (Story 4 Revisions)
+
+**Modified server → client:**
+
+`coaching:message` payload changed:
+```typescript
+// Was: { message, type, anchor?: { path, range } }
+// Now:
+{ message, type, anchor?: { path, range }, level: number, source: 'coaching' | 'explain' | 'observer' }
+```
+
+`editor:decorations` payload changed:
+```typescript
+// Was: decorations: [{ type, range, message?, style }]
+// Now:
+decorations: [{ type, range, message?, style, level: number }]
+```
+
+**Modified client → server:**
+
+`user:review` payload changed:
+```typescript
+// Was: {}
+// Now:
+{ scope: 'file' | 'since_last_review' | 'since_last_phase' | 'since_issue_start', path?: string }
+```
+
+**New server → client message:**
+
+| Type | Payload | Description |
+|------|---------|-------------|
+| `coaching:review_result` | `{ comments: [{ message, type, anchor }] }` | Batch review response with positioned comments |
+
+Server → client total: 27 → 28 message types. Client → server: 21 (unchanged).
+
+#### Acceptance Scenarios
+
+| # | Scenario | Expected Outcome |
+|---|----------|-----------------|
+| 9.1 | Backend sends anchored `coaching:message` at level 2, hint level is 2 | Full comment balloon appears right of anchor with arrow and type-colored left border |
+| 9.2 | Same message, hint level is 1 | Collapsed 20px pulsing Paige icon at anchor |
+| 9.3 | Click collapsed icon | Balloon expands to full content; stays expanded until dismissed |
+| 9.4 | Edit code under a comment balloon anchor | Balloon auto-dismisses immediately |
+| 9.5 | Backend sends unanchored `coaching:message` | Toast appears top-right, stacked, persists until ✕ clicked |
+| 9.6 | User clicks explain button on selected code | `user:explain` sent; response renders as full comment balloon at selection regardless of level |
+| 9.7 | Hint level slider moved from 1→3 | Collapsed icons expand to full balloons; new decorations appear; explorer glows intensify |
+| 9.8 | Hint level slider moved from 3→0 | Balloons collapse to icons; decorations removed; explorer glows removed; sidebar shows titles only |
+| 9.9 | Click "Review My Work" main button | `user:review` sent with current scope; review comments render as balloons; status bar shows ◀/▶ navigation |
+| 9.10 | Click ▾ on split button | Dropdown opens upward with 4 scope options, current default checked |
+| 9.11 | Navigate review with ◀/▶ | Editor scrolls to comment; focused comment highlighted; cross-file navigation switches tabs |
+| 9.12 | Click ✕ in review navigation | All review balloons dismissed; status bar restores to "Review My Work ▾" |
+| 9.13 | Phase transition during session | Old hints cleared, new hints appear filtered by current level |
+| 9.14 | Cmd+Shift+] at level 2 | Level increases to 3; slider updates; more decorations and full phase accordion appear |
+| 9.15 | Cmd+Shift+H at level 3 | Level cycles to 0; all visual hints collapse or hide |
+| 9.16 | Scroll editor with visible balloons | Balloons track their anchors; off-screen anchors cause balloons to hide |
+| 9.17 | Multiple comment balloons visible | All render without overlap (Floating UI collision detection) |
+
+#### Edge Cases
+
+| ID | Scenario | Handling |
+|----|----------|----------|
+| E9.1 | Comment balloon anchor scrolls out of visible area | Hide balloon; show when scrolled back into view |
+| E9.2 | Multiple comment balloons would overlap | Floating UI shift/flip middleware prevents overlap |
+| E9.3 | Code modification partially overlaps anchor range | Dismiss balloon (any overlap triggers dismiss) |
+| E9.4 | Review comments span multiple files | ◀/▶ auto-switches tabs; opens file if not already in a tab |
+| E9.5 | Review requested while previous review active | Previous review dismissed; replaced by new results |
+| E9.6 | Hint level changes during active review | Review comments unaffected (always fully displayed) |
+| E9.7 | Phase transition during active review | Review comments persist; new phase hints layer alongside |
+| E9.8 | `prefers-reduced-motion` active | Collapsed icon pulse static; no fade transitions on show/hide |
+| E9.9 | Very long coaching message in balloon | Scrollable within balloon; max-height 200px |
+| E9.10 | Anchor code deleted entirely | Dismiss balloon |
+| E9.11 | Tab closed containing review comments | Counter adjusts; ◀/▶ skip those comments; if all gone, exit review mode |
+| E9.12 | Backend sends `coaching:message` for file not currently open | Store message; render balloon when file tab becomes active |
+| E9.13 | Rapid hint level slider changes | Debounce `hints:level_change` WebSocket at 200ms; frontend rendering updates instantly per slider position |
+
+#### Requirements
+
+| ID | Requirement |
+|----|-------------|
+| R9.1 | Comment balloons MUST use `@floating-ui/react` for positioning |
+| R9.2 | Balloon anchor tracking MUST use Monaco `getScrolledVisiblePosition` + Floating UI virtual elements |
+| R9.3 | Balloons MUST prefer right-side placement with `flip` and `shift` middleware |
+| R9.4 | Balloons MUST show an arrow pointing at the anchored code range |
+| R9.5 | Balloons at levels 0-1 MUST render as collapsed 20px pulsing icon (except user-initiated) |
+| R9.6 | Clicking a collapsed icon MUST expand the balloon; it stays expanded until dismissed |
+| R9.7 | Balloons MUST auto-dismiss when anchored code is modified (any overlap with change range) |
+| R9.8 | Editor toasts MUST use `react-toastify` with `stacked` prop |
+| R9.9 | Toasts MUST be positioned top-right and persist until closed |
+| R9.10 | Toasts MUST always show full content regardless of hint level |
+| R9.11 | "Explain This" responses MUST render as fully expanded balloons regardless of level |
+| R9.12 | "Review My Work" MUST be a split button with scope dropdown (GitHub merge button pattern) |
+| R9.13 | Split button MUST default to "Review File" scope |
+| R9.14 | Review response MUST use `coaching:review_result` message type with comment array |
+| R9.15 | Review navigation MUST show ◀/▶ controls with current/total counter in status bar |
+| R9.16 | Review ◀/▶ MUST auto-switch tabs for cross-file comments |
+| R9.17 | Review comments MUST always be fully displayed regardless of hint level |
+| R9.18 | Frontend MUST own all rendering decisions (filter by level, dismiss on code change, show/hide on level change) |
+| R9.19 | Frontend MUST NOT round-trip to backend for hint display changes |
+| R9.20 | Keyboard shortcuts Cmd+Shift+H/[/] MUST control hint level |
+| R9.21 | Phase transitions MUST clear old hints (backend sends clear, frontend clears coaching balloons) then apply new |
+| R9.22 | `prefers-reduced-motion` MUST be respected for collapsed icon pulse and show/hide transitions |
+| R9.23 | Left border color MUST differentiate by message type (hint/info/success/warning → design system status tokens) |
+| R9.24 | `hints:level_change` MUST be debounced at 200ms; frontend rendering MUST update instantly |
+
+#### Success Criteria
+
+| ID | Criterion | Measurement |
+|----|-----------|-------------|
+| SC9.1 | Comment balloons render at anchor | Balloon appears right of anchored code with arrow pointing at range |
+| SC9.2 | Progressive disclosure works | Level 0-1 shows collapsed icon; level 2+ shows full balloon; change is instant |
+| SC9.3 | Auto-dismiss on code change | Edit code under balloon → balloon disappears immediately (no lag) |
+| SC9.4 | Explain flow works | Select text → explain button → click → balloon at selection with explanation |
+| SC9.5 | Review flow works | Click review → comments appear → ◀/▶ navigates → ✕ exits |
+| SC9.6 | Split button works | Main click reviews; caret opens dropdown; option changes default |
+| SC9.7 | Cross-file review | Broad scope review → comments in multiple files → ◀/▶ switches tabs |
+| SC9.8 | Toasts work | Unanchored message → toast top-right; stacks; persists until closed |
+| SC9.9 | Keyboard shortcuts work | Cmd+Shift+H cycles; [/] increment/decrement; slider reflects change |
+| SC9.10 | Phase transition clean | Old hints clear, new hints appear at current level |
+
+### Story 10: Placeholder / Coming Soon Page [P2] ✅
+
+**As a** developer clicking on Practice Challenges or Learning Materials on the dashboard,
+**I want** a friendly placeholder page that tells me these features are coming soon,
+**So that** I know the feature exists in Paige's vision but isn't available yet — without feeling like I hit a dead end.
+
+**Priority**: P2 — Polish; prevents dead-end UX for unbuilt features.
+**Dependencies**: Story 1 (Visual Identity), Story 2 (App Shell).
+
+#### Page Layout
+
+Centered content, vertically and horizontally, within the app shell. Background: `--bg-base`. The 48px header (Story 2) remains visible.
+
+```
+┌──────────────────────────────────────────┐
+│  [Paige logo]           PAIGE            │  ← persistent header
+├──────────────────────────────────────────┤
+│                                          │
+│                                          │
+│        ╔═══════════════════════╗         │
+│        ║   COMING SOON        ║         │  ← figlet ASCII, terracotta
+│        ╚═══════════════════════╝         │
+│                                          │
+│        [SVG illustration]                │  ← Paige character building
+│                                          │
+│        "I'm still learning this          │
+│         one myself... check back         │
+│         soon!"                           │  ← playful message
+│                                          │
+│        ← Back to Dashboard               │  ← text link
+│                                          │
+│                                          │
+│              · · · · · · ·               │  ← dot matrix bg
+└──────────────────────────────────────────┘
+```
+
+#### Visual Elements
+
+**Figlet header**: "COMING SOON" rendered in figlet ASCII art, `--accent-primary` (terracotta). Same treatment as dashboard section headers (Story 3).
+
+**SVG illustration**: Paige character mid-construction — e.g., hard hat, hammering together a window frame. ~160px tall. Scanline overlay (Story 1 aesthetic).
+
+**Message text**: `--text-secondary`, Body size (14px), max-width 320px, center-aligned. The message is static (hardcoded in the frontend — no backend data needed).
+
+**Back link**: "← Back to Dashboard" in `--accent-primary`, hover: `--accent-warm`. Click navigates back to dashboard view. Arrow is a literal `←` character, not an icon.
+
+**Dot matrix background**: Full-page dot matrix texture from Story 1, consistent with dashboard and editor empty states.
+
+#### Navigation
+
+- **Entry**: Click on a practice challenge card or learning material item from the dashboard
+- **Transition in**: Simple opacity fade (300ms ease-in-out). No zoom transition.
+- **Transition out**: Same opacity fade back to dashboard
+- **Back link**: Returns to dashboard. Dashboard state is preserved (scroll position, loaded data).
+- **Header back behavior**: If the header has any navigation affordance (Story 2), it should also return to dashboard from this view.
+
+#### Acceptance Scenarios
+
+| # | Scenario | Expected Outcome |
+|---|----------|-----------------|
+| 10.1 | Click practice challenge on dashboard | Fade to placeholder page with "COMING SOON" header and playful message |
+| 10.2 | Click learning material on dashboard | Same placeholder page (identical content) |
+| 10.3 | Click "← Back to Dashboard" | Fade back to dashboard; scroll position and data preserved |
+| 10.4 | View page styling | Figlet header in terracotta, dot matrix background, warm palette throughout |
+| 10.5 | SVG illustration not ready at build time | Fallback: large construction emoji (🚧) at 64px in place of illustration |
+
+#### Edge Cases
+
+| ID | Scenario | Handling |
+|----|----------|----------|
+| E10.1 | Direct deep-link to placeholder route | Render normally; back link goes to dashboard |
+| E10.2 | SVG illustration not ready | Fallback to 🚧 emoji at 64px |
+| E10.3 | `prefers-reduced-motion` active | Fade transition instant (0ms) |
+
+#### Requirements
+
+| ID | Requirement |
+|----|-------------|
+| R10.1 | Placeholder MUST be a single page for both practice challenges and learning materials |
+| R10.2 | Page MUST use figlet-rendered "COMING SOON" header in `--accent-primary` |
+| R10.3 | Page MUST display a playful, in-character Paige message |
+| R10.4 | Page MUST include a "← Back to Dashboard" link |
+| R10.5 | Navigation MUST use a simple opacity fade (300ms), NOT the zoom transition |
+| R10.6 | Page MUST NOT require any backend data or WebSocket messages |
+| R10.7 | Dashboard state MUST be preserved when returning from placeholder |
+| R10.8 | Dot matrix background MUST be consistent with Story 1 design system |
+| R10.9 | `prefers-reduced-motion` MUST be respected (instant transition) |
+
+#### Success Criteria
+
+| ID | Criterion | Measurement |
+|----|-----------|-------------|
+| SC10.1 | No dead ends | Practice and learning clicks reach a real page, not a broken route |
+| SC10.2 | Matches design system | Figlet header, warm palette, dot matrix, scanline on illustration |
+| SC10.3 | Round-trip works | Dashboard → placeholder → back preserves dashboard state |
+| SC10.4 | Playful tone | Message reads as Paige's voice, not generic boilerplate |
+
 ---
 
 ## Edge Cases
@@ -1486,6 +1965,22 @@ When sidebar is collapsed to 32px rail (Story 2):
 | E8.8 | `prefers-reduced-motion` active | Phase pulse static; morph/accordion/slider instant | 8 |
 | E8.9 | Session ends while sidebar visible | Navigate back to dashboard | 8 |
 | E8.10 | Label color too light for white text | Auto-contrast: dark text on light labels | 8 |
+| E9.1 | Balloon anchor scrolls out of view | Hide; show when scrolled back | 9 |
+| E9.2 | Multiple balloons would overlap | Floating UI shift/flip prevents overlap | 9 |
+| E9.3 | Code modification overlaps anchor range | Dismiss balloon on any overlap | 9 |
+| E9.4 | Review comments span multiple files | ◀/▶ auto-switches tabs | 9 |
+| E9.5 | New review while previous active | Previous dismissed; replaced by new | 9 |
+| E9.6 | Hint level changes during review | Review comments unaffected | 9 |
+| E9.7 | Phase transition during review | Review persists; new hints layer alongside | 9 |
+| E9.8 | `prefers-reduced-motion` active | Collapsed icon static; transitions instant | 9 |
+| E9.9 | Very long coaching message | Scrollable; max-height 200px | 9 |
+| E9.10 | Anchor code deleted entirely | Dismiss balloon | 9 |
+| E9.11 | Tab closed with review comments | Counter adjusts; ◀/▶ skip; exit if all gone | 9 |
+| E9.12 | Coaching message for unopened file | Store; render when tab becomes active | 9 |
+| E9.13 | Rapid hint level slider changes | Debounce WebSocket at 200ms; render instant | 9 |
+| E10.1 | Direct deep-link to placeholder route | Render normally; back link goes to dashboard | 10 |
+| E10.2 | SVG illustration not ready | Fallback to 🚧 emoji at 64px | 10 |
+| E10.3 | `prefers-reduced-motion` active | Fade transition instant (0ms) | 10 |
 
 ---
 
@@ -1502,7 +1997,7 @@ When sidebar is collapsed to 32px rail (Story 2):
 | R1.5 | JetBrains Mono from Google Fonts (400, 500, 600, 700) | 1 | 100% |
 | R1.6 | No raw hex literals outside theme file | 1 | 100% |
 | R1.7 | ASCII treatments via CSS only | 1 | 100% |
-| R2.1 | Exactly two view states: Dashboard and IDE | 2 | 100% |
+| R2.1 | Three view states: Dashboard, IDE, and Placeholder | 2, 10 | 100% |
 | R2.2 | 48px persistent header across both views | 2 | 100% |
 | R2.3 | CSS Grid for IDE layout with fixed proportions | 2 | 100% |
 | R2.4 | Sidebar collapse via Framer Motion `standard` spring | 2 | 100% |
@@ -1580,6 +2075,39 @@ When sidebar is collapsed to 32px rail (Story 2):
 | R8.14 | Sidebar MUST NOT contain AI logic | 8 | 100% |
 | R8.15 | `prefers-reduced-motion` MUST be respected for all sidebar animations | 8 | 100% |
 | R8.16 | Maximum 5 phases per issue | 8 | 100% |
+| R9.1 | Comment balloons MUST use `@floating-ui/react` | 9 | 100% |
+| R9.2 | Balloon anchor tracking MUST use Monaco `getScrolledVisiblePosition` + Floating UI virtual elements | 9 | 100% |
+| R9.3 | Balloons MUST prefer right-side placement with flip/shift middleware | 9 | 100% |
+| R9.4 | Balloons MUST show arrow pointing at anchored code range | 9 | 100% |
+| R9.5 | Balloons at levels 0-1 MUST render as collapsed 20px pulsing icon (except user-initiated) | 9 | 100% |
+| R9.6 | Clicking collapsed icon MUST expand balloon; stays expanded until dismissed | 9 | 100% |
+| R9.7 | Balloons MUST auto-dismiss when anchored code is modified | 9 | 100% |
+| R9.8 | Editor toasts MUST use `react-toastify` with `stacked` prop | 9 | 100% |
+| R9.9 | Toasts MUST be positioned top-right and persist until closed | 9 | 100% |
+| R9.10 | Toasts MUST always show full content regardless of hint level | 9 | 100% |
+| R9.11 | "Explain This" responses MUST render as fully expanded balloons regardless of level | 9 | 100% |
+| R9.12 | "Review My Work" MUST be split button with scope dropdown | 9 | 100% |
+| R9.13 | Split button MUST default to "Review File" scope | 9 | 100% |
+| R9.14 | Review response MUST use `coaching:review_result` message type | 9 | 100% |
+| R9.15 | Review navigation MUST show ◀/▶ with current/total counter in status bar | 9 | 100% |
+| R9.16 | Review ◀/▶ MUST auto-switch tabs for cross-file comments | 9 | 100% |
+| R9.17 | Review comments MUST always be fully displayed regardless of hint level | 9 | 100% |
+| R9.18 | Frontend MUST own all rendering decisions (filter by level, dismiss on code change) | 9 | 100% |
+| R9.19 | Frontend MUST NOT round-trip to backend for hint display changes | 9 | 100% |
+| R9.20 | Keyboard shortcuts Cmd+Shift+H/[/] MUST control hint level | 9 | 100% |
+| R9.21 | Phase transitions MUST clear old hints then apply new | 9 | 100% |
+| R9.22 | `prefers-reduced-motion` MUST be respected for collapsed icon pulse | 9 | 100% |
+| R9.23 | Left border color MUST differentiate by message type via design system tokens | 9 | 100% |
+| R9.24 | `hints:level_change` MUST be debounced at 200ms; frontend rendering MUST be instant | 9 | 100% |
+| R10.1 | Placeholder MUST be a single page for both practice challenges and learning materials | 10 | 100% |
+| R10.2 | Page MUST use figlet-rendered "COMING SOON" header in `--accent-primary` | 10 | 100% |
+| R10.3 | Page MUST display a playful, in-character Paige message | 10 | 100% |
+| R10.4 | Page MUST include a "← Back to Dashboard" link | 10 | 100% |
+| R10.5 | Navigation MUST use simple opacity fade (300ms), NOT zoom transition | 10 | 100% |
+| R10.6 | Page MUST NOT require any backend data or WebSocket messages | 10 | 100% |
+| R10.7 | Dashboard state MUST be preserved when returning from placeholder | 10 | 100% |
+| R10.8 | Dot matrix background MUST be consistent with Story 1 design system | 10 | 100% |
+| R10.9 | `prefers-reduced-motion` MUST be respected (instant transition) | 10 | 100% |
 
 ### Key Entities
 
@@ -1629,6 +2157,20 @@ When sidebar is collapsed to 32px rail (Story 2):
 | SC8.4 | Phase stepper reflects state | Complete=green check, active=terracotta pulse, pending=muted | 8 |
 | SC8.5 | Phase transition animates | Checkmark → line fill → next activation sequence | 8 |
 | SC8.6 | Accordion at level 3 | Click sub-step → expand; click another → collapse previous | 8 |
+| SC9.1 | Comment balloons render at anchor | Balloon right of code with arrow pointing at range | 9 |
+| SC9.2 | Progressive disclosure works | Level 0-1 shows icon; level 2+ shows full balloon; instant | 9 |
+| SC9.3 | Auto-dismiss on code change | Edit under balloon → disappears immediately | 9 |
+| SC9.4 | Explain flow works | Select → explain → balloon at selection with explanation | 9 |
+| SC9.5 | Review flow works | Review → comments → ◀/▶ navigates → ✕ exits | 9 |
+| SC9.6 | Split button works | Main click reviews; caret opens dropdown; option changes default | 9 |
+| SC9.7 | Cross-file review | Broad scope → multi-file comments → ◀/▶ switches tabs | 9 |
+| SC9.8 | Toasts work | Unanchored → toast top-right; stacks; persists until closed | 9 |
+| SC9.9 | Keyboard shortcuts work | Cmd+Shift+H cycles; [/] increment/decrement; slider syncs | 9 |
+| SC9.10 | Phase transition clean | Old hints clear, new hints appear at current level | 9 |
+| SC10.1 | No dead ends | Practice and learning clicks reach a real page, not a broken route | 10 |
+| SC10.2 | Matches design system | Figlet header, warm palette, dot matrix, scanline on illustration | 10 |
+| SC10.3 | Round-trip works | Dashboard → placeholder → back preserves dashboard state | 10 |
+| SC10.4 | Playful tone | Message reads as Paige's voice, not generic boilerplate | 10 |
 
 ---
 
@@ -1643,3 +2185,10 @@ When sidebar is collapsed to 32px rail (Story 2):
 | 2026-02-11 | 4 | `coaching:message` payload changed from `{ message, type }` to `{ message, type, anchor?: { path, range } }` | Story 8 discovery: coaching messages render as anchored comment balloons (when anchor present) or editor toasts (when absent), not in sidebar |
 | 2026-02-11 | 4 | `session:started` payload clarified: `phases` is `Phase[]`, `issueContext` is `IssueContext` (see Story 8 for interfaces) | Story 8 requires formal data structures for phase stepper and issue context |
 | 2026-02-11 | 2, 5 | Added 32px editor status bar (VS Code-style) to IDE layout between editor and terminal | Story 8 discovery: "Review My Work" button needs a home; status bar also shows file path, cursor position, language |
+| 2026-02-11 | 4 | `coaching:message` payload changed from `{ message, type, anchor? }` to `{ message, type, anchor?, level, source }` | Story 9: frontend needs level metadata to filter display, source to identify user-initiated messages |
+| 2026-02-11 | 4 | `editor:decorations` items changed from `{ type, range, message?, style }` to `{ type, range, message?, style, level }` | Story 9: frontend needs level metadata to filter decorations by hint level |
+| 2026-02-11 | 4 | `user:review` payload changed from `{}` to `{ scope, path? }` | Story 9: review split button supports 4 scopes (file, since last review, since last phase, since issue start) |
+| 2026-02-11 | 4 | New message type `coaching:review_result` (server → client, 28 total now) | Story 9: batch review response with positioned comment array for navigation |
+| 2026-02-11 | 5 | "Review My Work" text button → split button with scope dropdown (GitHub merge button pattern) | Story 9: user needs to choose review scope; split button keeps default action fast with options accessible |
+| 2026-02-11 | 5 | Status bar gains review navigation mode: `[◀] 2/7 [▶] [✕]` replaces split button during active review | Story 9: review comments need next/previous navigation with cross-file tab switching |
+| 2026-02-11 | 2 | R2.1 changed from "Exactly two view states" to "Three view states: Dashboard, IDE, and Placeholder" | Story 10: placeholder page is a lightweight third view state with fade transition |

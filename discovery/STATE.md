@@ -2,7 +2,7 @@
 
 **Updated**: 2026-02-11
 **Iteration**: 2
-**Phase**: Story Development (Phase 3)
+**Phase**: Complete (all stories graduated)
 
 ---
 
@@ -48,8 +48,8 @@ Paige's backend does the heavy intellectual lifting (coaching pipeline, memory, 
 | 6 | File Explorer with Hint Glow | P1 | ✅ In SPEC | 20% | 1, 2, 4 |
 | 7 | Terminal with Filter Pipeline | P1 | ✅ In SPEC | 20% | 1, 2, 4 |
 | 8 | Coaching Sidebar (Issue + Phases) | P1 | ✅ In SPEC | 95% | 1, 2, 4 |
-| 9 | Hinting System | P1 | ⏳ Queued | 15% | 5, 6, 8 |
-| 10 | Placeholder / Coming Soon Page | P2 | ⏳ Queued | 40% | 1, 2 |
+| 9 | Hinting System | P1 | ✅ In SPEC | 95% | 5, 6, 8 |
+| 10 | Placeholder / Coming Soon Page | P2 | ✅ In SPEC | 100% | 1, 2 |
 
 ### Story Dependencies
 ```
@@ -73,7 +73,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 ```
 
 ### Proto-Stories / Emerging Themes
-*All proto-stories have crystallized into the 10 stories above.*
+*All proto-stories have crystallized and graduated. No emerging themes.*
 
 ---
 
@@ -81,7 +81,9 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 | # | Story | Priority | Completed | Key Decisions | Revision Risk |
 |---|-------|----------|-----------|---------------|---------------|
-| 8 | Coaching Sidebar | P1 | 2026-02-11 | Coaching messages NOT in sidebar (comment balloons + toasts in editor); hint levels None/Light/Medium/Heavy; SVG illustrations morph per level; phase detail frontend-filtered; editor status bar added (Story 2/5 revision) | Low — Story 9 may refine coaching message rendering |
+| 8 | Coaching Sidebar | P1 | 2026-02-11 | Coaching messages NOT in sidebar (comment balloons + toasts in editor); hint levels None/Light/Medium/Heavy; SVG illustrations morph per level; phase detail frontend-filtered; editor status bar added (Story 2/5 revision) | Low |
+| 9 | Hinting System | P1 | 2026-02-11 | Frontend owns rendering decisions (filter by level, dismiss on code change); comment balloons via Floating UI; toasts via react-toastify stacked; collapsed icon at levels 0-1; split review button with 4 scopes; review navigation ◀/▶ in status bar; Cmd+Shift+H/[/] shortcuts; Story 4/5 revisions (level/source fields, review_result message, split button, review nav mode) | Low |
+| 10 | Placeholder / Coming Soon Page | P2 | 2026-02-11 | Single page for both practice/learning; playful Paige personality; simple fade transition (no zoom); static content, no backend data; Story 2 revised to three view states | None |
 
 *Full stories in SPEC.md*
 
@@ -89,7 +91,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 ## In-Progress Story Detail
 
-*No story currently in progress.*
+*All stories graduated. Specification complete.*
 
 ---
 
@@ -97,8 +99,7 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 *Items that might affect graduated stories:*
 
-- Story 9 (Hinting System) will define how coaching messages render as comment balloons and toasts — may refine the `coaching:message` anchor format from Story 4 revision
-- Story 9 will define how "Explain This" responses render — may need a new WebSocket message type or reuse `coaching:message` with anchor
+*No watching items — all stories graduated.*
 
 ---
 
@@ -116,5 +117,6 @@ WebSocket Client (4) ──→ all interactive stories (3, 5, 6, 7, 8)
 
 ## Next Actions
 
-- Story 9: Hinting System (now unblocked — depends on 5, 6, 8, all graduated)
-- Story 10: Placeholder / Coming Soon Page (P2)
+- All 10 stories graduated to SPEC.md
+- OPEN_QUESTIONS.md is empty
+- Specification ready for final review and validation
