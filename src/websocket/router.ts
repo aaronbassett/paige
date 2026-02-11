@@ -2,21 +2,13 @@
 // Implementation for T171
 
 import { WebSocket as WsWebSocket } from 'ws';
-import { getDatabase } from '../database/db.js';
-import { logAction } from '../logger/action-log.js';
-import type { ActionType } from '../types/domain.js';
-import type {
-  ClientToServerMessage,
-  ConnectionErrorData,
-  EditorTabSwitchData,
-  EditorSelectionData,
-  HintsLevelChangeData,
-  UserIdleStartData,
-  UserIdleEndData,
-} from '../types/websocket.js';
+import type { ClientToServerMessage, ConnectionErrorData } from '../types/websocket.js';
 import { handleConnectionHello } from './handlers/connection.js';
 import { handleFileOpen, handleFileSave } from './handlers/file.js';
 import { handleBufferUpdate } from './handlers/buffer.js';
+import { handleEditorTabSwitch, handleEditorSelection } from './handlers/editor.js';
+import { handleHintsLevelChange } from './handlers/hints.js';
+import { handleUserIdleStart, handleUserIdleEnd } from './handlers/user.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -53,57 +45,6 @@ function notImplementedHandler(messageType: string): MessageHandler {
   };
 }
 
-/**
- * Safely logs an action, catching and suppressing any database errors.
- * Used for fire-and-forget action logging that must not crash the server.
- */
-function safeLogAction(actionType: ActionType, data?: Record<string, unknown>): void {
-  const db = getDatabase();
-  if (db) {
-    logAction(db, 0, actionType, data).catch((err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error(`[ws-router] Failed to log action "${actionType}":`, err);
-    });
-  }
-}
-
-// ── Inline Handlers (to be extracted in T177-T179) ──────────────────────────
-
-function handleEditorTabSwitch(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
-  const tabData = data as EditorTabSwitchData;
-  safeLogAction('editor_tab_switch', {
-    fromPath: tabData.fromPath,
-    toPath: tabData.toPath,
-  });
-}
-
-function handleEditorSelection(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
-  const selData = data as EditorSelectionData;
-  safeLogAction('editor_selection', {
-    path: selData.path,
-    range: selData.range,
-    selectedText: selData.selectedText,
-  });
-}
-
-function handleHintsLevelChange(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
-  const hintsData = data as HintsLevelChangeData;
-  safeLogAction('hints_level_change', {
-    from: hintsData.from,
-    to: hintsData.to,
-  });
-}
-
-function handleUserIdleStart(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
-  const idleData = data as UserIdleStartData;
-  safeLogAction('user_idle_start', { durationMs: idleData.durationMs });
-}
-
-function handleUserIdleEnd(_ws: WsWebSocket, data: unknown, _connectionId: string): void {
-  const idleData = data as UserIdleEndData;
-  safeLogAction('user_idle_end', { idleDurationMs: idleData.idleDurationMs });
-}
-
 // ── Handler Registry ─────────────────────────────────────────────────────────
 
 /** Map of message type -> handler function. */
@@ -114,7 +55,7 @@ const handlers = new Map<string, MessageHandler>([
   ['file:save', handleFileSave],
   ['buffer:update', handleBufferUpdate],
 
-  // Inline handlers (to be extracted in T177-T179)
+  // Additional handlers (T177-T179)
   ['editor:tab_switch', handleEditorTabSwitch],
   ['editor:selection', handleEditorSelection],
   ['hints:level_change', handleHintsLevelChange],

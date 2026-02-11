@@ -364,10 +364,10 @@
 - [x] T174 [P] [US5] Create src/websocket/handlers/file.ts for file:open, file:save (use devs:typescript-dev agent)
 - [x] T175 [P] [US5] Create src/websocket/handlers/buffer.ts for buffer:update (use devs:typescript-dev agent)
 - [x] T176 [GIT] Commit: add core WebSocket handlers
-- [ ] T177 [P] [US5] Create src/websocket/handlers/editor.ts for editor:tab_switch (use devs:typescript-dev agent)
-- [ ] T178 [P] [US5] Create src/websocket/handlers/hints.ts for hints:level_change (use devs:typescript-dev agent)
-- [ ] T179 [P] [US5] Create src/websocket/handlers/user.ts for user:idle_start, user:idle_end (use devs:typescript-dev agent)
-- [ ] T180 [GIT] Commit: add additional WebSocket handlers
+- [x] T177 [P] [US5] Create src/websocket/handlers/editor.ts for editor:tab_switch (use devs:typescript-dev agent)
+- [x] T178 [P] [US5] Create src/websocket/handlers/hints.ts for hints:level_change (use devs:typescript-dev agent)
+- [x] T179 [P] [US5] Create src/websocket/handlers/user.ts for user:idle_start, user:idle_end (use devs:typescript-dev agent)
+- [x] T180 [GIT] Commit: add additional WebSocket handlers
 - [ ] T181 [US5] Implement broadcast function for server→client messages in src/websocket/server.ts (use devs:typescript-dev agent)
 - [ ] T182 [GIT] Commit: add broadcast function
 - [ ] T183 [US5] Wire file watcher events to broadcast fs:tree_update in src/index.ts (use devs:typescript-dev agent)
