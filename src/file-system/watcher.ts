@@ -82,6 +82,13 @@ export function createFileWatcher(projectDir: string): FileWatcher {
       handleEvent('unlink', path);
     });
 
+    // Swallow EACCES errors on inaccessible subdirectories (e.g. /tmp/systemd-*)
+    watcher.on('error', (error: Error) => {
+      const nodeErr = error as NodeJS.ErrnoException;
+      if (nodeErr.code === 'EACCES') return;
+      emitter.emit('error', error);
+    });
+
     // Wait for the watcher to be ready before resolving
     return new Promise<void>((resolve) => {
       watcher!.on('ready', resolve);

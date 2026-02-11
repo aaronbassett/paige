@@ -1,4 +1,12 @@
+import { mkdirSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+
 import { defineConfig } from 'vitest/config';
+
+// Create a dedicated temp directory for contract tests so the file watcher
+// doesn't scan all of /tmp (which contains inaccessible system directories).
+const contractProjectDir = resolve(join('/tmp', 'paige-contract-tests'));
+mkdirSync(contractProjectDir, { recursive: true });
 
 /**
  * Vitest configuration for the Paige backend server.
@@ -79,7 +87,7 @@ export default defineConfig({
 
           /* Provide minimal env vars so loadEnv() passes in contract tests */
           env: {
-            PROJECT_DIR: '/tmp',
+            PROJECT_DIR: contractProjectDir,
           },
         },
       },
