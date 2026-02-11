@@ -471,9 +471,9 @@
 
 ### Tests for User Story 7
 
-- [ ] T231 [P] [US7] Unit test for model alias resolution in tests/unit/api-client/models.test.ts (use devs:typescript-dev agent)
-- [ ] T232 [P] [US7] Integration test for API retry logic in tests/integration/api-retry.test.ts (use devs:typescript-dev agent)
-- [ ] T233 [GIT] Commit: add US7 tests (failing)
+- [x] T231 [P] [US7] Unit test for model alias resolution in tests/unit/api-client/models.test.ts (use devs:typescript-dev agent)
+- [x] T232 [P] [US7] Integration test for API retry logic in tests/integration/api-retry.test.ts (use devs:typescript-dev agent)
+- [x] T233 [GIT] Commit: add US7 tests (failing)
 
 ### Implementation for User Story 7
 
