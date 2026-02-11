@@ -310,8 +310,8 @@
 - [x] T148 [US4] Implement logApiCall with cost estimation in src/logger/api-log.ts (use devs:typescript-dev agent)
 - [x] T149 [GIT] Commit: add API call logging
 - [x] T150 [US4] Add query functions for action timeline in src/database/queries/actions.ts (use devs:typescript-dev agent)
-- [ ] T151 [GIT] Commit: add action queries
-- [ ] T152 [US4] Verify US4 tests now pass
+- [x] T151 [GIT] Commit: add action queries
+- [x] T152 [US4] Verify US4 tests now pass
 - [ ] T153 [GIT] Commit: verify US4 complete
 
 ### Phase 6 Wrap-Up
