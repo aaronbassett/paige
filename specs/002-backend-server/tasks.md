@@ -199,10 +199,10 @@
 - [x] T093 [P] [US2] Create src/database/queries/gaps.ts with CRUD functions (use devs:typescript-dev agent)
 - [x] T094 [P] [US2] Create src/database/queries/katas.ts with CRUD functions (use devs:typescript-dev agent)
 - [x] T095 [GIT] Commit: add dreyfus/gap/kata queries
-- [ ] T096 [US2] Initialize database on server startup in src/index.ts (use devs:typescript-dev agent)
-- [ ] T097 [GIT] Commit: integrate database initialization
-- [ ] T098 [US2] Verify US2 tests now pass
-- [ ] T099 [GIT] Commit: verify US2 complete
+- [x] T096 [US2] Initialize database on server startup in src/index.ts (use devs:typescript-dev agent)
+- [x] T097 [GIT] Commit: integrate database initialization
+- [x] T098 [US2] Verify US2 tests now pass
+- [x] T099 [GIT] Commit: verify US2 complete
 
 ### Phase 4 Wrap-Up
 

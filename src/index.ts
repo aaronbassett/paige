@@ -2,8 +2,9 @@
 // HTTP server with health endpoint, MCP transport, and WebSocket support
 
 import http, { type Server } from 'node:http';
+import { join } from 'node:path';
 import { loadEnv } from './config/env.js';
-import { closeDatabase } from './database/db.js';
+import { createDatabase, closeDatabase } from './database/db.js';
 
 export const VERSION = '1.0.0';
 
@@ -35,6 +36,13 @@ export interface ServerHandle {
 export async function createServer(config: ServerConfig): Promise<ServerHandle> {
   const env = loadEnv();
   const startTime = Date.now();
+
+  // Initialize SQLite database (creates tables on first run)
+  const dbPath = join(env.dataDir, 'paige.db');
+  await createDatabase(dbPath);
+
+  // eslint-disable-next-line no-console
+  console.log(`[server] Database initialized at ${dbPath}`);
 
   const server = http.createServer((req, res) => {
     if (req.method === 'GET' && req.url === '/health') {
