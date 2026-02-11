@@ -350,9 +350,9 @@
 
 ### Tests for User Story 5
 
-- [ ] T166 [P] [US5] Contract test for WebSocket message types in tests/contract/websocket-protocol.test.ts (use devs:typescript-dev agent)
-- [ ] T167 [P] [US5] Integration test for connection handshake in tests/integration/websocket-handshake.test.ts (use devs:typescript-dev agent)
-- [ ] T168 [GIT] Commit: add US5 tests (failing)
+- [x] T166 [P] [US5] Contract test for WebSocket message types in tests/contract/websocket-protocol.test.ts (use devs:typescript-dev agent)
+- [x] T167 [P] [US5] Integration test for connection handshake in tests/integration/websocket-handshake.test.ts (use devs:typescript-dev agent)
+- [x] T168 [GIT] Commit: add US5 tests (failing)
 
 ### Implementation for User Story 5
 
