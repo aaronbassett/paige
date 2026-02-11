@@ -1,0 +1,809 @@
+/**
+ * WebSocket protocol type definitions for Backend <-> Electron communication.
+ *
+ * 55 message types total:
+ *   - 23 Client->Server (Electron to Backend)
+ *   - 32 Server->Client (Backend to Electron)
+ *
+ * All messages follow the { type, data } discriminated union pattern.
+ * Derived from specs/002-backend-server/contracts/websocket.json
+ */
+
+import type { HintLevel, PhaseStatus } from './domain.js';
+
+// ── Shared Sub-Types ────────────────────────────────────────────────────────
+
+/** Editor text selection range (character offsets). */
+export interface SelectionRange {
+  readonly start: number;
+  readonly end: number;
+}
+
+/** Editor cursor range (line/column coordinates). */
+export interface EditorRange {
+  readonly startLine: number;
+  readonly startColumn: number;
+  readonly endLine: number;
+  readonly endColumn: number;
+}
+
+/** Line range for "Explain This" feature. */
+export interface LineRange {
+  readonly startLine: number;
+  readonly endLine: number;
+}
+
+/** Editor line highlight decoration. */
+export type HighlightStyle = 'info' | 'warning' | 'error';
+
+export interface HighlightRange {
+  readonly start: number;
+  readonly end: number;
+  readonly style: HighlightStyle;
+}
+
+/** File tree hint style. */
+export type ExplorerHintStyle = 'suggested' | 'warning' | 'error';
+
+/** Connection error codes. */
+export type ConnectionErrorCode = 'NOT_IMPLEMENTED' | 'INVALID_MESSAGE' | 'INTERNAL_ERROR';
+
+/** File system watcher action. */
+export type FsTreeAction = 'add' | 'change' | 'unlink' | 'addDir' | 'unlinkDir';
+
+/** Coaching message severity. */
+export type CoachingMessageType = 'info' | 'success' | 'warning' | 'error';
+
+/** Observer nudge signal types. */
+export type NudgeSignal =
+  | 'stuck_on_implementation'
+  | 'long_idle'
+  | 'excessive_hints'
+  | 'repeated_errors';
+
+/** Dashboard stats time period. */
+export type StatsPeriod = '7d' | '30d' | 'all';
+
+/** Issue suitability assessment. */
+export type IssueSuitability = 'excellent' | 'good' | 'fair' | 'poor';
+
+// ── Client -> Server Message Data ───────────────────────────────────────────
+
+export interface ConnectionHelloData {
+  readonly version: string;
+  readonly platform: string;
+  readonly windowSize: {
+    readonly width: number;
+    readonly height: number;
+  };
+}
+
+export interface FileOpenData {
+  readonly path: string;
+}
+
+export interface FileSaveData {
+  readonly path: string;
+  readonly content: string;
+}
+
+export interface FileCloseData {
+  readonly path: string;
+}
+
+export interface FileCreateData {
+  readonly path: string;
+}
+
+export interface FileDeleteData {
+  readonly path: string;
+}
+
+export interface BufferUpdateData {
+  readonly path: string;
+  readonly content: string;
+  readonly cursorPosition: number;
+  readonly selections: readonly SelectionRange[];
+}
+
+export interface EditorTabSwitchData {
+  readonly fromPath: string;
+  readonly toPath: string;
+}
+
+export interface EditorSelectionData {
+  readonly path: string;
+  readonly range: EditorRange;
+  readonly selectedText: string;
+}
+
+export interface HintsLevelChangeData {
+  readonly from: HintLevel;
+  readonly to: HintLevel;
+}
+
+export interface UserIdleStartData {
+  readonly durationMs: number;
+}
+
+export interface UserIdleEndData {
+  readonly idleDurationMs: number;
+}
+
+export interface UserExplainData {
+  readonly path: string;
+  readonly range: LineRange;
+  readonly selectedText: string;
+}
+
+export interface ObserverMuteData {
+  readonly muted: boolean;
+}
+
+export interface PracticeSubmitSolutionData {
+  readonly kataId: number;
+  readonly code: string;
+  readonly activeConstraints: readonly string[];
+}
+
+export interface PracticeRequestHintData {
+  readonly kataId: number;
+}
+
+export interface PracticeViewPreviousAttemptsData {
+  readonly kataId: number;
+}
+
+export interface DashboardRequestData {
+  readonly statsPeriod: StatsPeriod;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface DashboardRefreshIssuesData {}
+
+export interface TerminalCommandData {
+  readonly command: string;
+}
+
+export interface TreeExpandData {
+  readonly path: string;
+}
+
+export interface TreeCollapseData {
+  readonly path: string;
+}
+
+export interface ReviewRequestData {
+  readonly phaseId: number;
+}
+
+// ── Server -> Client Message Data ───────────────────────────────────────────
+
+export interface ConnectionInitData {
+  readonly sessionId: string;
+  readonly capabilities: {
+    readonly chromadb_available: boolean;
+    readonly gh_cli_available: boolean;
+  };
+  readonly featureFlags: {
+    readonly observer_enabled: boolean;
+    readonly practice_mode_enabled: boolean;
+  };
+}
+
+export interface ConnectionErrorData {
+  readonly code: ConnectionErrorCode;
+  readonly message: string;
+  readonly context?: Record<string, unknown> | undefined;
+}
+
+export interface FsContentData {
+  readonly path: string;
+  readonly content: string;
+  readonly language: string;
+  readonly lineCount: number;
+}
+
+export interface FsSaveAckData {
+  readonly path: string;
+  readonly success: boolean;
+  readonly timestamp: string;
+}
+
+export interface FsSaveErrorData {
+  readonly path: string;
+  readonly error: string;
+}
+
+export interface FsTreeUpdateData {
+  readonly action: FsTreeAction;
+  readonly path: string;
+  readonly newPath?: string | undefined;
+}
+
+export interface EditorOpenFileData {
+  readonly path: string;
+  readonly content: string;
+  readonly language: string;
+  readonly lineCount: number;
+}
+
+export interface EditorHighlightLinesData {
+  readonly path: string;
+  readonly ranges: readonly HighlightRange[];
+}
+
+export interface EditorClearHighlightsData {
+  readonly path?: string | undefined;
+}
+
+export interface ExplorerHintFilesData {
+  readonly paths: readonly string[];
+  readonly style: ExplorerHintStyle;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ExplorerClearHintsData {}
+
+export interface CoachingPlanPhase {
+  readonly number: number;
+  readonly title: string;
+  readonly description: string;
+  readonly hint_level: string;
+}
+
+export interface CoachingPlan {
+  readonly id: number;
+  readonly title: string;
+  readonly description: string;
+  readonly total_phases: number;
+  readonly phases: readonly CoachingPlanPhase[];
+}
+
+export interface CoachingPlanReadyData {
+  readonly plan: CoachingPlan;
+}
+
+export interface CoachingPhase {
+  readonly id: number;
+  readonly number: number;
+  readonly title: string;
+  readonly status: PhaseStatus;
+  readonly started_at?: string | undefined;
+  readonly completed_at?: string | undefined;
+}
+
+export interface CoachingPhaseUpdateData {
+  readonly phase: CoachingPhase;
+}
+
+export interface CoachingMessageData {
+  readonly message: string;
+  readonly type: CoachingMessageType;
+}
+
+export interface CoachingIssueContextData {
+  readonly title: string;
+  readonly summary: string;
+}
+
+export interface ObserverStatusData {
+  readonly active: boolean;
+  readonly muted: boolean;
+}
+
+export interface ObserverNudgeData {
+  readonly signal: NudgeSignal;
+  readonly confidence: number;
+  readonly context: string;
+}
+
+export interface ExplainResponseData {
+  readonly explanation: string;
+  readonly phaseConnection?: string | undefined;
+}
+
+export interface ExplainErrorData {
+  readonly error: string;
+}
+
+export interface PracticeSolutionReviewData {
+  readonly review: string;
+  readonly level: number;
+  readonly passed: boolean;
+  readonly constraintsUnlocked: readonly string[];
+}
+
+export interface PracticeHintData {
+  readonly hint: string;
+}
+
+export interface PracticeAttempt {
+  readonly code: string;
+  readonly review: string;
+  readonly level: number;
+  readonly passed: boolean;
+  readonly constraints: readonly string[];
+  readonly submitted_at: string;
+}
+
+export interface PracticePreviousAttemptsData {
+  readonly attempts: readonly PracticeAttempt[];
+}
+
+export interface ReviewErrorData {
+  readonly error: string;
+}
+
+export interface DreyfusAssessmentEntry {
+  readonly skill_area: string;
+  readonly stage: string;
+  readonly confidence: number;
+}
+
+export interface DashboardStats {
+  readonly total_sessions: number;
+  readonly total_actions: number;
+  readonly total_api_calls: number;
+  readonly total_cost: number;
+}
+
+export interface DashboardStateData {
+  readonly dreyfus: readonly DreyfusAssessmentEntry[];
+  readonly stats: DashboardStats;
+  readonly issues: readonly unknown[];
+  readonly challenges: readonly unknown[];
+  readonly learning_materials: readonly unknown[];
+}
+
+export interface DashboardIssue {
+  readonly number: number;
+  readonly title: string;
+  readonly body: string;
+  readonly suitability: IssueSuitability;
+  readonly recommended_focus: string;
+  readonly labels: readonly string[];
+}
+
+export interface DashboardIssuesData {
+  readonly issues: readonly DashboardIssue[];
+}
+
+export interface DashboardChallenge {
+  readonly id: number;
+  readonly title: string;
+  readonly description: string;
+  readonly attempts: number;
+  readonly maxLevel: number;
+  readonly gap: string;
+}
+
+export interface DashboardChallengesData {
+  readonly challenges: readonly DashboardChallenge[];
+}
+
+export interface LearningResource {
+  readonly title: string;
+  readonly url: string;
+  readonly description: string;
+}
+
+export interface LearningMaterialEntry {
+  readonly gap: string;
+  readonly resources: readonly LearningResource[];
+}
+
+export interface DashboardLearningMaterialsData {
+  readonly materials: readonly LearningMaterialEntry[];
+}
+
+export interface DashboardIssuesErrorData {
+  readonly error: string;
+}
+
+export interface SessionStartedData {
+  readonly sessionId: number;
+  readonly project_dir: string;
+}
+
+export interface SessionCompletedData {
+  readonly memories_added: number;
+  readonly gaps_identified: number;
+  readonly katas_generated: number;
+  readonly assessments_updated: number;
+}
+
+// ── Client -> Server Messages (Discriminated Union) ─────────────────────────
+
+export interface ConnectionHelloMessage {
+  readonly type: 'connection:hello';
+  readonly data: ConnectionHelloData;
+}
+
+export interface FileOpenMessage {
+  readonly type: 'file:open';
+  readonly data: FileOpenData;
+}
+
+export interface FileSaveMessage {
+  readonly type: 'file:save';
+  readonly data: FileSaveData;
+}
+
+export interface FileCloseMessage {
+  readonly type: 'file:close';
+  readonly data: FileCloseData;
+}
+
+export interface FileCreateMessage {
+  readonly type: 'file:create';
+  readonly data: FileCreateData;
+}
+
+export interface FileDeleteMessage {
+  readonly type: 'file:delete';
+  readonly data: FileDeleteData;
+}
+
+export interface BufferUpdateMessage {
+  readonly type: 'buffer:update';
+  readonly data: BufferUpdateData;
+}
+
+export interface EditorTabSwitchMessage {
+  readonly type: 'editor:tab_switch';
+  readonly data: EditorTabSwitchData;
+}
+
+export interface EditorSelectionMessage {
+  readonly type: 'editor:selection';
+  readonly data: EditorSelectionData;
+}
+
+export interface HintsLevelChangeMessage {
+  readonly type: 'hints:level_change';
+  readonly data: HintsLevelChangeData;
+}
+
+export interface UserIdleStartMessage {
+  readonly type: 'user:idle_start';
+  readonly data: UserIdleStartData;
+}
+
+export interface UserIdleEndMessage {
+  readonly type: 'user:idle_end';
+  readonly data: UserIdleEndData;
+}
+
+export interface UserExplainMessage {
+  readonly type: 'user:explain';
+  readonly data: UserExplainData;
+}
+
+export interface ObserverMuteMessage {
+  readonly type: 'observer:mute';
+  readonly data: ObserverMuteData;
+}
+
+export interface PracticeSubmitSolutionMessage {
+  readonly type: 'practice:submit_solution';
+  readonly data: PracticeSubmitSolutionData;
+}
+
+export interface PracticeRequestHintMessage {
+  readonly type: 'practice:request_hint';
+  readonly data: PracticeRequestHintData;
+}
+
+export interface PracticeViewPreviousAttemptsMessage {
+  readonly type: 'practice:view_previous_attempts';
+  readonly data: PracticeViewPreviousAttemptsData;
+}
+
+export interface DashboardRequestMessage {
+  readonly type: 'dashboard:request';
+  readonly data: DashboardRequestData;
+}
+
+export interface DashboardRefreshIssuesMessage {
+  readonly type: 'dashboard:refresh_issues';
+  readonly data: DashboardRefreshIssuesData;
+}
+
+export interface TerminalCommandMessage {
+  readonly type: 'terminal:command';
+  readonly data: TerminalCommandData;
+}
+
+export interface TreeExpandMessage {
+  readonly type: 'tree:expand';
+  readonly data: TreeExpandData;
+}
+
+export interface TreeCollapseMessage {
+  readonly type: 'tree:collapse';
+  readonly data: TreeCollapseData;
+}
+
+export interface ReviewRequestMessage {
+  readonly type: 'review:request';
+  readonly data: ReviewRequestData;
+}
+
+/** Union of all 23 client-to-server message types. */
+export type ClientToServerMessage =
+  | ConnectionHelloMessage
+  | FileOpenMessage
+  | FileSaveMessage
+  | FileCloseMessage
+  | FileCreateMessage
+  | FileDeleteMessage
+  | BufferUpdateMessage
+  | EditorTabSwitchMessage
+  | EditorSelectionMessage
+  | HintsLevelChangeMessage
+  | UserIdleStartMessage
+  | UserIdleEndMessage
+  | UserExplainMessage
+  | ObserverMuteMessage
+  | PracticeSubmitSolutionMessage
+  | PracticeRequestHintMessage
+  | PracticeViewPreviousAttemptsMessage
+  | DashboardRequestMessage
+  | DashboardRefreshIssuesMessage
+  | TerminalCommandMessage
+  | TreeExpandMessage
+  | TreeCollapseMessage
+  | ReviewRequestMessage;
+
+// ── Server -> Client Messages (Discriminated Union) ─────────────────────────
+
+export interface ConnectionInitMessage {
+  readonly type: 'connection:init';
+  readonly data: ConnectionInitData;
+}
+
+export interface ConnectionErrorMessage {
+  readonly type: 'connection:error';
+  readonly data: ConnectionErrorData;
+}
+
+export interface FsContentMessage {
+  readonly type: 'fs:content';
+  readonly data: FsContentData;
+}
+
+export interface FsSaveAckMessage {
+  readonly type: 'fs:save_ack';
+  readonly data: FsSaveAckData;
+}
+
+export interface FsSaveErrorMessage {
+  readonly type: 'fs:save_error';
+  readonly data: FsSaveErrorData;
+}
+
+export interface FsTreeUpdateMessage {
+  readonly type: 'fs:tree_update';
+  readonly data: FsTreeUpdateData;
+}
+
+export interface EditorOpenFileMessage {
+  readonly type: 'editor:open_file';
+  readonly data: EditorOpenFileData;
+}
+
+export interface EditorHighlightLinesMessage {
+  readonly type: 'editor:highlight_lines';
+  readonly data: EditorHighlightLinesData;
+}
+
+export interface EditorClearHighlightsMessage {
+  readonly type: 'editor:clear_highlights';
+  readonly data: EditorClearHighlightsData;
+}
+
+export interface ExplorerHintFilesMessage {
+  readonly type: 'explorer:hint_files';
+  readonly data: ExplorerHintFilesData;
+}
+
+export interface ExplorerClearHintsMessage {
+  readonly type: 'explorer:clear_hints';
+  readonly data: ExplorerClearHintsData;
+}
+
+export interface CoachingPlanReadyMessage {
+  readonly type: 'coaching:plan_ready';
+  readonly data: CoachingPlanReadyData;
+}
+
+export interface CoachingPhaseUpdateMessage {
+  readonly type: 'coaching:phase_update';
+  readonly data: CoachingPhaseUpdateData;
+}
+
+export interface CoachingMessageMessage {
+  readonly type: 'coaching:message';
+  readonly data: CoachingMessageData;
+}
+
+export interface CoachingIssueContextMessage {
+  readonly type: 'coaching:issue_context';
+  readonly data: CoachingIssueContextData;
+}
+
+export interface ObserverStatusMessage {
+  readonly type: 'observer:status';
+  readonly data: ObserverStatusData;
+}
+
+export interface ObserverNudgeMessage {
+  readonly type: 'observer:nudge';
+  readonly data: ObserverNudgeData;
+}
+
+export interface ExplainResponseMessage {
+  readonly type: 'explain:response';
+  readonly data: ExplainResponseData;
+}
+
+export interface ExplainErrorMessage {
+  readonly type: 'explain:error';
+  readonly data: ExplainErrorData;
+}
+
+export interface PracticeSolutionReviewMessage {
+  readonly type: 'practice:solution_review';
+  readonly data: PracticeSolutionReviewData;
+}
+
+export interface PracticeHintMessage {
+  readonly type: 'practice:hint';
+  readonly data: PracticeHintData;
+}
+
+export interface PracticePreviousAttemptsMessage {
+  readonly type: 'practice:previous_attempts';
+  readonly data: PracticePreviousAttemptsData;
+}
+
+export interface ReviewErrorMessage {
+  readonly type: 'review:error';
+  readonly data: ReviewErrorData;
+}
+
+export interface DashboardStateMessage {
+  readonly type: 'dashboard:state';
+  readonly data: DashboardStateData;
+}
+
+export interface DashboardIssuesMessage {
+  readonly type: 'dashboard:issues';
+  readonly data: DashboardIssuesData;
+}
+
+export interface DashboardChallengesMessage {
+  readonly type: 'dashboard:challenges';
+  readonly data: DashboardChallengesData;
+}
+
+export interface DashboardLearningMaterialsMessage {
+  readonly type: 'dashboard:learning_materials';
+  readonly data: DashboardLearningMaterialsData;
+}
+
+export interface DashboardIssuesErrorMessage {
+  readonly type: 'dashboard:issues_error';
+  readonly data: DashboardIssuesErrorData;
+}
+
+export interface SessionStartedMessage {
+  readonly type: 'session:started';
+  readonly data: SessionStartedData;
+}
+
+export interface SessionCompletedMessage {
+  readonly type: 'session:completed';
+  readonly data: SessionCompletedData;
+}
+
+/** Union of all 32 server-to-client message types. */
+export type ServerToClientMessage =
+  | ConnectionInitMessage
+  | ConnectionErrorMessage
+  | FsContentMessage
+  | FsSaveAckMessage
+  | FsSaveErrorMessage
+  | FsTreeUpdateMessage
+  | EditorOpenFileMessage
+  | EditorHighlightLinesMessage
+  | EditorClearHighlightsMessage
+  | ExplorerHintFilesMessage
+  | ExplorerClearHintsMessage
+  | CoachingPlanReadyMessage
+  | CoachingPhaseUpdateMessage
+  | CoachingMessageMessage
+  | CoachingIssueContextMessage
+  | ObserverStatusMessage
+  | ObserverNudgeMessage
+  | ExplainResponseMessage
+  | ExplainErrorMessage
+  | PracticeSolutionReviewMessage
+  | PracticeHintMessage
+  | PracticePreviousAttemptsMessage
+  | ReviewErrorMessage
+  | DashboardStateMessage
+  | DashboardIssuesMessage
+  | DashboardChallengesMessage
+  | DashboardLearningMaterialsMessage
+  | DashboardIssuesErrorMessage
+  | SessionStartedMessage
+  | SessionCompletedMessage;
+
+// ── Combined Type ───────────────────────────────────────────────────────────
+
+/** Any WebSocket message (client or server). */
+export type WebSocketMessage = ClientToServerMessage | ServerToClientMessage;
+
+// ── Type-Safe Message Type Literals ─────────────────────────────────────────
+
+/** All valid client-to-server message type strings. */
+export type ClientToServerMessageType = ClientToServerMessage['type'];
+
+/** All valid server-to-client message type strings. */
+export type ServerToClientMessageType = ServerToClientMessage['type'];
+
+/** All valid WebSocket message type strings. */
+export type WebSocketMessageType = WebSocketMessage['type'];
+
+// ── Type-Safe Message Extraction ────────────────────────────────────────────
+
+/**
+ * Extract the data type for a specific message type string.
+ *
+ * Usage:
+ *   type Data = MessageDataFor<"file:open">; // FileOpenData
+ *   type Data = MessageDataFor<"connection:init">; // ConnectionInitData
+ */
+export type MessageDataFor<T extends WebSocketMessageType> = Extract<
+  WebSocketMessage,
+  { readonly type: T }
+>['data'];
+
+/**
+ * Extract the full message type for a specific message type string.
+ *
+ * Usage:
+ *   type Msg = MessageFor<"file:open">; // FileOpenMessage
+ *   type Msg = MessageFor<"connection:init">; // ConnectionInitMessage
+ */
+export type MessageFor<T extends WebSocketMessageType> = Extract<
+  WebSocketMessage,
+  { readonly type: T }
+>;
+
+// ── Type-Safe Message Handler Map ───────────────────────────────────────────
+
+/**
+ * Maps each client-to-server message type to its handler function signature.
+ * Useful for building type-safe WebSocket routers.
+ *
+ * Usage:
+ *   const handlers: ClientMessageHandlers = {
+ *     "file:open": (data) => { ... }, // data is FileOpenData
+ *     "file:save": (data) => { ... }, // data is FileSaveData
+ *     ...
+ *   };
+ */
+export type ClientMessageHandlers = {
+  readonly [T in ClientToServerMessageType]: (data: MessageDataFor<T>) => void | Promise<void>;
+};
+
+/**
+ * Partial handler map for client-to-server messages.
+ * Allows registering handlers for only a subset of message types.
+ */
+export type PartialClientMessageHandlers = {
+  readonly [T in ClientToServerMessageType]?: (data: MessageDataFor<T>) => void | Promise<void>;
+};
