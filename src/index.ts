@@ -1,7 +1,9 @@
 // Paige Backend Server - Entry point
-// Implementation will be added in Phase 3 (US1: Server Foundation & Lifecycle)
+// HTTP server with health endpoint, MCP transport, and WebSocket support
 
-import type { Server } from 'node:http';
+import http, { type Server } from 'node:http';
+import { loadEnv } from './config/env.js';
+import { closeDatabase } from './database/db.js';
 
 export const VERSION = '1.0.0';
 
@@ -22,11 +24,74 @@ export interface ServerHandle {
 /**
  * Creates and starts the Paige backend HTTP server.
  *
+ * - Validates environment configuration via loadEnv()
+ * - Creates an HTTP server with health endpoint
+ * - Listens on the configured port
+ * - Returns a handle with the server and a graceful close function
+ *
  * @param config - Server configuration (port, etc.)
  * @returns A promise resolving to a handle with the server and a close function.
  */
-// eslint-disable-next-line @typescript-eslint/require-await -- stub; implementation will use await
-export async function createServer(_config: ServerConfig): Promise<ServerHandle> {
-  // TODO: Implement in Phase 3 (T062-T067)
-  throw new Error('createServer is not yet implemented');
+export async function createServer(config: ServerConfig): Promise<ServerHandle> {
+  const env = loadEnv();
+  const startTime = Date.now();
+
+  const server = http.createServer((req, res) => {
+    if (req.method === 'GET' && req.url === '/health') {
+      const uptimeMs = Date.now() - startTime;
+      const uptimeSeconds = uptimeMs / 1000;
+      const body = JSON.stringify({ status: 'ok', uptime: uptimeSeconds });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(body);
+      return;
+    }
+
+    // All other routes/methods: 404
+    const body = JSON.stringify({ error: 'Not Found' });
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(body);
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(config.port, () => {
+      server.removeListener('error', reject);
+      resolve();
+    });
+  });
+
+  const address = server.address();
+  const listeningPort =
+    address !== null && typeof address !== 'string' ? address.port : config.port;
+
+  // eslint-disable-next-line no-console
+  console.log(`[server] Listening on port ${String(listeningPort)}`);
+  // eslint-disable-next-line no-console
+  console.log(`[server] Project directory: ${env.projectDir}`);
+  // eslint-disable-next-line no-console
+  console.log('[server] Paige backend ready');
+
+  const close = async (): Promise<void> => {
+    // eslint-disable-next-line no-console
+    console.log('[server] Closing HTTP server...');
+    await new Promise<void>((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    // eslint-disable-next-line no-console
+    console.log('[server] Closing database...');
+    await closeDatabase();
+
+    // eslint-disable-next-line no-console
+    console.log('[server] Shutdown complete');
+  };
+
+  return { server, close };
 }

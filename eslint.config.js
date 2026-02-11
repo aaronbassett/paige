@@ -19,6 +19,8 @@ export default [
       "**/*.js",
       "!*.config.js",
       "!.*.js",
+      // Root-level .ts config files lack type-aware parser context
+      "*.config.ts",
     ],
   },
 
