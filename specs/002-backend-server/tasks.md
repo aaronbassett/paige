@@ -23,40 +23,40 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T001 [GIT] Verify on main branch and working tree is clean
-- [ ] T002 [GIT] Pull latest changes from origin/main
-- [ ] T003 [GIT] Create feature branch: 002-backend-server
+- [x] T001 [GIT] Verify on main branch and working tree is clean
+- [x] T002 [GIT] Pull latest changes from origin/main
+- [x] T003 [GIT] Create feature branch: 002-backend-server
 
 ### Project Initialization
 
-- [ ] T004 Create project directory structure per plan.md (src/, tests/, specs/)
-- [ ] T005 [GIT] Commit: initialize project structure
-- [ ] T006 Initialize Node.js project with package.json (use devs:typescript-dev agent)
-- [ ] T007 [GIT] Commit: add package.json
-- [ ] T008 Install core dependencies from plan.md (@modelcontextprotocol/sdk, better-sqlite3, kysely, ws, chokidar, zod, @anthropic-ai/sdk, chromadb)
-- [ ] T009 [GIT] Commit: add production dependencies
-- [ ] T010 [P] Install dev dependencies (typescript, @types/node, @types/ws, vitest, @vitest/ui, eslint, prettier, husky, lint-staged)
-- [ ] T011 [GIT] Commit: add dev dependencies
-- [ ] T012 Configure TypeScript with strict mode in tsconfig.json (use devs:typescript-dev agent)
-- [ ] T013 [GIT] Commit: add TypeScript config
-- [ ] T014 [P] Configure ESLint with @typescript-eslint/recommended-requiring-type-checking (use dev-specialisms:init-local-tooling skill)
-- [ ] T015 [P] Configure Prettier with consistent style rules (use dev-specialisms:init-local-tooling skill)
-- [ ] T016 [GIT] Commit: add linting and formatting config
-- [ ] T017 Configure Vitest with unit/integration/contract test separation in vitest.config.ts
-- [ ] T018 [GIT] Commit: add Vitest config
-- [ ] T019 Set up Husky + lint-staged for pre-commit hooks (reject warnings)
-- [ ] T020 [GIT] Commit: add pre-commit hooks
-- [ ] T021 Create .env.example template with PORT, PROJECT_DIR, ANTHROPIC_API_KEY, DATA_DIR
-- [ ] T022 [GIT] Commit: add environment template
-- [ ] T023 Update .gitignore for Node.js, TypeScript, .env, coverage, dist
-- [ ] T024 [GIT] Commit: update gitignore
+- [x] T004 Create project directory structure per plan.md (src/, tests/, specs/)
+- [x] T005 [GIT] Commit: initialize project structure
+- [x] T006 Initialize Node.js project with package.json (use devs:typescript-dev agent)
+- [x] T007 [GIT] Commit: add package.json
+- [x] T008 Install core dependencies from plan.md (@modelcontextprotocol/sdk, better-sqlite3, kysely, ws, chokidar, zod, @anthropic-ai/sdk, chromadb)
+- [x] T009 [GIT] Commit: add production dependencies
+- [x] T010 [P] Install dev dependencies (typescript, @types/node, @types/ws, vitest, @vitest/ui, eslint, prettier, husky, lint-staged)
+- [x] T011 [GIT] Commit: add dev dependencies
+- [x] T012 Configure TypeScript with strict mode in tsconfig.json (use devs:typescript-dev agent)
+- [x] T013 [GIT] Commit: add TypeScript config
+- [x] T014 [P] Configure ESLint with @typescript-eslint/recommended-requiring-type-checking (use dev-specialisms:init-local-tooling skill)
+- [x] T015 [P] Configure Prettier with consistent style rules (use dev-specialisms:init-local-tooling skill)
+- [x] T016 [GIT] Commit: add linting and formatting config
+- [x] T017 Configure Vitest with unit/integration/contract test separation in vitest.config.ts
+- [x] T018 [GIT] Commit: add Vitest config
+- [x] T019 Set up Husky + lint-staged for pre-commit hooks (reject warnings)
+- [x] T020 [GIT] Commit: add pre-commit hooks
+- [x] T021 Create .env.example template with PORT, PROJECT_DIR, ANTHROPIC_API_KEY, DATA_DIR
+- [x] T022 [GIT] Commit: add environment template
+- [x] T023 Update .gitignore for Node.js, TypeScript, .env, coverage, dist
+- [x] T024 [GIT] Commit: update gitignore
 
 ### Phase 1 Completion
 
-- [ ] T025 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T026 [GIT] Create/update PR to main with Phase 1 summary
-- [ ] T027 [GIT] Verify all CI checks pass
-- [ ] T028 [GIT] Report PR ready status
+- [x] T025 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T026 [GIT] Create/update PR to main with Phase 1 summary
+- [x] T027 [GIT] Verify all CI checks pass
+- [x] T028 [GIT] Report PR ready status
 
 ---
 
@@ -68,30 +68,30 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T029 [GIT] Verify working tree is clean before starting Phase 2
-- [ ] T030 [GIT] Pull and rebase on origin/main if needed
+- [x] T029 [GIT] Verify working tree is clean before starting Phase 2
+- [x] T030 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T031 Create retro/P2.md for this phase
-- [ ] T032 [GIT] Commit: initialize phase 2 retro
+- [x] T031 Create retro/P2.md for this phase
+- [x] T032 [GIT] Commit: initialize phase 2 retro
 
 ### Foundational Infrastructure
 
-- [ ] T033 Create src/types/domain.ts with core type definitions (Session, Plan, Phase, etc.) (use devs:typescript-dev agent)
-- [ ] T034 [GIT] Commit: add domain types
-- [ ] T035 [P] Create src/config/env.ts with environment validation (use devs:typescript-dev agent)
-- [ ] T036 [GIT] Commit: add environment config
+- [x] T033 Create src/types/domain.ts with core type definitions (Session, Plan, Phase, etc.) (use devs:typescript-dev agent)
+- [x] T034 [GIT] Commit: add domain types
+- [x] T035 [P] Create src/config/env.ts with environment validation (use devs:typescript-dev agent)
+- [x] T036 [GIT] Commit: add environment config
 - [ ] T037 [P] Create src/database/db.ts with Kysely setup and WAL mode (use devs:typescript-dev agent)
 - [ ] T038 [P] Create src/database/migrations/ directory with all 10 table CREATE TABLE IF NOT EXISTS scripts (use devs:typescript-dev agent)
 - [ ] T039 [GIT] Commit: add database setup and migrations
 - [ ] T040 [P] Create src/logger/action-log.ts with logAction function and EventEmitter (use devs:typescript-dev agent)
 - [ ] T041 [P] Create src/logger/api-log.ts with logApiCall function and cost tracking (use devs:typescript-dev agent)
 - [ ] T042 [GIT] Commit: add logging infrastructure
-- [ ] T043 Create src/types/websocket.ts with 55 WebSocket message type definitions from contracts/websocket.json (use devs:typescript-dev agent)
-- [ ] T044 [GIT] Commit: add WebSocket types
-- [ ] T045 Create src/types/mcp.ts with MCP tool parameter/return types from contracts/mcp-tools.json (use devs:typescript-dev agent)
-- [ ] T046 [GIT] Commit: add MCP types
+- [x] T043 Create src/types/websocket.ts with 55 WebSocket message type definitions from contracts/websocket.json (use devs:typescript-dev agent)
+- [x] T044 [GIT] Commit: add WebSocket types
+- [x] T045 Create src/types/mcp.ts with MCP tool parameter/return types from contracts/mcp-tools.json (use devs:typescript-dev agent)
+- [x] T046 [GIT] Commit: add MCP types
 
 ### Phase 2 Wrap-Up
 
