@@ -23,6 +23,46 @@ Claude Code Plugin ←── MCP (SSE) ──→ Backend Server ←── WebSoc
 
 ## Active Technologies
 
+### Feature 001: Electron UI (Face Tier)
+
+**Core Stack**:
+- **TypeScript 5.x** (strict mode) — Type safety across main + renderer processes
+- **Node.js 20.x LTS** — Runtime for Electron main process
+- **Electron 28+** — Desktop application framework (Chromium + Node.js)
+- **React 18** — UI library with hooks, strict mode
+- **Vite** — Fast bundler for renderer process with HMR
+
+**UI Components**:
+- **@monaco-editor/react** — Code editor (VS Code engine)
+- **xterm.js** — Terminal emulator with ANSI color support
+- **react-arborist** — Virtualized file tree (500+ files performant)
+- **vscode-icons** — File type icons for tree
+- **Framer Motion** — Spring physics animations (4 named presets)
+- **@floating-ui/react** — Comment balloon positioning with collision detection
+- **react-toastify** — Unanchored editor notifications
+
+**Backend Communication**:
+- **WebSocket (native)** — 51 message types defined in contracts/
+- **node-pty** — PTY management for terminal (main process)
+
+**Testing**:
+- **Vitest** — Fast test framework (Jest-compatible API, ESM-native)
+- **@testing-library/react** — React component testing
+- **Playwright** — E2E testing with Electron support
+
+**Development Tools**:
+- **ESLint** — Linting (strict, warnings are blockers)
+- **Prettier** — Code formatting (auto-applied on commit)
+- **husky + lint-staged** — Pre-commit hooks
+
+**Project Structure**:
+- `src/` — Main process (Electron backend, PTY, IPC)
+- `renderer/` — Renderer process (React frontend, Monaco, xterm.js)
+- `shared/` — Shared TypeScript types (WebSocket protocol, entities)
+- `tests/` — Unit, integration, E2E tests
+
+### Feature 002: Backend Server (Brain Tier)
+
 **Language & Runtime**: TypeScript on Node.js 18+
 
 **Core Dependencies**:
@@ -43,10 +83,76 @@ Claude Code Plugin ←── MCP (SSE) ──→ Backend Server ←── WebSoc
 
 **Architecture**: Single backend server, three-tier system (Plugin ↔ Backend ↔ Electron)
 
+**Project Structure**:
+```
+src/
+├── index.ts        # Entry point: HTTP + MCP + WebSocket
+├── config/         # Environment validation
+├── database/       # Kysely setup, migrations, typed queries
+├── file-system/    # Buffer cache, file ops, watcher, tree
+├── logger/         # Action log, API log
+├── mcp/            # MCP server, 12 tools, session management
+├── websocket/      # WebSocket server, router, 23 handlers
+├── api-client/     # Claude API with retries, schemas, pricing
+├── memory/         # ChromaDB client with degradation
+├── coaching/       # Pipeline, wrap-up, 4 agents
+├── observer/       # Per-session Observer, triage, nudges
+├── ui-apis/        # Explain This, Practice Review
+├── dashboard/      # Dashboard data assembly (4 flows)
+└── types/          # TypeScript definitions
+```
+
+---
+
 ## Development Commands
 
-### Essential Commands
+### Electron UI
 
+**Setup**:
+```bash
+cd electron-ui
+npm install
+```
+
+**Development**:
+```bash
+npm run dev              # Start Electron app with HMR
+npm run typecheck        # Run TypeScript type check
+```
+
+**Testing**:
+```bash
+npm test                 # Run all tests
+npm run test:unit        # Unit tests only
+npm run test:integration # Integration tests only
+npm run test:e2e         # E2E tests (Playwright)
+npm run test:watch       # Watch mode
+npm run test:coverage    # Coverage report
+```
+
+**Code Quality**:
+```bash
+npm run lint             # Run ESLint
+npm run lint:fix         # Fix ESLint issues
+npm run format           # Format with Prettier
+npm run format:check     # Check formatting
+```
+
+**Build**:
+```bash
+npm run build            # Package Electron app
+```
+
+**Key Shortcuts** (in app):
+- Cmd+R — Reload renderer
+- Cmd+Opt+I — Toggle DevTools
+- Cmd+S — Save file (Monaco)
+- Cmd+W — Close tab (Monaco)
+- Cmd+Shift+H — Cycle hint level
+
+### Backend Server
+
+**Essential Commands**:
 ```bash
 # Install dependencies
 pnpm install
@@ -70,8 +176,7 @@ pnpm format
 pnpm build
 ```
 
-### Testing Commands
-
+**Testing Commands**:
 ```bash
 # Watch mode
 pnpm test:watch
@@ -89,8 +194,7 @@ pnpm test:contract
 pnpm test:coverage
 ```
 
-### Database Commands
-
+**Database Commands**:
 ```bash
 # Reset database (deletes all data)
 rm ~/.paige/paige.db
@@ -100,8 +204,7 @@ rm ~/.paige/paige.db
 sqlite3 ~/.paige/paige.db "SELECT * FROM sessions;"
 ```
 
-### External Services
-
+**External Services**:
 ```bash
 # Start ChromaDB (optional, server degrades gracefully without it)
 docker run -p 8000:8000 chromadb/chroma
@@ -110,57 +213,32 @@ docker run -p 8000:8000 chromadb/chroma
 gh auth status
 ```
 
-## File Structure
-
-### Implementation Plan Documents
-
-```
-specs/002-backend-server/
-├── spec.md         # Complete functional requirements (12 user stories)
-├── plan.md         # This implementation plan
-├── research.md     # Technology decisions and best practices
-├── data-model.md   # Database schema and entity relationships
-├── quickstart.md   # Setup and testing guide
-├── contracts/      # API contracts
-│   ├── mcp-tools.json     # 12 MCP tool schemas
-│   └── websocket.json     # 55 WebSocket message types
-└── tasks.md        # Generated by /sdd:tasks (not yet created)
-```
-
-### Source Code (when implemented)
-
-```
-src/
-├── index.ts        # Entry point: HTTP + MCP + WebSocket
-├── config/         # Environment validation
-├── database/       # Kysely setup, migrations, typed queries
-├── file-system/    # Buffer cache, file ops, watcher, tree
-├── logger/         # Action log, API log
-├── mcp/            # MCP server, 12 tools, session management
-├── websocket/      # WebSocket server, router, 23 handlers
-├── api-client/     # Claude API with retries, schemas, pricing
-├── memory/         # ChromaDB client with degradation
-├── coaching/       # Pipeline, wrap-up, 4 agents
-├── observer/       # Per-session Observer, triage, nudges
-├── ui-apis/        # Explain This, Practice Review
-├── dashboard/      # Dashboard data assembly (4 flows)
-└── types/          # TypeScript definitions
-```
+---
 
 ## Recent Changes
 
-**2026-02-11** - Initial planning phase completed
+**2026-02-11**: Feature 001 (Electron UI) and Feature 002 (Backend Server) planning complete
+
+**Feature 001 (Electron UI)**:
+- Defined 51 WebSocket message types (contracts/websocket-protocol.md)
+- Created data model with 10 entities (data-model.md)
+- Researched test framework (selected Vitest over Jest)
+- Established project structure (main + renderer + shared)
+- Defined TypeScript strict mode configuration
+- Set up development workflow with husky + lint-staged
+
+**Feature 002 (Backend Server)**:
 - Defined 12 user stories with 186 functional requirements
 - Researched tech stack (Vitest, Kysely, MCP SDK, ChromaDB)
 - Designed data model (10 tables with relationships)
 - Generated API contracts (12 MCP tools, 55 WebSocket messages)
 - Created quickstart guide with setup instructions
 
+---
+
 ## References
 
 - `docs/planning/initial-brainstorm.md` — Full architecture, research, UI design, coaching pipeline, MCP tool surface, WebSocket protocol, Observer system, demo script (Read when required)
 - `.sdd/memory/constitution.md` — Project constitution with enforceable principles and development standards (Read at the start of every session)
-- `specs/002-backend-server/spec.md` — Complete feature specification (12 user stories, 186 requirements, 91 success criteria)
-- `specs/002-backend-server/plan.md` — Implementation plan with technical decisions
-- `specs/002-backend-server/data-model.md` — Database schema and entity relationships
-- `specs/002-backend-server/quickstart.md` — Setup and testing guide
+- `specs/001-electron-ui/` — Feature 001 spec, plan, data model, contracts, research, quickstart
+- `specs/002-backend-server/` — Feature 002 spec, plan, data model, contracts, research, quickstart
