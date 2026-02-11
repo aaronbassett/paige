@@ -368,10 +368,10 @@
 - [x] T178 [P] [US5] Create src/websocket/handlers/hints.ts for hints:level_change (use devs:typescript-dev agent)
 - [x] T179 [P] [US5] Create src/websocket/handlers/user.ts for user:idle_start, user:idle_end (use devs:typescript-dev agent)
 - [x] T180 [GIT] Commit: add additional WebSocket handlers
-- [ ] T181 [US5] Implement broadcast function for server→client messages in src/websocket/server.ts (use devs:typescript-dev agent)
-- [ ] T182 [GIT] Commit: add broadcast function
-- [ ] T183 [US5] Wire file watcher events to broadcast fs:tree_update in src/index.ts (use devs:typescript-dev agent)
-- [ ] T184 [GIT] Commit: integrate file watcher broadcasts
+- [x] T181 [US5] Implement broadcast function for server→client messages in src/websocket/server.ts (use devs:typescript-dev agent)
+- [x] T182 [GIT] Commit: add broadcast function
+- [x] T183 [US5] Wire file watcher events to broadcast fs:tree_update in src/index.ts (use devs:typescript-dev agent)
+- [x] T184 [GIT] Commit: integrate file watcher broadcasts
 - [ ] T185 [US5] Verify US5 tests now pass
 - [ ] T186 [GIT] Commit: verify US5 complete
 
