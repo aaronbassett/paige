@@ -430,8 +430,8 @@
 - [x] T212 [GIT] Commit: add MCP UI control tools
 - [x] T213 [US6] Register all 12 MCP tools in src/mcp/server.ts (use devs:typescript-dev agent)
 - [x] T214 [GIT] Commit: register MCP tools
-- [ ] T215 [US6] Integrate MCP server with HTTP server in src/index.ts (use devs:typescript-dev agent)
-- [ ] T216 [GIT] Commit: integrate MCP server
+- [x] T215 [US6] Integrate MCP server with HTTP server in src/index.ts (use devs:typescript-dev agent)
+- [x] T216 [GIT] Commit: integrate MCP server
 - [ ] T217 [US6] Verify US6 tests now pass
 - [ ] T218 [GIT] Commit: verify US6 complete
 
