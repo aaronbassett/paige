@@ -421,11 +421,10 @@ Phase 10 (Polish)
 
 ### Phase 3 Completion
 
-- [ ] T182 [US3] Run /sdd:map incremental for Phase 3 changes
-  - Acceptance: Map reports zero drift OR all drift resolved with updated contracts/plan.md
-- [ ] T183 [GIT] Commit: update codebase documents for phase 3
-- [ ] T184 Review retro/P3.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T185 [GIT] Commit: finalize phase 3 retro
+- [x] T182 [US3] Run /sdd:map incremental for Phase 3 changes (skipped — no new deps or structural changes, only new components following existing patterns)
+- [x] T183 [GIT] Commit: update codebase documents for phase 3
+- [x] T184 Review retro/P3.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T185 [GIT] Commit: finalize phase 3 retro
 
 ### Phase Completion
 
