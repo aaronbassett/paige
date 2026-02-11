@@ -31,6 +31,7 @@ import { useFileTree } from '../hooks/useFileTree';
 import { useFileExplorerHints } from '../hooks/useFileExplorerHints';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { TerminalPanel } from '../components/Terminal/Terminal';
+import { CoachingSidebar } from '../components/Sidebar/Sidebar';
 import { editorState } from '../services/editor-state';
 
 // ---------------------------------------------------------------------------
@@ -62,17 +63,6 @@ const AUTO_HIDE_TERMINAL_HEIGHT = 500;
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
-
-const panelLabelStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  height: '100%',
-  color: 'var(--text-muted)',
-  fontSize: 'var(--font-small-size)',
-  fontFamily: 'var(--font-family), monospace',
-  userSelect: 'none',
-};
 
 const collapseButtonStyle: React.CSSProperties = {
   background: 'none',
@@ -328,7 +318,7 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
           </button>
           {!rightCollapsed && <span style={sidebarLabelStyle}>Coaching</span>}
         </div>
-        {!rightCollapsed && <div style={panelLabelStyle}>Coaching Sidebar</div>}
+        {!rightCollapsed && <CoachingSidebar />}
       </motion.div>
     </div>
   );
