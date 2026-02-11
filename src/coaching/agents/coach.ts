@@ -31,7 +31,7 @@ export function runCoachAgent(input: CoachAgentInput): Promise<CoachAgentRespons
       stage: a.stage,
       confidence: a.confidence,
     })),
-    relevant_memories: input.relevantMemories.map((m) => ({
+    relevant_memories: (input.relevantMemories ?? []).map((m) => ({
       content: m.content,
       connection: m.connection,
       use_in_coaching: m.use_in_coaching,
