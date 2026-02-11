@@ -99,8 +99,18 @@ function makeChallenges() {
 
 function makeMaterials() {
   return [
-    { id: 'mat-1', title: 'TypeScript Handbook', type: 'article' as const, url: 'https://example.com/ts' },
-    { id: 'mat-2', title: 'React Hooks Tutorial', type: 'tutorial' as const, url: 'https://example.com/hooks' },
+    {
+      id: 'mat-1',
+      title: 'TypeScript Handbook',
+      type: 'article' as const,
+      url: 'https://example.com/ts',
+    },
+    {
+      id: 'mat-2',
+      title: 'React Hooks Tutorial',
+      type: 'tutorial' as const,
+      url: 'https://example.com/hooks',
+    },
   ];
 }
 
@@ -286,7 +296,9 @@ describe('Dashboard integration', () => {
     // (tasks alone are sufficient since hasInProgressTasks will be true)
 
     // Click the Resume button for the first task
-    const resumeButton = screen.getByRole('button', { name: /Resume task: Fix login form validation/ });
+    const resumeButton = screen.getByRole('button', {
+      name: /Resume task: Fix login form validation/,
+    });
     await user.click(resumeButton);
 
     // Should dispatch dashboard:resume_task with the task ID

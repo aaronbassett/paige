@@ -247,14 +247,35 @@
 }
 
 /* Vary widths to simulate realistic tree structure */
-.file-explorer-loading-bar:nth-child(1) { width: 65%; }
-.file-explorer-loading-bar:nth-child(2) { width: 80%; margin-left: var(--space-md); }
-.file-explorer-loading-bar:nth-child(3) { width: 55%; margin-left: var(--space-md); }
-.file-explorer-loading-bar:nth-child(4) { width: 70%; }
-.file-explorer-loading-bar:nth-child(5) { width: 45%; margin-left: var(--space-md); }
-.file-explorer-loading-bar:nth-child(6) { width: 60%; margin-left: var(--space-lg); }
-.file-explorer-loading-bar:nth-child(7) { width: 75%; }
-.file-explorer-loading-bar:nth-child(8) { width: 50%; margin-left: var(--space-md); }
+.file-explorer-loading-bar:nth-child(1) {
+  width: 65%;
+}
+.file-explorer-loading-bar:nth-child(2) {
+  width: 80%;
+  margin-left: var(--space-md);
+}
+.file-explorer-loading-bar:nth-child(3) {
+  width: 55%;
+  margin-left: var(--space-md);
+}
+.file-explorer-loading-bar:nth-child(4) {
+  width: 70%;
+}
+.file-explorer-loading-bar:nth-child(5) {
+  width: 45%;
+  margin-left: var(--space-md);
+}
+.file-explorer-loading-bar:nth-child(6) {
+  width: 60%;
+  margin-left: var(--space-lg);
+}
+.file-explorer-loading-bar:nth-child(7) {
+  width: 75%;
+}
+.file-explorer-loading-bar:nth-child(8) {
+  width: 50%;
+  margin-left: var(--space-md);
+}
 
 @keyframes skeleton-pulse {
   0% {

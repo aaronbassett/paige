@@ -269,9 +269,7 @@ export function PhaseStepper({
             {/* Right content column */}
             <div style={contentColumnStyle}>
               {/* Phase title */}
-              <p style={isActive ? phaseTitleActiveStyle : phaseTitleStyle}>
-                {phase.title}
-              </p>
+              <p style={isActive ? phaseTitleActiveStyle : phaseTitleStyle}>{phase.title}</p>
 
               {/* Summary (hint level >= 1, active phase only) */}
               {showSummary && <p style={summaryStyle}>{phase.summary}</p>}

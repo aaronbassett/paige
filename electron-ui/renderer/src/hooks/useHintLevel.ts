@@ -95,7 +95,7 @@ export function useHintLevel(): UseHintLevelReturn {
         void send('hints:level_change', { level });
       }, DEBOUNCE_HINT_LEVEL_MS);
     },
-    [send],
+    [send]
   );
 
   // -------------------------------------------------------------------------
@@ -140,7 +140,7 @@ export function useHintLevel(): UseHintLevelReturn {
       setHintLevelState(level);
       sendDebouncedLevelChange(level);
     },
-    [sendDebouncedLevelChange],
+    [sendDebouncedLevelChange]
   );
 
   const cycleHintLevel = useCallback(() => {

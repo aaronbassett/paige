@@ -23,9 +23,7 @@ import type { KeyboardShortcutHandlers } from '../../../renderer/src/hooks/useKe
 // ---------------------------------------------------------------------------
 
 /** Dispatch a keyboard event on window with the given properties. */
-function pressKey(
-  opts: Partial<KeyboardEventInit> & { key: string },
-): KeyboardEvent {
+function pressKey(opts: Partial<KeyboardEventInit> & { key: string }): KeyboardEvent {
   const event = new KeyboardEvent('keydown', {
     bubbles: true,
     cancelable: true,
@@ -166,9 +164,18 @@ describe('useKeyboardShortcuts', () => {
     const e2 = metaShift('[');
     const e3 = metaShift(']');
 
-    expect((e1 as ReturnType<typeof metaShift> & { preventDefaultSpy: ReturnType<typeof vi.spyOn> }).preventDefaultSpy).toHaveBeenCalled();
-    expect((e2 as ReturnType<typeof metaShift> & { preventDefaultSpy: ReturnType<typeof vi.spyOn> }).preventDefaultSpy).toHaveBeenCalled();
-    expect((e3 as ReturnType<typeof metaShift> & { preventDefaultSpy: ReturnType<typeof vi.spyOn> }).preventDefaultSpy).toHaveBeenCalled();
+    expect(
+      (e1 as ReturnType<typeof metaShift> & { preventDefaultSpy: ReturnType<typeof vi.spyOn> })
+        .preventDefaultSpy
+    ).toHaveBeenCalled();
+    expect(
+      (e2 as ReturnType<typeof metaShift> & { preventDefaultSpy: ReturnType<typeof vi.spyOn> })
+        .preventDefaultSpy
+    ).toHaveBeenCalled();
+    expect(
+      (e3 as ReturnType<typeof metaShift> & { preventDefaultSpy: ReturnType<typeof vi.spyOn> })
+        .preventDefaultSpy
+    ).toHaveBeenCalled();
   });
 
   it('should NOT trigger callbacks for unrelated keys', () => {
@@ -230,28 +237,22 @@ describe('useKeyboardShortcuts', () => {
     const { rerender } = renderHook(
       ({ onCycleHintLevel }: KeyboardShortcutHandlers) =>
         useKeyboardShortcuts({ onCycleHintLevel }),
-      { initialProps: { onCycleHintLevel: firstHandler } },
+      { initialProps: { onCycleHintLevel: firstHandler } }
     );
 
     // addEventListener called once on mount
-    const keydownCalls = addSpy.mock.calls.filter(
-      ([eventName]) => eventName === 'keydown',
-    );
+    const keydownCalls = addSpy.mock.calls.filter(([eventName]) => eventName === 'keydown');
     expect(keydownCalls).toHaveLength(1);
 
     // Rerender with a new handler
     rerender({ onCycleHintLevel: secondHandler });
 
     // No additional addEventListener call for keydown
-    const keydownCallsAfter = addSpy.mock.calls.filter(
-      ([eventName]) => eventName === 'keydown',
-    );
+    const keydownCallsAfter = addSpy.mock.calls.filter(([eventName]) => eventName === 'keydown');
     expect(keydownCallsAfter).toHaveLength(1);
 
     // No removeEventListener call (listener not re-registered)
-    const removeCalls = removeSpy.mock.calls.filter(
-      ([eventName]) => eventName === 'keydown',
-    );
+    const removeCalls = removeSpy.mock.calls.filter(([eventName]) => eventName === 'keydown');
     expect(removeCalls).toHaveLength(0);
 
     // The new handler should be used

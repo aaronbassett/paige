@@ -204,7 +204,7 @@ export function HintSlider({ level, onChange }: HintSliderProps) {
         onChange(newLevel);
       }
     },
-    [level, onChange],
+    [level, onChange]
   );
 
   const activeConfig = LEVELS[level]!;
@@ -224,11 +224,7 @@ export function HintSlider({ level, onChange }: HintSliderProps) {
     <div style={containerStyle} role="group" aria-label="Hint level selector">
       {/* Illustration area */}
       <div style={illustrationContainerStyle} aria-hidden="true">
-        <span
-          style={illustrationStyle}
-          data-testid="hint-illustration"
-          key={level}
-        >
+        <span style={illustrationStyle} data-testid="hint-illustration" key={level}>
           {activeConfig.emoji}
         </span>
       </div>

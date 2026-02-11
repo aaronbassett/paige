@@ -76,7 +76,7 @@ vi.mock('react-arborist', async () => {
     nodes: MockArboristNode[],
     renderFn: (props: Record<string, unknown>) => React.ReactNode,
     setToggle: React.Dispatch<React.SetStateAction<number>>,
-    depth: number = 0,
+    depth: number = 0
   ): React.ReactNode[] {
     const result: React.ReactNode[] = [];
     const ids = expandedIdsRef.current;
@@ -106,13 +106,11 @@ vi.mock('react-arborist', async () => {
           node: mockNode,
           style: { paddingLeft: depth * 12 },
           dragHandle: null,
-        }),
+        })
       );
 
       if (isDir && isOpen && nodeData.children) {
-        result.push(
-          ...renderNodes(nodeData.children, renderFn, setToggle, depth + 1),
-        );
+        result.push(...renderNodes(nodeData.children, renderFn, setToggle, depth + 1));
       }
     }
 
@@ -129,7 +127,7 @@ vi.mock('react-arborist', async () => {
       children: (props: Record<string, unknown>) => React.ReactNode;
       [key: string]: unknown;
     },
-    ref: React.Ref<unknown>,
+    ref: React.Ref<unknown>
   ) {
     const { data, children: renderFn } = props;
     const [, setToggle] = React.useState(0);
@@ -145,11 +143,7 @@ vi.mock('react-arborist', async () => {
       },
     }));
 
-    return React.createElement(
-      'div',
-      { role: 'tree' },
-      ...renderNodes(data, renderFn, setToggle),
-    );
+    return React.createElement('div', { role: 'tree' }, ...renderNodes(data, renderFn, setToggle));
   });
 
   return { Tree: MockTree };
@@ -191,9 +185,7 @@ function TestFileExplorer() {
   const { hints, autoExpandPaths } = useFileExplorerHints();
 
   // useFileExplorerHints returns ReadonlyMap; FileTree expects Map
-  const hintsMap = hints instanceof Map
-    ? (hints as Map<string, HintInfo>)
-    : new Map(hints);
+  const hintsMap = hints instanceof Map ? (hints as Map<string, HintInfo>) : new Map(hints);
 
   return (
     <div style={{ width: 220, height: 600 }}>
@@ -446,9 +438,7 @@ describe('File Explorer workflow integration', () => {
 
     // Send explorer:hint_files with a hint on package.json
     simulateMessage('explorer:hint_files', {
-      hints: [
-        { path: '/project/package.json', style: 'obvious', directories: ['/project'] },
-      ],
+      hints: [{ path: '/project/package.json', style: 'obvious', directories: ['/project'] }],
     });
 
     // The hinted file node should now have an inset box-shadow glow

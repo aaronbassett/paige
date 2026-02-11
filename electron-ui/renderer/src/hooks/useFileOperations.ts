@@ -25,7 +25,12 @@ import {
   DEBOUNCE_BUFFER_MAX_WAIT,
   type DebouncedFunction,
 } from '../services/debouncer';
-import type { WebSocketMessage, BufferContentMessage, SaveAckMessage, FsTreeUpdateMessage } from '@shared/types/websocket-messages';
+import type {
+  WebSocketMessage,
+  BufferContentMessage,
+  SaveAckMessage,
+  FsTreeUpdateMessage,
+} from '@shared/types/websocket-messages';
 
 // ---------------------------------------------------------------------------
 // Language -> icon mapping
@@ -103,7 +108,7 @@ export function useFileOperations(): UseFileOperationsReturn {
     const debouncedSend = debounce(
       sendBufferUpdate,
       DEBOUNCE_BUFFER_UPDATE,
-      DEBOUNCE_BUFFER_MAX_WAIT,
+      DEBOUNCE_BUFFER_MAX_WAIT
     );
 
     debouncedUpdateRef.current = debouncedSend;
@@ -202,7 +207,7 @@ export function useFileOperations(): UseFileOperationsReturn {
       // Otherwise request file content from backend
       void send('file:open', { path });
     },
-    [send],
+    [send]
   );
 
   // -------------------------------------------------------------------------

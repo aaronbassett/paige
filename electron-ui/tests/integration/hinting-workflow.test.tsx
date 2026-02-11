@@ -57,9 +57,7 @@ vi.mock('framer-motion', () => ({
       layoutId?: unknown;
     }) => <div {...rest}>{children}</div>,
   },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // ---------------------------------------------------------------------------
@@ -141,14 +139,12 @@ function setupHandlerCapture(): {
 } {
   const handlers = new Map<string, Array<(msg: WebSocketMessage) => void>>();
 
-  mockOn.mockImplementation(
-    (type: string, handler: (msg: WebSocketMessage) => void) => {
-      const existing = handlers.get(type) ?? [];
-      existing.push(handler);
-      handlers.set(type, existing);
-      return vi.fn(); // unsubscribe
-    },
-  );
+  mockOn.mockImplementation((type: string, handler: (msg: WebSocketMessage) => void) => {
+    const existing = handlers.get(type) ?? [];
+    existing.push(handler);
+    handlers.set(type, existing);
+    return vi.fn(); // unsubscribe
+  });
 
   const simulateMessage = (type: string, payload: unknown) => {
     const typeHandlers = handlers.get(type);
@@ -180,13 +176,11 @@ function setupHandlerCapture(): {
  */
 function createMockEditor(): MonacoEditorLike {
   return {
-    getScrolledVisiblePosition: vi.fn(
-      ({ lineNumber }: { lineNumber: number; column: number }) => ({
-        top: lineNumber * 20,
-        left: 100,
-        height: 20,
-      }),
-    ),
+    getScrolledVisiblePosition: vi.fn(({ lineNumber }: { lineNumber: number; column: number }) => ({
+      top: lineNumber * 20,
+      left: 100,
+      height: 20,
+    })),
     onDidScrollChange: vi.fn(() => ({ dispose: vi.fn() })),
   };
 }
@@ -204,8 +198,7 @@ function TestHintingWrapper() {
   const { hintLevel, setHintLevel } = useHintLevel();
   const { messages, dismissMessage, expandedIds, expandMessage, dismissAllCoaching } =
     useCoachingMessages();
-  const { reviewState, focusedMessageId, next, previous, exitReview } =
-    useReviewNavigation();
+  const { reviewState, focusedMessageId, next, previous, exitReview } = useReviewNavigation();
 
   // Stable mock editor instance across re-renders
   const [mockEditor] = useState(() => createMockEditor());
@@ -307,9 +300,7 @@ describe('Hinting System Integration', () => {
 
     expect(screen.getByTestId('message-count').textContent).toBe('1');
     // At level 0 + source coaching -> collapsed icon (button with "Expand hint message")
-    expect(
-      screen.getByRole('button', { name: /expand hint message/i }),
-    ).toBeTruthy();
+    expect(screen.getByRole('button', { name: /expand hint message/i })).toBeTruthy();
     // No full balloon visible
     expect(screen.queryByRole('tooltip')).toBeNull();
   });

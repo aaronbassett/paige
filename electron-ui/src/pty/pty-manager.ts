@@ -26,15 +26,13 @@ export class PtyManager {
     }
 
     const isWindows = process.platform === 'win32';
-    const shell = isWindows
-      ? 'cmd.exe'
-      : process.env.SHELL ?? '/bin/bash';
+    const shell = isWindows ? 'cmd.exe' : (process.env.SHELL ?? '/bin/bash');
 
     const env: Record<string, string> = {
       ...Object.fromEntries(
         Object.entries(process.env).filter(
-          (entry): entry is [string, string] => entry[1] !== undefined,
-        ),
+          (entry): entry is [string, string] => entry[1] !== undefined
+        )
       ),
       TERM: 'xterm-256color',
     };

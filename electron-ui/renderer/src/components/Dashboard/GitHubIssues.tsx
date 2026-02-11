@@ -127,7 +127,11 @@ export function GitHubIssues({ issues, onIssueClick }: GitHubIssuesProps) {
       {issues === null && (
         <div style={listStyle} role="status" aria-label="Loading issues">
           {[0, 1, 2].map((i) => (
-            <div key={i} style={{ ...skeletonCardStyle, animationDelay: `${i * 150}ms` }} aria-hidden="true" />
+            <div
+              key={i}
+              style={{ ...skeletonCardStyle, animationDelay: `${i * 150}ms` }}
+              aria-hidden="true"
+            />
           ))}
         </div>
       )}

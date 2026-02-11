@@ -157,9 +157,7 @@ describe('EditorTabs', () => {
       render(<EditorTabs />);
 
       const allTabs = screen.getAllByRole('tab');
-      const inactiveTabs = allTabs.filter(
-        (t) => t.getAttribute('aria-selected') === 'false',
-      );
+      const inactiveTabs = allTabs.filter((t) => t.getAttribute('aria-selected') === 'false');
       expect(inactiveTabs).toHaveLength(2);
     });
   });
@@ -298,9 +296,7 @@ describe('EditorTabs', () => {
       const dirtyDot = screen.getByLabelText('Unsaved changes');
       await user.click(dirtyDot);
 
-      expect(confirmMock).toHaveBeenCalledWith(
-        'Discard unsaved changes to index.ts?',
-      );
+      expect(confirmMock).toHaveBeenCalledWith('Discard unsaved changes to index.ts?');
       // Tab should NOT be closed since user cancelled
       expect(mockCloseTab).not.toHaveBeenCalled();
 

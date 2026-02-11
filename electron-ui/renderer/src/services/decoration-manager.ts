@@ -221,9 +221,7 @@ class DecorationManager {
     if (!decorations) {
       return [];
     }
-    return decorations
-      .filter((d) => rangesOverlap(editRange, d.range))
-      .map((d) => d.id);
+    return decorations.filter((d) => rangesOverlap(editRange, d.range)).map((d) => d.id);
   }
 
   /**

@@ -284,7 +284,7 @@ export function CodeEditor({ editorInstanceRef }: CodeEditorProps) {
       // Focus the editor on mount
       editor.focus();
     },
-    [editorInstanceRef],
+    [editorInstanceRef]
   );
 
   // -------------------------------------------------------------------------

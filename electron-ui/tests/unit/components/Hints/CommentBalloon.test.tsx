@@ -47,12 +47,7 @@ const BORDER_COLORS: Record<CoachingMessageType, string> = {
   warning: '#d4a857',
 };
 
-const MESSAGE_TYPES: CoachingMessageType[] = [
-  'hint',
-  'info',
-  'success',
-  'warning',
-];
+const MESSAGE_TYPES: CoachingMessageType[] = ['hint', 'info', 'success', 'warning'];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -89,11 +84,11 @@ describe('CommentBalloon', () => {
           messageId="msg-1"
           referenceElement={referenceElement}
           onClose={onClose}
-        />,
+        />
       );
 
       expect(screen.getByTestId('balloon-message-msg-1')).toHaveTextContent(
-        'Check the loop condition on line 12',
+        'Check the loop condition on line 12'
       );
     });
 
@@ -106,7 +101,7 @@ describe('CommentBalloon', () => {
           messageId="msg-2"
           referenceElement={referenceElement}
           onClose={onClose}
-        />,
+        />
       );
 
       expect(screen.getByTestId('floating-arrow')).toBeInTheDocument();
@@ -121,7 +116,7 @@ describe('CommentBalloon', () => {
           messageId="msg-null"
           referenceElement={null}
           onClose={onClose}
-        />,
+        />
       );
 
       expect(container.innerHTML).toBe('');
@@ -133,46 +128,38 @@ describe('CommentBalloon', () => {
   // -------------------------------------------------------------------------
 
   describe('type-colored borders', () => {
-    it.each(MESSAGE_TYPES)(
-      'shows correct border color for type "%s"',
-      (type) => {
-        const onClose = vi.fn();
-        render(
-          <CommentBalloon
-            message={`Message of type ${type}`}
-            type={type}
-            messageId={`msg-${type}`}
-            referenceElement={referenceElement}
-            onClose={onClose}
-          />,
-        );
+    it.each(MESSAGE_TYPES)('shows correct border color for type "%s"', (type) => {
+      const onClose = vi.fn();
+      render(
+        <CommentBalloon
+          message={`Message of type ${type}`}
+          type={type}
+          messageId={`msg-${type}`}
+          referenceElement={referenceElement}
+          onClose={onClose}
+        />
+      );
 
-        const balloon = screen.getByTestId(`comment-balloon-msg-${type}`);
-        expect(balloon.style.borderLeftColor).toBe(BORDER_COLORS[type]);
-      },
-    );
+      const balloon = screen.getByTestId(`comment-balloon-msg-${type}`);
+      expect(balloon.style.borderLeftColor).toBe(BORDER_COLORS[type]);
+    });
 
-    it.each(MESSAGE_TYPES)(
-      'has left border width of 3px for type "%s"',
-      (type) => {
-        const onClose = vi.fn();
-        render(
-          <CommentBalloon
-            message={`Message of type ${type}`}
-            type={type}
-            messageId={`msg-border-${type}`}
-            referenceElement={referenceElement}
-            onClose={onClose}
-          />,
-        );
+    it.each(MESSAGE_TYPES)('has left border width of 3px for type "%s"', (type) => {
+      const onClose = vi.fn();
+      render(
+        <CommentBalloon
+          message={`Message of type ${type}`}
+          type={type}
+          messageId={`msg-border-${type}`}
+          referenceElement={referenceElement}
+          onClose={onClose}
+        />
+      );
 
-        const balloon = screen.getByTestId(
-          `comment-balloon-msg-border-${type}`,
-        );
-        expect(balloon.style.borderLeftWidth).toBe('3px');
-        expect(balloon.style.borderLeftStyle).toBe('solid');
-      },
-    );
+      const balloon = screen.getByTestId(`comment-balloon-msg-border-${type}`);
+      expect(balloon.style.borderLeftWidth).toBe('3px');
+      expect(balloon.style.borderLeftStyle).toBe('solid');
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -189,7 +176,7 @@ describe('CommentBalloon', () => {
           messageId="msg-close"
           referenceElement={referenceElement}
           onClose={onClose}
-        />,
+        />
       );
 
       const closeButton = screen.getByTestId('close-balloon-msg-close');
@@ -208,7 +195,7 @@ describe('CommentBalloon', () => {
           messageId="msg-warn"
           referenceElement={referenceElement}
           onClose={onClose}
-        />,
+        />
       );
 
       const closeButton = screen.getByLabelText('Close warning message');
@@ -230,7 +217,7 @@ describe('CommentBalloon', () => {
           messageId="msg-width"
           referenceElement={referenceElement}
           onClose={onClose}
-        />,
+        />
       );
 
       const balloon = screen.getByTestId('comment-balloon-msg-width');
@@ -246,7 +233,7 @@ describe('CommentBalloon', () => {
           messageId="msg-height"
           referenceElement={referenceElement}
           onClose={onClose}
-        />,
+        />
       );
 
       const balloon = screen.getByTestId('comment-balloon-msg-height');
@@ -262,7 +249,7 @@ describe('CommentBalloon', () => {
           messageId="msg-scroll"
           referenceElement={referenceElement}
           onClose={onClose}
-        />,
+        />
       );
 
       const balloon = screen.getByTestId('comment-balloon-msg-scroll');
@@ -285,7 +272,7 @@ describe('CommentBalloon', () => {
           referenceElement={referenceElement}
           onClose={onClose}
           emphasized
-        />,
+        />
       );
 
       const balloon = screen.getByTestId('comment-balloon-msg-emp');
@@ -309,7 +296,7 @@ describe('CommentBalloon', () => {
           messageId="msg-normal"
           referenceElement={referenceElement}
           onClose={onClose}
-        />,
+        />
       );
 
       const balloon = screen.getByTestId('comment-balloon-msg-normal');
@@ -328,7 +315,7 @@ describe('CommentBalloon', () => {
           referenceElement={referenceElement}
           onClose={onClose}
           emphasized
-        />,
+        />
       );
 
       const balloon = screen.getByTestId('comment-balloon-msg-warn-emp');
@@ -353,7 +340,7 @@ describe('CommentBalloon', () => {
           messageId="msg-a11y"
           referenceElement={referenceElement}
           onClose={onClose}
-        />,
+        />
       );
 
       expect(screen.getByRole('tooltip')).toBeInTheDocument();
@@ -368,7 +355,7 @@ describe('CommentBalloon', () => {
           messageId="msg-dt"
           referenceElement={referenceElement}
           onClose={onClose}
-        />,
+        />
       );
 
       const balloon = screen.getByTestId('comment-balloon-msg-dt');

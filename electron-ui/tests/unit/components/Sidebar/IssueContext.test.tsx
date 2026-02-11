@@ -81,7 +81,7 @@ describe('IssueContextDisplay', () => {
       expect(windowOpenSpy).toHaveBeenCalledWith(
         'https://github.com/org/repo/issues/42',
         '_blank',
-        'noopener,noreferrer',
+        'noopener,noreferrer'
       );
 
       vi.unstubAllGlobals();
@@ -224,7 +224,7 @@ describe('IssueContextDisplay', () => {
       await user.click(toggleButton);
       expect(screen.getByRole('button', { name: /hide summary/i })).toHaveAttribute(
         'aria-expanded',
-        'true',
+        'true'
       );
     });
 

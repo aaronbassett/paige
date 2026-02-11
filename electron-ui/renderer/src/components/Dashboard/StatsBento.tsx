@@ -182,13 +182,30 @@ function SkeletonCard() {
   return (
     <div style={cardStyle} aria-hidden="true">
       <div
-        style={{ ...skeletonBarStyle, width: '60%', height: '12px', marginBottom: 'var(--space-sm)', animation: 'breathe 2s ease-in-out infinite' }}
+        style={{
+          ...skeletonBarStyle,
+          width: '60%',
+          height: '12px',
+          marginBottom: 'var(--space-sm)',
+          animation: 'breathe 2s ease-in-out infinite',
+        }}
       />
       <div
-        style={{ ...skeletonBarStyle, width: '40%', height: '24px', marginBottom: 'var(--space-sm)', animation: 'breathe 2s ease-in-out infinite 0.1s' }}
+        style={{
+          ...skeletonBarStyle,
+          width: '40%',
+          height: '24px',
+          marginBottom: 'var(--space-sm)',
+          animation: 'breathe 2s ease-in-out infinite 0.1s',
+        }}
       />
       <div
-        style={{ ...skeletonBarStyle, width: '30%', height: '12px', animation: 'breathe 2s ease-in-out infinite 0.2s' }}
+        style={{
+          ...skeletonBarStyle,
+          width: '30%',
+          height: '12px',
+          animation: 'breathe 2s ease-in-out infinite 0.2s',
+        }}
       />
     </div>
   );

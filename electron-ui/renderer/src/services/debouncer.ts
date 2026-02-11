@@ -69,7 +69,7 @@ export interface DebouncedFunction<T extends unknown[]> {
 export function debounce<T extends unknown[]>(
   fn: (...args: T) => void,
   ms: number,
-  maxWait?: number,
+  maxWait?: number
 ): DebouncedFunction<T> {
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let maxTimeout: ReturnType<typeof setTimeout> | null = null;

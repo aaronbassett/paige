@@ -71,9 +71,7 @@ function toArboristData(node: TreeNode): ArboristNode {
     path: node.path,
     type: node.type,
     children:
-      node.type === 'directory' && node.children
-        ? node.children.map(toArboristData)
-        : undefined,
+      node.type === 'directory' && node.children ? node.children.map(toArboristData) : undefined,
   };
 }
 
@@ -273,9 +271,7 @@ function getHintGlow(style: ExplorerHintStyle | undefined): string | undefined {
  * Returns a CSS animation for the given hint style, or undefined if none.
  * Only the "unmissable" hint level gets a breathing animation.
  */
-function getHintAnimation(
-  style: ExplorerHintStyle | undefined,
-): string | undefined {
+function getHintAnimation(style: ExplorerHintStyle | undefined): string | undefined {
   if (style === 'unmissable') {
     return 'breathe 2s ease-in-out infinite';
   }
@@ -331,7 +327,7 @@ function FileTreeNode({
         handleClick();
       }
     },
-    [handleClick],
+    [handleClick]
   );
 
   // Build row style
@@ -526,15 +522,13 @@ export function FileTree({
       activeFilePath,
       onFileClick,
     }),
-    [hints, activeFilePath, onFileClick],
+    [hints, activeFilePath, onFileClick]
   );
 
   // Node renderer that injects context
   const renderNode = useCallback(
-    (props: NodeRendererProps<ArboristNode>) => (
-      <FileTreeNode {...props} context={context} />
-    ),
-    [context],
+    (props: NodeRendererProps<ArboristNode>) => <FileTreeNode {...props} context={context} />,
+    [context]
   );
 
   // Handle null tree (loading)
@@ -543,8 +537,7 @@ export function FileTree({
   }
 
   // Handle empty tree
-  const hasChildren =
-    tree.type === 'directory' && tree.children && tree.children.length > 0;
+  const hasChildren = tree.type === 'directory' && tree.children && tree.children.length > 0;
   if (!hasChildren && tree.type === 'directory') {
     return <EmptyState />;
   }

@@ -255,7 +255,7 @@ class EditorStateService {
     }
 
     this.tabs = this.tabs.map((t) =>
-      t.path === path ? { ...t, cursorPosition: { ...position } } : t,
+      t.path === path ? { ...t, cursorPosition: { ...position } } : t
     );
     this.notify();
   }
