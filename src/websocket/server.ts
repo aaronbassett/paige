@@ -1,8 +1,16 @@
-// WebSocket server: upgrade on /ws, connection tracking, broadcast
-// Stub for TDD — implementation in T169, T181
+// WebSocket server: upgrade on /ws, connection tracking, broadcast, sendToClient
+// Implementation for T169, T181
 
-import type { Server } from 'node:http';
-import type { ServerToClientMessage } from '../types/websocket.js';
+import { randomUUID } from 'node:crypto';
+import type { Server, IncomingMessage } from 'node:http';
+import type { Duplex } from 'node:stream';
+import { WebSocketServer, WebSocket as WsWebSocket } from 'ws';
+import { routeMessage } from './router.js';
+import type {
+  ServerToClientMessage,
+  ClientToServerMessage,
+  ConnectionErrorData,
+} from '../types/websocket.js';
 
 /** Handle for the WebSocket server lifecycle. */
 export interface WebSocketServerHandle {
@@ -10,17 +18,150 @@ export interface WebSocketServerHandle {
   close: () => void;
 }
 
+// ── Module-Level State ──────────────────────────────────────────────────────
+
+/** Map of connectionId -> WebSocket for all connected clients. */
+const clients = new Map<string, WsWebSocket>();
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Sends a connection:error message to a single WebSocket client.
+ */
+function sendError(
+  ws: WsWebSocket,
+  code: ConnectionErrorData['code'],
+  message: string,
+  context?: Record<string, unknown>,
+): void {
+  const errorMsg = { type: 'connection:error', data: { code, message, context } };
+  if (ws.readyState === WsWebSocket.OPEN) {
+    ws.send(JSON.stringify(errorMsg));
+  }
+}
+
+// ── Public API ──────────────────────────────────────────────────────────────
+
 /**
  * Creates a WebSocket server attached to the given HTTP server.
- * Handles upgrade requests at the /ws path.
+ * Handles upgrade requests at the /ws path only.
+ * Connections on any other path receive a 404 response.
  */
-export function createWebSocketServer(_server: Server): WebSocketServerHandle {
-  return Promise.reject(new Error('Not implemented')) as never;
+export function createWebSocketServer(server: Server): WebSocketServerHandle {
+  const wss = new WebSocketServer({ noServer: true });
+
+  // Handle HTTP upgrade requests — only accept /ws path
+  server.on('upgrade', (request: IncomingMessage, socket: Duplex, head: Buffer) => {
+    const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`);
+
+    if (url.pathname !== '/ws') {
+      socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  });
+
+  // Handle new WebSocket connections
+  wss.on('connection', (ws: WsWebSocket) => {
+    const connectionId = randomUUID();
+    clients.set(connectionId, ws);
+
+    ws.on('message', (rawData: Buffer | ArrayBuffer | Buffer[]) => {
+      // Parse the raw message as a UTF-8 string
+      let text: string;
+      if (Buffer.isBuffer(rawData)) {
+        text = rawData.toString('utf-8');
+      } else if (rawData instanceof ArrayBuffer) {
+        text = Buffer.from(rawData).toString('utf-8');
+      } else {
+        // Buffer[] — concatenate
+        text = Buffer.concat(rawData).toString('utf-8');
+      }
+
+      // Attempt to parse JSON
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        sendError(ws, 'INVALID_MESSAGE', 'Failed to parse message as JSON');
+        return;
+      }
+
+      // Validate { type, data } envelope
+      if (
+        typeof parsed !== 'object' ||
+        parsed === null ||
+        !('type' in parsed) ||
+        !('data' in parsed)
+      ) {
+        sendError(ws, 'INVALID_MESSAGE', 'Message must contain "type" and "data" fields');
+        return;
+      }
+
+      const envelope = parsed as { type: string; data: unknown };
+
+      if (typeof envelope.type !== 'string') {
+        sendError(ws, 'INVALID_MESSAGE', 'Message "type" field must be a string');
+        return;
+      }
+
+      // Route to the appropriate handler
+      routeMessage(ws, envelope as ClientToServerMessage, connectionId);
+    });
+
+    ws.on('close', () => {
+      clients.delete(connectionId);
+    });
+
+    ws.on('error', () => {
+      // Remove the client on error to prevent stale entries
+      clients.delete(connectionId);
+    });
+  });
+
+  return {
+    close: () => {
+      // Close all connected clients
+      for (const [id, ws] of clients) {
+        ws.close();
+        clients.delete(id);
+      }
+      wss.close();
+    },
+  };
 }
 
 /**
  * Broadcasts a message to all connected WebSocket clients.
  */
-export function broadcast(_message: ServerToClientMessage): void {
-  throw new Error('Not implemented');
+export function broadcast(message: ServerToClientMessage): void {
+  const serialized = JSON.stringify(message);
+  for (const ws of clients.values()) {
+    if (ws.readyState === WsWebSocket.OPEN) {
+      ws.send(serialized);
+    }
+  }
+}
+
+/**
+ * Sends a message to a specific connected client by connectionId.
+ * Silently ignores if the client is not found or not in OPEN state.
+ */
+export function sendToClient(connectionId: string, message: ServerToClientMessage): void {
+  const ws = clients.get(connectionId);
+  if (ws && ws.readyState === WsWebSocket.OPEN) {
+    ws.send(JSON.stringify(message));
+  }
+}
+
+/**
+ * Returns the number of currently connected WebSocket clients.
+ * Useful for health checks.
+ */
+export function getConnectedClientCount(): number {
+  return clients.size;
 }
