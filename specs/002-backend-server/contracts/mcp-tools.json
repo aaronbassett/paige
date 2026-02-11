@@ -1,0 +1,388 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Paige MCP Tools",
+  "description": "12 MCP tools exposed by the Paige backend server to Claude Code",
+  "tools": [
+    {
+      "name": "paige_start_session",
+      "description": "Create a new coaching session. Called by Claude Code plugin's SessionStart hook. Only one session can be active at a time.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_dir": {
+            "type": "string",
+            "description": "Absolute path to the project directory"
+          },
+          "issue_number": {
+            "type": "integer",
+            "description": "GitHub issue number (optional)"
+          },
+          "issue_title": {
+            "type": "string",
+            "description": "GitHub issue title (optional)"
+          }
+        },
+        "required": ["project_dir"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "session": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "project_dir": { "type": "string" },
+              "issue_number": { "type": "integer" },
+              "issue_title": { "type": "string" },
+              "status": { "type": "string", "enum": ["active"] },
+              "started_at": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "paige_end_session",
+      "description": "End the current session and run wrap-up pipeline (Reflection, Knowledge Gap, Dreyfus agents). Called by Claude Code plugin's SessionEnd hook.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "memories_added": { "type": "integer" },
+          "gaps_identified": { "type": "integer" },
+          "katas_generated": { "type": "integer" },
+          "assessments_updated": { "type": "integer" }
+        }
+      }
+    },
+    {
+      "name": "paige_get_buffer",
+      "description": "Get current editor buffer state for a file. Returns null if no buffer entry exists.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "File path (absolute or relative to PROJECT_DIR)"
+          }
+        },
+        "required": ["path"]
+      },
+      "outputSchema": {
+        "type": ["object", "null"],
+        "properties": {
+          "path": { "type": "string" },
+          "content": { "type": "string" },
+          "cursorPosition": { "type": "integer" },
+          "dirty": { "type": "boolean" },
+          "lastUpdated": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "paige_get_open_files",
+      "description": "Get list of all currently open file paths (opened via file:open or paige_open_file).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "paths": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "name": "paige_get_diff",
+      "description": "Get unified diff for files with unsaved buffer edits. If no path specified, returns diffs for all dirty files.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Optional file path. If omitted, returns all diffs."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "diffs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": { "type": "string" },
+                "diff": { "type": "string", "description": "Unified diff format" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "paige_get_session_state",
+      "description": "Get comprehensive session state. Use 'include' filter to request specific state items only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "include": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["session", "plan", "phase", "dreyfus", "gaps", "katas", "actions", "diffs", "open_files"]
+            },
+            "description": "Optional filter. If omitted, returns all state items."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "session": { "type": "object" },
+          "plan": { "type": "object" },
+          "phase": { "type": "object" },
+          "dreyfus": { "type": "array" },
+          "gaps": { "type": "array" },
+          "katas": { "type": "array" },
+          "actions": { "type": "array" },
+          "diffs": { "type": "array" },
+          "open_files": { "type": "array" }
+        }
+      }
+    },
+    {
+      "name": "paige_open_file",
+      "description": "Open a file in Electron editor. Backend reads file, adds to open files set, logs action, broadcasts to Electron.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "File path (absolute or relative to PROJECT_DIR)"
+          }
+        },
+        "required": ["path"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "path": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "paige_highlight_lines",
+      "description": "Apply line decorations in Electron editor. Decorations accumulate (not replaced).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "File path"
+          },
+          "ranges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "start": { "type": "integer", "description": "Start line (1-indexed)" },
+                "end": { "type": "integer", "description": "End line (1-indexed, inclusive)" },
+                "style": { "type": "string", "enum": ["info", "warning", "error"], "description": "Decoration style" }
+              },
+              "required": ["start", "end", "style"]
+            }
+          }
+        },
+        "required": ["path", "ranges"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "paige_clear_highlights",
+      "description": "Clear line decorations. If path specified, clears only that file. If omitted, clears all files.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Optional file path. If omitted, clears all."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "paige_hint_files",
+      "description": "Apply file tree decorations in Electron explorer.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "paths": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "File paths to hint"
+          },
+          "style": {
+            "type": "string",
+            "enum": ["suggested", "warning", "error"],
+            "description": "Decoration style"
+          }
+        },
+        "required": ["paths", "style"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "paige_clear_hints",
+      "description": "Clear all file tree decorations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "paige_update_phase",
+      "description": "Update phase status (pending → active → complete). Updates SQLite, logs action, broadcasts to Electron.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "phase": {
+            "type": "integer",
+            "description": "Phase number (1-indexed)"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "complete"],
+            "description": "New status (cannot transition back to pending)"
+          }
+        },
+        "required": ["phase", "status"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "phase": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "number": { "type": "integer" },
+              "title": { "type": "string" },
+              "status": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "paige_show_message",
+      "description": "Display a coaching message in Electron UI.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Message text"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["info", "success", "warning", "error"],
+            "description": "Message type"
+          }
+        },
+        "required": ["message", "type"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "paige_show_issue_context",
+      "description": "Display GitHub issue context in Electron UI sidebar.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Issue title"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Issue summary or description"
+          }
+        },
+        "required": ["title", "summary"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "paige_run_coaching_pipeline",
+      "description": "Transform GitHub issue into phased coaching plan. Queries memories, calls Coach Agent, stores plan/phases/hints, broadcasts to Electron.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "plan": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "title": { "type": "string" },
+              "total_phases": { "type": "integer" }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "notes": [
+    "All tools are stateful (require active session except paige_start_session)",
+    "All tools log mcp_tool_call action to action_log",
+    "UI control tools (highlight, hint, update_phase, show_message, show_issue_context) broadcast WebSocket messages",
+    "Read tools (get_buffer, get_open_files, get_diff, get_session_state) return data only",
+    "NO file-write tools exposed (read-only enforcement)"
+  ]
+}
