@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paige Design System Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #1a1a18;
+    --bg-surface: #252523;
+    --bg-elevated: #30302e;
+    --bg-inset: #141413;
+    --accent-primary: #d97757;
+    --accent-warm: #e8956a;
+    --accent-deep: #b85c3a;
+    --text-primary: #faf9f5;
+    --text-secondary: #a8a69e;
+    --text-muted: #6b6960;
+    --hint-glow: rgba(217, 119, 87, 0.4);
+    --phase-pending: #6b6960;
+    --phase-active: #d97757;
+    --phase-complete: #7cb87c;
+    --status-error: #e05252;
+    --status-warning: #d4a843;
+    --status-success: #7cb87c;
+    --status-info: #6b9bd2;
+    --border-subtle: #30302e;
+    --border-active: rgba(217, 119, 87, 0.6);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    line-height: 1.6;
+    /* Subtle noise texture */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+
+  /* ── Figlet Header ── */
+  .figlet-header {
+    color: var(--accent-primary);
+    font-size: 10px;
+    line-height: 1.1;
+    letter-spacing: 0;
+    white-space: pre;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-bottom: 80px;
+    padding-left: 4px;
+  }
+
+  /* ── Sections ── */
+  section {
+    margin-bottom: 80px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 32px;
+    padding-bottom: 12px;
+    /* Dot matrix border */
+    border-bottom: 1px solid transparent;
+    background-image: radial-gradient(circle, var(--text-muted) 0.5px, transparent 0.5px);
+    background-size: 6px 6px;
+    background-position: bottom;
+    background-repeat: repeat-x;
+  }
+
+  /* ── Colour Swatches ── */
+  .swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .swatch-group-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    margin-top: 32px;
+  }
+
+  .swatch-group-title:first-of-type {
+    margin-top: 0;
+  }
+
+  .swatch {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .swatch-color {
+    height: 80px;
+    position: relative;
+  }
+
+  .swatch-info {
+    padding: 12px;
+    background: var(--bg-surface);
+  }
+
+  .swatch-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .swatch-value {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ── Typography ── */
+  .type-sample {
+    margin-bottom: 40px;
+    padding: 24px;
+    background: var(--bg-surface);
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .type-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+  }
+
+  .type-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 12px;
+  }
+
+  .display { font-size: 56px; font-weight: 700; line-height: 1.2; }
+  .h1 { font-size: 32px; font-weight: 700; line-height: 1.3; }
+  .h2 { font-size: 24px; font-weight: 600; line-height: 1.3; }
+  .h3 { font-size: 18px; font-weight: 600; line-height: 1.4; }
+  .body-text { font-size: 14px; font-weight: 400; line-height: 1.6; }
+  .small-text { font-size: 12px; font-weight: 500; line-height: 1.4; }
+
+  /* ── Accent text ── */
+  .accent { color: var(--accent-primary); }
+
+  /* ── Scanline Panel ── */
+  .scanline-panel {
+    position: relative;
+    background: var(--bg-surface);
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    padding: 24px;
+    overflow: hidden;
+  }
+
+  .scanline-panel::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(217, 119, 87, 0.03) 2px,
+      rgba(217, 119, 87, 0.03) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* ── Dot Matrix Background ── */
+  .dot-matrix-bg {
+    background-color: var(--bg-surface);
+    background-image: radial-gradient(circle, rgba(168, 166, 158, 0.08) 1px, transparent 1px);
+    background-size: 8px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    padding: 24px;
+  }
+
+  /* ── Hint Glow Demo ── */
+  .file-tree-demo {
+    background: var(--bg-inset);
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .file-item {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+  }
+
+  .file-item.hinted {
+    background: var(--hint-glow);
+    color: var(--text-primary);
+    animation: breathe 3s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(217, 119, 87, 0.2);
+  }
+
+  @keyframes breathe {
+    0%, 100% {
+      background: rgba(217, 119, 87, 0.15);
+      box-shadow: 0 0 8px rgba(217, 119, 87, 0.1);
+    }
+    50% {
+      background: rgba(217, 119, 87, 0.35);
+      box-shadow: 0 0 16px rgba(217, 119, 87, 0.25);
+    }
+  }
+
+  .file-item .icon {
+    color: var(--text-muted);
+    margin-right: 8px;
+  }
+
+  .file-item.hinted .icon {
+    color: var(--accent-primary);
+  }
+
+  /* ── Phase Progress Demo ── */
+  .phase-list {
+    list-style: none;
+  }
+
+  .phase-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 13px;
+  }
+
+  .phase-item:last-child { border-bottom: none; }
+
+  .phase-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .phase-dot.pending { background: var(--phase-pending); }
+  .phase-dot.active {
+    background: var(--phase-active);
+    box-shadow: 0 0 8px rgba(217, 119, 87, 0.5);
+    animation: breathe-dot 2s ease-in-out infinite;
+  }
+  .phase-dot.complete { background: var(--phase-complete); }
+
+  @keyframes breathe-dot {
+    0%, 100% { box-shadow: 0 0 4px rgba(217, 119, 87, 0.3); }
+    50% { box-shadow: 0 0 12px rgba(217, 119, 87, 0.6); }
+  }
+
+  .phase-text { color: var(--text-secondary); }
+  .phase-text.active { color: var(--text-primary); font-weight: 600; }
+  .phase-text.complete { color: var(--text-muted); text-decoration: line-through; }
+
+  /* ── Status Colours ── */
+  .status-grid {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .status-pill {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .status-pill.error { background: rgba(224, 82, 82, 0.15); color: var(--status-error); border: 1px solid rgba(224, 82, 82, 0.3); }
+  .status-pill.warning { background: rgba(212, 168, 67, 0.15); color: var(--status-warning); border: 1px solid rgba(212, 168, 67, 0.3); }
+  .status-pill.success { background: rgba(124, 184, 124, 0.15); color: var(--status-success); border: 1px solid rgba(124, 184, 124, 0.3); }
+  .status-pill.info { background: rgba(107, 155, 210, 0.15); color: var(--status-info); border: 1px solid rgba(107, 155, 210, 0.3); }
+
+  /* ── Mock IDE Layout ── */
+  .mock-ide {
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 500px;
+    display: grid;
+    grid-template-columns: 220px 1fr 260px;
+    grid-template-rows: 1fr 180px;
+  }
+
+  .mock-sidebar-left {
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-subtle);
+    grid-row: 1 / 3;
+    padding: 12px;
+    overflow: hidden;
+  }
+
+  .mock-editor {
+    background: var(--bg-inset);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 16px;
+    position: relative;
+  }
+
+  .mock-editor-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .mock-tab {
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+  }
+
+  .mock-tab.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--accent-primary);
+  }
+
+  .mock-code {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+  }
+
+  .mock-code .highlight-line {
+    background: rgba(217, 119, 87, 0.1);
+    border-left: 3px solid var(--accent-primary);
+    margin: 0 -16px;
+    padding: 0 16px 0 13px;
+    display: block;
+  }
+
+  .mock-code .line-num {
+    color: var(--text-muted);
+    display: inline-block;
+    width: 28px;
+    text-align: right;
+    margin-right: 16px;
+    user-select: none;
+  }
+
+  .mock-code .keyword { color: #c792ea; }
+  .mock-code .string { color: #c3e88d; }
+  .mock-code .func { color: #82aaff; }
+  .mock-code .comment { color: var(--text-muted); font-style: italic; }
+  .mock-code .squiggly {
+    text-decoration: wavy underline;
+    text-decoration-color: var(--status-error);
+    text-underline-offset: 3px;
+  }
+
+  .mock-sidebar-right {
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border-subtle);
+    grid-row: 1 / 3;
+    padding: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .mock-sidebar-right::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(217, 119, 87, 0.025) 2px,
+      rgba(217, 119, 87, 0.025) 4px
+    );
+    pointer-events: none;
+  }
+
+  .mock-terminal {
+    background: var(--bg-inset);
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    grid-column: 2 / 3;
+  }
+
+  .mock-terminal .prompt { color: var(--accent-primary); }
+  .mock-terminal .paige { color: var(--phase-complete); }
+
+  .mock-panel-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .mock-issue-card {
+    background: var(--bg-elevated);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--accent-primary);
+  }
+
+  .mock-issue-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .mock-issue-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* ── Gutter marker demo ── */
+  .gutter-marker {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .gutter-marker.hint { background: var(--accent-primary); }
+  .gutter-marker.error { background: var(--status-error); }
+
+  /* ── Two-column layout ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 800px) {
+    .two-col { grid-template-columns: 1fr; }
+    .swatch-grid { grid-template-columns: repeat(2, 1fr); }
+    .mock-ide { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── Figlet Header ── -->
+  <pre class="figlet-header">
+ ____       _
+|  _ \ __ _(_) __ _  ___
+| |_) / _` | |/ _` |/ _ \
+|  __/ (_| | | (_| |  __/
+|_|   \__,_|_|\__, |\___|
+              |___/
+  </pre>
+  <p class="page-subtitle">Design System Preview &mdash; Anthropic-adjacent, warm, distinctly Paige</p>
+
+  <!-- ── Colour Palette ── -->
+  <section>
+    <h2 class="section-title">Colour Palette</h2>
+
+    <p class="swatch-group-title">Backgrounds</p>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background: var(--bg-inset);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">bg-inset</div>
+          <div class="swatch-value">#141413 — Terminal, editor</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: var(--bg-base);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">bg-base</div>
+          <div class="swatch-value">#1a1a18 — App background</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: var(--bg-surface);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">bg-surface</div>
+          <div class="swatch-value">#252523 — Panels, cards</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: var(--bg-elevated);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">bg-elevated</div>
+          <div class="swatch-value">#30302e — Hover, active</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="swatch-group-title">Accent &mdash; Terracotta</p>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background: var(--accent-deep);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">accent-deep</div>
+          <div class="swatch-value">#b85c3a — Pressed</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: var(--accent-primary);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">accent-primary</div>
+          <div class="swatch-value">#d97757 — Primary accent</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: var(--accent-warm);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">accent-warm</div>
+          <div class="swatch-value">#e8956a — Hover, glow</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="swatch-group-title">Text</p>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background: var(--text-primary);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">text-primary</div>
+          <div class="swatch-value">#faf9f5 — Parchment white</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: var(--text-secondary);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">text-secondary</div>
+          <div class="swatch-value">#a8a69e — Labels, meta</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: var(--text-muted);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">text-muted</div>
+          <div class="swatch-value">#6b6960 — Disabled, subtle</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="swatch-group-title">Status</p>
+    <div class="status-grid" style="margin-top: 8px;">
+      <span class="status-pill error">Error</span>
+      <span class="status-pill warning">Warning</span>
+      <span class="status-pill success">Success</span>
+      <span class="status-pill info">Info</span>
+    </div>
+  </section>
+
+  <!-- ── Typography ── -->
+  <section>
+    <h2 class="section-title">Typography &mdash; JetBrains Mono</h2>
+
+    <div class="type-sample">
+      <div class="type-label">Display &mdash; 56px / 700</div>
+      <div class="display">Claude Codes, <span class="accent">Paige Pairs</span></div>
+      <div class="type-meta">Dashboard headers, splash screen</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Heading 1 &mdash; 32px / 700</div>
+      <div class="h1">Your Learning Journey</div>
+      <div class="type-meta">Page sections, major headings</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Heading 2 &mdash; 24px / 600</div>
+      <div class="h2">Current Issue: <span class="accent">Fix OAuth callback handler</span></div>
+      <div class="type-meta">Panel headers, issue titles</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Heading 3 &mdash; 18px / 600</div>
+      <div class="h3">Phase 2: Implement error boundary</div>
+      <div class="type-meta">Phase titles, section subheads</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Body &mdash; 14px / 400</div>
+      <div class="body-text" style="max-width: 600px;">
+        The state management in this component follows the same pattern as
+        <span class="accent">UserProfile</span> &mdash; take a look at how that one
+        handles side effects. You&rsquo;ve seen this before.
+      </div>
+      <div class="type-meta">Coaching messages, descriptions, content</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Small / Labels &mdash; 12px / 500</div>
+      <div class="small-text">
+        <span style="color: var(--text-muted);">LAST SESSION</span>&ensp;
+        2h 14m &middot; 3 phases completed &middot; 2 hints used
+      </div>
+      <div class="type-meta">Metadata, timestamps, stats</div>
+    </div>
+  </section>
+
+  <!-- ── ASCII Treatments ── -->
+  <section>
+    <h2 class="section-title">ASCII Treatments</h2>
+
+    <div class="two-col">
+      <div>
+        <p class="swatch-group-title">Scanline Overlay</p>
+        <div class="scanline-panel">
+          <div class="mock-panel-title">Current Issue</div>
+          <div class="mock-issue-card">
+            <div class="mock-issue-title">#7 Fix OAuth callback race condition</div>
+            <div class="mock-issue-desc">The auth flow intermittently fails when the callback fires before state is initialised.</div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px;">
+            Subtle scanlines create a CRT/terminal callback on coaching panels
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="swatch-group-title">Dot Matrix Background</p>
+        <div class="dot-matrix-bg">
+          <div class="mock-panel-title">Phase Progress</div>
+          <ul class="phase-list">
+            <li class="phase-item">
+              <span class="phase-dot complete"></span>
+              <span class="phase-text complete">Find the OAuth callback handler</span>
+            </li>
+            <li class="phase-item">
+              <span class="phase-dot active"></span>
+              <span class="phase-text active">Add error boundary with cleanup</span>
+            </li>
+            <li class="phase-item">
+              <span class="phase-dot pending"></span>
+              <span class="phase-text">Write test for race condition</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Hint Glow Demo ── -->
+  <section>
+    <h2 class="section-title">File Hint Glow &mdash; Breathing Animation</h2>
+
+    <div class="two-col">
+      <div class="file-tree-demo">
+        <div class="mock-panel-title">Explorer</div>
+        <div class="file-item"><span class="icon">&#9655;</span> node_modules</div>
+        <div class="file-item"><span class="icon">&#9655;</span> public</div>
+        <div class="file-item"><span class="icon">&#9661;</span> src</div>
+        <div class="file-item" style="padding-left: 28px;"><span class="icon">&#9661;</span> handlers</div>
+        <div class="file-item hinted" style="padding-left: 44px;"><span class="icon">&#9724;</span> oauth.ts</div>
+        <div class="file-item" style="padding-left: 28px;"><span class="icon">&#9661;</span> middleware</div>
+        <div class="file-item" style="padding-left: 44px;"><span class="icon">&#9724;</span> auth.ts</div>
+        <div class="file-item" style="padding-left: 28px;"><span class="icon">&#9661;</span> components</div>
+        <div class="file-item hinted" style="padding-left: 44px;"><span class="icon">&#9724;</span> AuthCallback.tsx</div>
+        <div class="file-item" style="padding-left: 44px;"><span class="icon">&#9724;</span> UserProfile.tsx</div>
+        <div class="file-item"><span class="icon">&#9724;</span> package.json</div>
+        <div class="file-item"><span class="icon">&#9724;</span> tsconfig.json</div>
+      </div>
+
+      <div style="padding: 16px;">
+        <p class="swatch-group-title" style="margin-top: 0;">The Breakable Wall</p>
+        <p class="body-text" style="color: var(--text-secondary); margin-bottom: 16px;">
+          Hinted files pulse with a warm terracotta glow &mdash; a gentle
+          &ldquo;look here&rdquo; that suggests without forcing. Like a
+          breakable wall in a game: visible enough to notice, subtle
+          enough to ignore if you choose.
+        </p>
+        <p class="body-text" style="color: var(--text-secondary);">
+          The animation uses a spring-based breathing cycle (stiffness: 120,
+          damping: 14) for organic, non-mechanical movement.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Mock IDE ── -->
+  <section>
+    <h2 class="section-title">Mock IDE Layout &mdash; All Panels</h2>
+
+    <div class="mock-ide">
+      <!-- Left sidebar: File tree -->
+      <div class="mock-sidebar-left">
+        <div class="mock-panel-title">Explorer</div>
+        <div class="file-item"><span class="icon">&#9661;</span> src</div>
+        <div class="file-item" style="padding-left: 20px;"><span class="icon">&#9661;</span> handlers</div>
+        <div class="file-item hinted" style="padding-left: 32px; font-size: 12px;"><span class="icon">&#9724;</span> oauth.ts</div>
+        <div class="file-item" style="padding-left: 20px;"><span class="icon">&#9661;</span> middleware</div>
+        <div class="file-item" style="padding-left: 32px; font-size: 12px;"><span class="icon">&#9724;</span> auth.ts</div>
+        <div class="file-item" style="padding-left: 20px;"><span class="icon">&#9661;</span> components</div>
+        <div class="file-item hinted" style="padding-left: 32px; font-size: 12px;"><span class="icon">&#9724;</span> AuthCallback.tsx</div>
+        <div class="file-item" style="padding-left: 32px; font-size: 12px;"><span class="icon">&#9724;</span> UserProfile.tsx</div>
+      </div>
+
+      <!-- Main editor -->
+      <div class="mock-editor">
+        <div class="mock-editor-tabs">
+          <div class="mock-tab active">oauth.ts</div>
+          <div class="mock-tab">AuthCallback.tsx</div>
+        </div>
+        <div class="mock-code">
+          <span class="line-num">38</span><span class="keyword">export async function</span> <span class="func">handleCallback</span>(req, res) {<br>
+          <span class="line-num">39</span>&ensp; <span class="keyword">const</span> { code, state } = req.query;<br>
+          <span class="line-num">40</span>&ensp; <span class="comment">// Validate state parameter</span><br>
+          <span class="highlight-line"><span class="gutter-marker hint"></span><span class="line-num">41</span>&ensp; <span class="keyword">const</span> session = <span class="keyword">await</span> <span class="func">getSession</span>(state);</span>
+          <span class="highlight-line"><span class="gutter-marker error"></span><span class="line-num">42</span>&ensp; <span class="keyword">const</span> tokens = <span class="keyword">await</span> <span class="func squiggly">exchangeCode</span>(code);</span>
+          <span class="line-num">43</span>&ensp; <span class="comment">// TODO: handle token refresh</span><br>
+          <span class="line-num">44</span>&ensp; <span class="keyword">return</span> <span class="func">setAuthCookies</span>(res, tokens);<br>
+          <span class="line-num">45</span>}<br>
+        </div>
+      </div>
+
+      <!-- Right sidebar: coaching -->
+      <div class="mock-sidebar-right">
+        <div class="mock-panel-title">Current Issue</div>
+        <div class="mock-issue-card">
+          <div class="mock-issue-title" style="font-size: 12px;">#7 OAuth race condition</div>
+          <div class="mock-issue-desc" style="font-size: 10px;">Callback fires before state init</div>
+        </div>
+
+        <div class="mock-panel-title" style="margin-top: 20px;">Phases</div>
+        <ul class="phase-list">
+          <li class="phase-item" style="padding: 8px 0;">
+            <span class="phase-dot complete"></span>
+            <span class="phase-text complete" style="font-size: 11px;">Find handler</span>
+          </li>
+          <li class="phase-item" style="padding: 8px 0;">
+            <span class="phase-dot active"></span>
+            <span class="phase-text active" style="font-size: 11px;">Add error check</span>
+          </li>
+          <li class="phase-item" style="padding: 8px 0;">
+            <span class="phase-dot pending"></span>
+            <span class="phase-text" style="font-size: 11px;">Write test</span>
+          </li>
+        </ul>
+
+        <div class="mock-panel-title" style="margin-top: 20px;">Hint Level</div>
+        <div style="font-size: 11px; color: var(--accent-primary); font-weight: 600;">
+          &#9724; &#9724; &#9724; &#9724;&ensp; Detail
+        </div>
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">
+          Cmd+H to cycle
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="mock-terminal">
+        <span class="prompt">$</span> claude<br>
+        <br>
+        <span class="paige">Paige:</span> Line 42 is the issue &mdash; <span style="color: var(--accent-primary);">exchangeCode</span><br>
+        doesn&rsquo;t handle the case where the session hasn&rsquo;t<br>
+        been initialised yet. You&rsquo;ve seen this pattern before<br>
+        in <span style="color: var(--accent-primary);">UserProfile</span>. What did we do there?<br>
+        <br>
+        <span class="prompt">&gt;</span> <span style="color: var(--text-primary);">_</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
