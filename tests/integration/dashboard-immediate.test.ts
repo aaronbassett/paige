@@ -320,17 +320,18 @@ describe('handleDashboardRequest (integration)', () => {
   it('broadcasts dashboard:state immediately', async () => {
     await handleDashboardRequest('7d');
 
-    expect(mockBroadcast).toHaveBeenCalledTimes(1);
-    const broadcastArg = mockBroadcast.mock.calls[0]![0] as {
+    // First broadcast should be dashboard:state (Flow 1 runs before Flows 2-4)
+    expect(mockBroadcast).toHaveBeenCalled();
+    const firstCall = mockBroadcast.mock.calls[0]![0] as {
       type: string;
       data: { dreyfus: unknown[]; stats: Record<string, number> };
     };
-    expect(broadcastArg.type).toBe('dashboard:state');
-    expect(Array.isArray(broadcastArg.data.dreyfus)).toBe(true);
-    expect(typeof broadcastArg.data.stats.total_sessions).toBe('number');
-    expect(typeof broadcastArg.data.stats.total_actions).toBe('number');
-    expect(typeof broadcastArg.data.stats.total_api_calls).toBe('number');
-    expect(typeof broadcastArg.data.stats.total_cost).toBe('number');
+    expect(firstCall.type).toBe('dashboard:state');
+    expect(Array.isArray(firstCall.data.dreyfus)).toBe(true);
+    expect(typeof firstCall.data.stats.total_sessions).toBe('number');
+    expect(typeof firstCall.data.stats.total_actions).toBe('number');
+    expect(typeof firstCall.data.stats.total_api_calls).toBe('number');
+    expect(typeof firstCall.data.stats.total_cost).toBe('number');
   });
 
   // ── Test 10: Returns flowsCompleted with per-flow status booleans ──────────
