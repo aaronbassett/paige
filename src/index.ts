@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { loadEnv } from './config/env.js';
 import { createDatabase, closeDatabase } from './database/db.js';
 import { createFileWatcher, type FileChangeEvent } from './file-system/watcher.js';
+import { createMcpServer } from './mcp/server.js';
 import { createWebSocketServer, broadcast } from './websocket/server.js';
 import type { FsTreeAction } from './types/websocket.js';
 
@@ -47,6 +48,9 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
   // eslint-disable-next-line no-console
   console.log(`[server] Database initialized at ${dbPath}`);
 
+  // Create MCP server (tool registration happens lazily per session)
+  const mcpHandle = createMcpServer(null as unknown as Server);
+
   const server = http.createServer((req, res) => {
     if (req.method === 'GET' && req.url === '/health') {
       const uptimeMs = Date.now() - startTime;
@@ -55,6 +59,19 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(body);
+      return;
+    }
+
+    // Route /mcp requests to MCP Streamable HTTP transport
+    if (req.url?.startsWith('/mcp')) {
+      mcpHandle.handleRequest(req, res).catch((err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.error('[server] MCP request error:', err);
+        if (!res.headersSent) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Internal Server Error' }));
+        }
+      });
       return;
     }
 
@@ -114,6 +131,10 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
     // eslint-disable-next-line no-console
     console.log('[server] Closing file watcher...');
     await fileWatcher.close();
+
+    // eslint-disable-next-line no-console
+    console.log('[server] Closing MCP server...');
+    await mcpHandle.close();
 
     // eslint-disable-next-line no-console
     console.log('[server] Closing WebSocket server...');
