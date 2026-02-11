@@ -725,17 +725,17 @@
 
 ### Phase 13 Wrap-Up
 
-- [ ] T367 [US11] Run /sdd:map incremental for Phase 13 changes
-- [ ] T368 [GIT] Commit: update codebase documents for phase 13
-- [ ] T369 [US11] Review retro/P13.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T370 [GIT] Commit: finalize phase 13 retro
+- [x] T367 [US11] Run /sdd:map incremental for Phase 13 changes
+- [x] T368 [GIT] Commit: update codebase documents for phase 13
+- [x] T369 [US11] Review retro/P13.md and extract critical learnings to CLAUDE.md (conservative)
+- [x] T370 [GIT] Commit: finalize phase 13 retro
 
 ### Phase 13 Completion
 
-- [ ] T371 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T372 [GIT] Create/update PR to main with Phase 13 summary
-- [ ] T373 [GIT] Verify all CI checks pass
-- [ ] T374 [GIT] Report PR ready status
+- [x] T371 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T372 [GIT] Create/update PR to main with Phase 13 summary
+- [x] T373 [GIT] Verify all CI checks pass
+- [x] T374 [GIT] Report PR ready status
 
 **Checkpoint**: UI-driven API calls complete
 
