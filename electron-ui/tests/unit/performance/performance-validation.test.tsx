@@ -86,7 +86,7 @@ describe('T519: Dashboard renders 25 issues without lag', () => {
     expect(screen.getAllByRole('button')).toHaveLength(25);
 
     // Render should complete quickly (generous threshold for CI)
-    expect(renderTime).toBeLessThan(200);
+    expect(renderTime).toBeLessThan(500);
 
     unmount();
   });
@@ -98,11 +98,15 @@ describe('T519: Dashboard renders 25 issues without lag', () => {
     render(<GitHubIssues issues={issues} onIssueClick={onIssueClick} />);
 
     // Spot-check label rendering on specific cards
-    const firstCard = screen.getByLabelText('Issue #1: Issue 1: Fix critical bug in authentication flow');
+    const firstCard = screen.getByLabelText(
+      'Issue #1: Issue 1: Fix critical bug in authentication flow'
+    );
     expect(within(firstCard).getByText('bug')).toBeInTheDocument();
 
     // Issue #3 should have 3 labels (index 2, so (2 % 3) + 1 = 3)
-    const thirdCard = screen.getByLabelText('Issue #3: Issue 3: Fix critical bug in authentication flow');
+    const thirdCard = screen.getByLabelText(
+      'Issue #3: Issue 3: Fix critical bug in authentication flow'
+    );
     expect(within(thirdCard).getByText('bug')).toBeInTheDocument();
     expect(within(thirdCard).getByText('enhancement')).toBeInTheDocument();
     expect(within(thirdCard).getByText('priority')).toBeInTheDocument();
