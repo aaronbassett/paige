@@ -765,8 +765,8 @@
 
 ### Implementation for User Story 12
 
-- [ ] T382 [US12] Add IssueSuitability schema to src/api-client/schemas.ts (use devs:typescript-dev agent)
-- [ ] T383 [GIT] Commit: add issue suitability schema
+- [x] T382 [US12] Add IssueSuitability schema to src/api-client/schemas.ts (use devs:typescript-dev agent)
+- [x] T383 [GIT] Commit: add issue suitability schema
 - [ ] T384 [US12] Create src/dashboard/handler.ts with dashboard:request dispatcher (use devs:typescript-dev agent)
 - [ ] T385 [GIT] Commit: add dashboard dispatcher
 - [ ] T386 [P] [US12] Create src/dashboard/flows/state.ts with Dreyfus + stats assembly (use devs:typescript-dev agent)
