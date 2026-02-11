@@ -151,14 +151,14 @@
 - [x] T070 [US1] Run /sdd:map incremental for Phase 3 changes (skipped: no .sdd/codebase/ exists yet)
 - [x] T071 [GIT] Commit: update codebase documents for phase 3
 - [x] T072 [US1] Review retro/P3.md and extract critical learnings to CLAUDE.md (conservative)
-- [ ] T073 [GIT] Commit: finalize phase 3 retro
+- [x] T073 [GIT] Commit: finalize phase 3 retro
 
 ### Phase 3 Completion
 
-- [ ] T074 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T075 [GIT] Create/update PR to main with Phase 3 summary
-- [ ] T076 [GIT] Verify all CI checks pass
-- [ ] T077 [GIT] Report PR ready status
+- [x] T074 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T075 [GIT] Create/update PR to main with Phase 3 summary
+- [x] T076 [GIT] Verify all CI checks pass
+- [x] T077 [GIT] Report PR ready status
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
