@@ -136,7 +136,9 @@ export function createWebSocketServer(server: Server): WebSocketServerHandle {
 }
 
 /**
- * Broadcasts a message to all connected WebSocket clients.
+ * Broadcasts a typed message to all connected WebSocket clients.
+ * Skips clients whose readyState is not OPEN.
+ * @param message - Server-to-client message envelope (type + data)
  */
 export function broadcast(message: ServerToClientMessage): void {
   const serialized = JSON.stringify(message);

@@ -25,7 +25,10 @@ export async function handlePracticeReview(
   data: PracticeSubmitSolutionData,
   sessionId: number,
 ): Promise<ReviewResult> {
-  const db = getDatabase()!;
+  const db = getDatabase();
+  if (db === null) {
+    throw new Error('Database not initialized. Cannot handle practice review.');
+  }
 
   // Load kata — throw if not found so handler broadcasts review:error
   const kata = await getKataById(db, data.kataId);

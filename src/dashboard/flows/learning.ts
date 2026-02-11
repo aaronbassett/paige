@@ -141,7 +141,7 @@ function findResources(topic: string): LearningResource[] {
 export async function assembleLearningMaterials(): Promise<DashboardLearningMaterialsData | null> {
   const db = getDatabase();
   if (db === null) {
-    throw new Error('Database not initialised');
+    throw new Error('Database not initialized. Cannot load learning materials.');
   }
 
   // Find all unaddressed knowledge gaps across all sessions

@@ -33,7 +33,12 @@ export function registerLifecycleTools(server: McpServer): void {
       // Guard: only one active session at a time
       if (getActiveSessionId() !== null) {
         return {
-          content: [{ type: 'text' as const, text: 'A session is already active' }],
+          content: [
+            {
+              type: 'text' as const,
+              text: 'A session is already active. End it with paige_end_session before starting a new one.',
+            },
+          ],
           isError: true,
         };
       }
@@ -41,7 +46,12 @@ export function registerLifecycleTools(server: McpServer): void {
       const db = getDatabase();
       if (db === null) {
         return {
-          content: [{ type: 'text' as const, text: 'Database not initialized' }],
+          content: [
+            {
+              type: 'text' as const,
+              text: 'Database not initialized. The server may not have started correctly.',
+            },
+          ],
           isError: true,
         };
       }
@@ -82,7 +92,12 @@ export function registerLifecycleTools(server: McpServer): void {
 
     if (sessionId === null) {
       return {
-        content: [{ type: 'text' as const, text: 'No active session to end' }],
+        content: [
+          {
+            type: 'text' as const,
+            text: 'No active session to end. Start one with paige_start_session first.',
+          },
+        ],
         isError: true,
       };
     }

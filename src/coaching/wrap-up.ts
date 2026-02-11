@@ -23,12 +23,19 @@ export interface WrapUpResult {
   assessmentsUpdated: number;
 }
 
-/** Runs session wrap-up: knowledge gaps -> dreyfus -> reflection -> mark complete. */
+/**
+ * Runs session wrap-up: extracts knowledge gaps, updates Dreyfus assessments,
+ * generates reflection memories, marks the session completed, and broadcasts results.
+ * Each agent runs independently; failures are logged but do not block finalization.
+ * @param sessionId - The session to wrap up
+ * @returns Counts of memories, gaps, katas, and assessments produced
+ * @throws {Error} If the database is unavailable or the session does not exist
+ */
 export async function runSessionWrapUp(sessionId: number): Promise<WrapUpResult> {
   // 1. Get database
   const db = getDatabase();
   if (db === null) {
-    throw new Error('Database not initialised');
+    throw new Error('Database not initialized. Cannot run session wrap-up.');
   }
 
   // 2. Get session
