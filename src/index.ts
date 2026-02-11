@@ -5,6 +5,7 @@ import http, { type Server } from 'node:http';
 import { join } from 'node:path';
 import { loadEnv } from './config/env.js';
 import { createDatabase, closeDatabase } from './database/db.js';
+import { createWebSocketServer } from './websocket/server.js';
 
 export const VERSION = '1.0.0';
 
@@ -61,6 +62,9 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
     res.end(body);
   });
 
+  // Attach WebSocket server to handle /ws upgrade requests
+  const wsHandle = createWebSocketServer(server);
+
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
     server.listen(config.port, () => {
@@ -81,6 +85,10 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
   console.log('[server] Paige backend ready');
 
   const close = async (): Promise<void> => {
+    // eslint-disable-next-line no-console
+    console.log('[server] Closing WebSocket server...');
+    wsHandle.close();
+
     // eslint-disable-next-line no-console
     console.log('[server] Closing HTTP server...');
     await new Promise<void>((resolve, reject) => {
