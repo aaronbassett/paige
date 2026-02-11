@@ -13,6 +13,21 @@ import type { FsTreeAction } from './types/websocket.js';
 
 export const VERSION = '1.0.0';
 
+/** Prints the Paige ASCII art banner and version info to stdout. */
+function printBanner(): void {
+  const banner = `
+  ____   _    ___ ____ _____
+ |  _ \\ / \\  |_ _/ ___| ____|
+ | |_) / _ \\  | | |  _|  _|
+ |  __/ ___ \\ | | |_| | |___
+ |_| /_/   \\_\\___|\\____|_____|
+
+ v${VERSION} — Claude Codes, Paige Pairs.
+`;
+  // eslint-disable-next-line no-console
+  console.log(banner);
+}
+
 /** Configuration for the Paige backend server. */
 export interface ServerConfig {
   /** TCP port to listen on. Use 0 for OS-assigned port. */
@@ -42,12 +57,12 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
   const env = loadEnv();
   const startTime = Date.now();
 
+  // Print ASCII banner before any startup work
+  printBanner();
+
   // Initialize SQLite database (creates tables on first run)
   const dbPath = join(env.dataDir, 'paige.db');
   await createDatabase(dbPath);
-
-  // eslint-disable-next-line no-console
-  console.log(`[server] Database initialized at ${dbPath}`);
 
   // Initialize ChromaDB (lazy — server starts even if ChromaDB is down)
   await initializeMemory(env.chromadbUrl);
@@ -125,11 +140,15 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
     address !== null && typeof address !== 'string' ? address.port : config.port;
 
   // eslint-disable-next-line no-console
-  console.log(`[server] Listening on port ${String(listeningPort)}`);
-  // eslint-disable-next-line no-console
-  console.log(`[server] Project directory: ${env.projectDir}`);
-  // eslint-disable-next-line no-console
-  console.log('[server] Paige backend ready');
+  console.log(
+    [
+      `[server] Paige backend ready`,
+      `  Port:      ${String(listeningPort)}`,
+      `  Project:   ${env.projectDir}`,
+      `  MCP:       http://localhost:${String(listeningPort)}/mcp`,
+      `  WebSocket: ws://localhost:${String(listeningPort)}/ws`,
+    ].join('\n'),
+  );
 
   const close = async (): Promise<void> => {
     // eslint-disable-next-line no-console
