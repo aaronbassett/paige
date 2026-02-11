@@ -61,6 +61,27 @@ export async function logApiCall(db: Kysely<DatabaseTables>, entry: ApiCallInput
     .execute();
 }
 
+// ── Period-Based Queries (Dashboard) ──────────────────────────────────────────
+
+/**
+ * Returns the total API call count within the given time period.
+ * Period: '7d' = last 7 days, '30d' = last 30 days, 'all' = no filter.
+ */
+export function getApiCallCountByPeriod(
+  _db: Kysely<DatabaseTables>,
+  _period: string,
+): Promise<number> {
+  return Promise.reject(new Error('Not implemented'));
+}
+
+/**
+ * Returns the total estimated cost (USD) within the given time period.
+ * Period: '7d' = last 7 days, '30d' = last 30 days, 'all' = no filter.
+ */
+export function getApiCostByPeriod(_db: Kysely<DatabaseTables>, _period: string): Promise<number> {
+  return Promise.reject(new Error('Not implemented'));
+}
+
 // ── Session Cost Query ─────────────────────────────────────────────────────────
 
 /**

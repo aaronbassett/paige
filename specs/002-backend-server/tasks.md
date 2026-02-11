@@ -759,9 +759,9 @@
 
 ### Tests for User Story 12
 
-- [ ] T379 [P] [US12] Integration test for dashboard immediate response in tests/integration/dashboard-immediate.test.ts (use devs:typescript-dev agent)
-- [ ] T380 [P] [US12] Integration test for dashboard issues flow in tests/integration/dashboard-issues.test.ts (use devs:typescript-dev agent)
-- [ ] T381 [GIT] Commit: add US12 tests (failing)
+- [x] T379 [P] [US12] Integration test for dashboard immediate response in tests/integration/dashboard-immediate.test.ts (use devs:typescript-dev agent)
+- [x] T380 [P] [US12] Integration test for dashboard issues flow in tests/integration/dashboard-issues.test.ts (use devs:typescript-dev agent)
+- [x] T381 [GIT] Commit: add US12 tests (failing)
 
 ### Implementation for User Story 12
 

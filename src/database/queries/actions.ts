@@ -83,6 +83,27 @@ export interface ApiCallStats {
  *
  * Returns zeroed stats when no API calls exist for the given session.
  */
+/**
+ * Returns the count of distinct sessions within the given time period.
+ * Period: '7d' = last 7 days, '30d' = last 30 days, 'all' = no filter.
+ */
+export function getSessionCountByPeriod(_db: AppDatabase, _period: string): Promise<number> {
+  return Promise.reject(new Error('Not implemented'));
+}
+
+/**
+ * Returns the total action count within the given time period.
+ * Period: '7d' = last 7 days, '30d' = last 30 days, 'all' = no filter.
+ */
+export function getActionCountByPeriod(_db: AppDatabase, _period: string): Promise<number> {
+  return Promise.reject(new Error('Not implemented'));
+}
+
+/**
+ * Returns aggregated cost, latency, and call count for all API calls in a session.
+ *
+ * Returns zeroed stats when no API calls exist for the given session.
+ */
 export async function getApiCallStats(db: AppDatabase, sessionId: number): Promise<ApiCallStats> {
   const result = await db
     .selectFrom('api_call_log')
