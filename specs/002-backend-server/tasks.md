@@ -401,13 +401,13 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T195 [GIT] Verify working tree is clean before starting Phase 8
-- [ ] T196 [GIT] Pull and rebase on origin/main if needed
+- [x] T195 [GIT] Verify working tree is clean before starting Phase 8
+- [x] T196 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T197 [US6] Create retro/P8.md for this phase
-- [ ] T198 [GIT] Commit: initialize phase 8 retro
+- [x] T197 [US6] Create retro/P8.md for this phase
+- [x] T198 [GIT] Commit: initialize phase 8 retro
 
 ### Tests for User Story 6
 
