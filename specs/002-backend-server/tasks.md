@@ -700,28 +700,28 @@
 
 ### Tests for User Story 11
 
-- [ ] T348 [P] [US11] Integration test for Explain This in tests/integration/explain-this.test.ts (use devs:typescript-dev agent)
-- [ ] T349 [P] [US11] Integration test for Practice Review in tests/integration/practice-review.test.ts (use devs:typescript-dev agent)
-- [ ] T350 [GIT] Commit: add US11 tests (failing)
+- [x] T348 [P] [US11] Integration test for Explain This in tests/integration/explain-this.test.ts (use devs:typescript-dev agent)
+- [x] T349 [P] [US11] Integration test for Practice Review in tests/integration/practice-review.test.ts (use devs:typescript-dev agent)
+- [x] T350 [GIT] Commit: add US11 tests (failing)
 
 ### Implementation for User Story 11
 
-- [ ] T351 [US11] Add Explain and Review schemas to src/api-client/schemas.ts (use devs:typescript-dev agent)
-- [ ] T352 [GIT] Commit: add UI API schemas
-- [ ] T353 [US11] Create src/ui-apis/explain.ts with user:explain handler and Dreyfus-aware prompting (use devs:typescript-dev agent)
-- [ ] T354 [GIT] Commit: add Explain This
-- [ ] T355 [US11] Create src/ui-apis/review.ts with practice:submit_solution handler (use devs:typescript-dev agent)
-- [ ] T356 [GIT] Commit: add Practice Review
-- [ ] T357 [US11] Implement constraint unlocking logic in src/ui-apis/review.ts (use devs:typescript-dev agent)
-- [ ] T358 [GIT] Commit: add constraint unlocking
-- [ ] T359 [US11] Implement same-constraint filtering for previous attempts in src/ui-apis/review.ts (use devs:typescript-dev agent)
-- [ ] T360 [GIT] Commit: add same-constraint filtering
-- [ ] T361 [US11] Wire user:explain handler in src/websocket/handlers/user.ts (use devs:typescript-dev agent)
-- [ ] T362 [GIT] Commit: wire Explain This handler
-- [ ] T363 [US11] Wire practice:submit_solution handler in src/websocket/handlers/practice.ts (use devs:typescript-dev agent)
-- [ ] T364 [GIT] Commit: wire Practice Review handler
-- [ ] T365 [US11] Verify US11 tests now pass
-- [ ] T366 [GIT] Commit: verify US11 complete
+- [x] T351 [US11] Add Explain and Review schemas to src/api-client/schemas.ts (use devs:typescript-dev agent)
+- [x] T352 [GIT] Commit: add UI API schemas
+- [x] T353 [US11] Create src/ui-apis/explain.ts with user:explain handler and Dreyfus-aware prompting (use devs:typescript-dev agent)
+- [x] T354 [GIT] Commit: add Explain This
+- [x] T355 [US11] Create src/ui-apis/review.ts with practice:submit_solution handler (use devs:typescript-dev agent)
+- [x] T356 [GIT] Commit: add Practice Review
+- [x] T357 [US11] Implement constraint unlocking logic in src/ui-apis/review.ts (use devs:typescript-dev agent)
+- [x] T358 [GIT] Commit: add constraint unlocking
+- [x] T359 [US11] Implement same-constraint filtering for previous attempts in src/ui-apis/review.ts (use devs:typescript-dev agent)
+- [x] T360 [GIT] Commit: add same-constraint filtering
+- [x] T361 [US11] Wire user:explain handler in src/websocket/handlers/user.ts (use devs:typescript-dev agent)
+- [x] T362 [GIT] Commit: wire Explain This handler
+- [x] T363 [US11] Wire practice:submit_solution handler in src/websocket/handlers/practice.ts (use devs:typescript-dev agent)
+- [x] T364 [GIT] Commit: wire Practice Review handler
+- [x] T365 [US11] Verify US11 tests now pass
+- [x] T366 [GIT] Commit: verify US11 complete
 
 ### Phase 13 Wrap-Up
 
