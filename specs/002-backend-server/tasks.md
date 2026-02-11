@@ -411,9 +411,9 @@
 
 ### Tests for User Story 6
 
-- [ ] T199 [P] [US6] Contract test for MCP tool schemas in tests/contract/mcp-schema.test.ts (use devs:typescript-dev agent)
-- [ ] T200 [P] [US6] Integration test for MCP session lifecycle in tests/integration/mcp-lifecycle.test.ts (use devs:typescript-dev agent)
-- [ ] T201 [GIT] Commit: add US6 tests (failing)
+- [x] T199 [P] [US6] Contract test for MCP tool schemas in tests/contract/mcp-schema.test.ts (use devs:typescript-dev agent)
+- [x] T200 [P] [US6] Integration test for MCP session lifecycle in tests/integration/mcp-lifecycle.test.ts (use devs:typescript-dev agent)
+- [x] T201 [GIT] Commit: add US6 tests (failing)
 
 ### Implementation for User Story 6
 
