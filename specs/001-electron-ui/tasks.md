@@ -180,8 +180,8 @@ Phase 10 (Polish)
 
 ### Phase Completion
 
-- [ ] T061 [GIT] Push branch to origin (ensure pre-push hooks pass)
-- [ ] T062 [GIT] Create/update PR to main with Phase 1 summary
+- [x] T061 [GIT] Push branch to origin (ensure pre-push hooks pass)
+- [x] T062 [GIT] Create/update PR to main with Phase 1 summary — PR #6
 - [ ] T063 [GIT] Verify all CI checks pass
 - [ ] T064 [GIT] HOLD: Await PR review (LGTM required before Phase 2)
 
@@ -197,9 +197,9 @@ Phase 10 (Polish)
 
 ### Phase Start
 
-- [ ] T066 [GIT] Verify working tree is clean before starting Phase 2
-- [ ] T067 [GIT] Pull and rebase on origin/main if needed
-- [ ] T068 Create retro/P2.md for this phase
+- [x] T066 [GIT] Verify working tree is clean before starting Phase 2
+- [x] T067 [GIT] Pull and rebase on origin/main if needed
+- [x] T068 Create retro/P2.md for this phase
 - [ ] T069 [GIT] Commit: initialize phase 2 retro
 
 ### Story 1: Visual Identity & Design System [US1]
