@@ -372,8 +372,8 @@
 - [x] T182 [GIT] Commit: add broadcast function
 - [x] T183 [US5] Wire file watcher events to broadcast fs:tree_update in src/index.ts (use devs:typescript-dev agent)
 - [x] T184 [GIT] Commit: integrate file watcher broadcasts
-- [ ] T185 [US5] Verify US5 tests now pass
-- [ ] T186 [GIT] Commit: verify US5 complete
+- [x] T185 [US5] Verify US5 tests now pass
+- [x] T186 [GIT] Commit: verify US5 complete
 
 ### Phase 7 Wrap-Up
 
