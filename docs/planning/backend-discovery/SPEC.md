@@ -610,7 +610,17 @@ Electron ──ws──→ JSON parse → Router (Map<type, handler>) → Handle
 interface WebSocketMessage<T = unknown> {
   type: string;
   payload: T;
+  id?: string;        // Optional correlation ID for request/response pairs
+  timestamp: number;  // Unix ms
 }
+```
+
+**Period Type** (for dashboard stats):
+```typescript
+type Period = "7d" | "30d" | "all";
+// "7d" = last 7 days (This Week)
+// "30d" = last 30 days (This Month)
+// "all" = all time
 ```
 
 **Handler Context**:
@@ -739,7 +749,7 @@ interface ConnectionMeta {
 | ID | Requirement | Confidence |
 |----|-------------|------------|
 | FR-049 | All WebSocket messages MUST be JSON with `{ type: string, payload: object }`. | High |
-| FR-050 | TypeScript interfaces MUST be defined for all 50 message types (23 client→server, 27 server→client — includes additive revisions from Stories 9, 10, 11, 12). | High |
+| FR-050 | TypeScript interfaces MUST be defined for all 55 message types (23 client→server, 32 server→client — includes additive revisions from Stories 9, 10, 11, 12). | High |
 | FR-051 | Router MUST be `Map<string, MessageHandler>` dispatching inbound messages. | High |
 | FR-052 | Handler signature: `(payload: T, context: HandlerContext) => Promise<void>`. | High |
 | FR-053 | `connection:hello` MUST store metadata and respond with `connection:init`. | High |
@@ -763,6 +773,75 @@ interface ConnectionMeta {
 | SC-026 | Broadcast delivers | Message sent to all connected clients |
 | SC-027 | Unknown type handled | Logged and ignored, no crash |
 | SC-028 | Tree update broadcast | File watcher event triggers `fs:tree_update` |
+
+#### Comprehensive WebSocket Message Catalog
+
+**Total**: 55 message types (23 client→server, 32 server→client)
+
+**Server → Client (32 messages)**:
+
+| Type | Payload Shape | Source Story | Description |
+|------|---------------|--------------|-------------|
+| `connection:init` | `{ sessionId, capabilities, featureFlags }` | 5 | Handshake response |
+| `connection:error` | `{ code, message, context }` | 5 | Backend error notification |
+| `dashboard:dreyfus` | `{ skillAreas: [{ name, stage, score }], overallStage }` | 12 | Dreyfus radar data |
+| `dashboard:state` | `{ dreyfus, stats, inProgress, issues, challenges, materials }` | 12 | Full dashboard state |
+| `dashboard:issues` | `{ issues: [{ number, title, ... }] }` | 12 | GitHub issues |
+| `dashboard:issues_error` | `{ error }` | 12 | GitHub fetch failure |
+| `fs:tree` | `{ root: TreeNode }` | 5 | Full file tree |
+| `fs:tree_update` | `{ action, path, newPath? }` | 5 | Incremental tree change |
+| `fs:content` | `{ path, content, language, lineCount }` | 5 | File content response |
+| `fs:save_ack` | `{ path, success, timestamp }` | 5 | Save confirmation |
+| `fs:save_error` | `{ path, error }` | 5 | Save failure |
+| `editor:decorations` | `{ path, decorations: [...] }` | 6 | Paige-controlled decorations |
+| `editor:clear_decorations` | `{ path? }` | 6 | Remove decorations |
+| `editor:hover_hint` | `{ path, range, hintText }` | 6 | Hover popover content |
+| `editor:open_file` | `{ path, content, language, lineCount }` | 6 | MCP-triggered file open |
+| `editor:highlight_lines` | `{ path, start, end, style, hoverText? }` | 6 | MCP-triggered line highlights |
+| `editor:clear_highlights` | `{ path? }` | 6 | MCP-triggered clear |
+| `explorer:hint_files` | `{ hints: [{ path, style, directories? }] }` | 6 | File tree glow triggers |
+| `explorer:clear_hints` | `{}` | 6 | Remove all file glows |
+| `session:started` | `{ issueContext, phases, hintLevel, openFiles? }` | 9 | Session initialized |
+| `session:resumed` | `{ restoredState }` | 9 | Session restored |
+| `session:ended` | `{ summary }` | 9 | Session wrap-up |
+| `coaching:phase_update` | `{ phase, status, description }` | 6 | Phase state change |
+| `coaching:message` | `{ message, type, anchor? }` | 6 | Coaching message |
+| `coaching:issue_context` | `{ number, title, summary, labels, url }` | 6 | Issue details |
+| `coaching:plan_ready` | `{ planId, phases, memoryConnection, estimatedDifficulty }` | 9 | Pipeline completed |
+| `observer:nudge` | `{ signal, confidence, context }` | 10 | Nudge for PTY injection |
+| `observer:status` | `{ active, muted, lastEvaluation }` | 10 | Observer state |
+| `explain:response` | `{ explanation }` | 11 | Explain This response |
+| `review:response` | `{ review, suggestions }` | 11 | Review response |
+| `practice:kata_load` | `{ kata, constraints }` | 11 | Practice kata |
+| `practice:solution_review` | `{ review, level, passed, constraintsUnlocked }` | 11 | Solution feedback |
+
+**Client → Server (23 messages)**:
+
+| Type | Payload Shape | Source Story | Description |
+|------|---------------|--------------|-------------|
+| `connection:hello` | `{ version, platform, windowSize }` | 5 | Initial handshake |
+| `dashboard:request` | `{ statsPeriod?: Period }` | 12 | Request dashboard data |
+| `dashboard:refresh_issues` | `{}` | 12 | Re-fetch GitHub issues |
+| `session:start` | `{ issueNumber }` | 9 | User selected issue |
+| `session:resume` | `{ sessionId }` | 9 | Resume session |
+| `session:end` | `{}` | 9 | End session |
+| `file:open` | `{ path }` | 5 | User opened file |
+| `file:save` | `{ path, content }` | 5 | User saved file |
+| `file:close` | `{ path }` | 5 | User closed tab |
+| `buffer:update` | `{ path, content, cursorPosition, selections }` | 5 | Buffer edit |
+| `editor:tab_switch` | `{ fromPath, toPath }` | 5 | Tab switched |
+| `editor:selection` | `{ path, range, textLength }` | 5 | Selection changed |
+| `explorer:expand_dir` | `{ path }` | 5 | Directory expanded |
+| `explorer:collapse_dir` | `{ path }` | 5 | Directory collapsed |
+| `hints:level_change` | `{ level, previousLevel }` | 5 | Hint slider moved |
+| `user:explain` | `{ path, range, selectedText }` | 11 | Explain This |
+| `user:review` | `{}` | 11 | Review My Work |
+| `user:idle_start` | `{ lastActionTimestamp }` | 10 | User went idle |
+| `user:idle_end` | `{}` | 10 | User returned |
+| `observer:mute` | `{ muted }` | 10 | Toggle Observer |
+| `practice:submit_solution` | `{ kataId, code, activeConstraints }` | 11 | Submit practice |
+| `terminal:input` | `{ input }` | 5 | Terminal stdin |
+| `terminal:resize` | `{ cols, rows }` | 5 | Terminal resized |
 
 ---
 
@@ -794,11 +873,11 @@ interface ConnectionMeta {
 | `paige_open_file` | `{ path }` | `editor:open_file` | Open/focus file in Monaco |
 | `paige_highlight_lines` | `{ path, start, end, style, hoverText? }` | `editor:highlight_lines` | Add line decorations (accumulate) |
 | `paige_clear_highlights` | `{ path? }` | `editor:clear_highlights` | Remove decorations (per-file or all) |
-| `paige_hint_files` | `{ paths, style }` | `explorer:hint_files` | Highlight files in explorer tree |
+| `paige_hint_files` | `{ hints: [{ path, style, directories? }] }` | `explorer:hint_files` | Highlight files in explorer tree (per-file styling) |
 | `paige_clear_hints` | `{}` | `explorer:clear_hints` | Remove all tree hints |
 | `paige_update_phase` | `{ phase, status }` | `coaching:phase_update` | Update phase in SQLite + broadcast |
-| `paige_show_message` | `{ message, type }` | `coaching:message` | Display coaching message |
-| `paige_show_issue_context` | `{ title, summary }` | `coaching:issue_context` | Update issue context panel |
+| `paige_show_message` | `{ message, type, anchor? }` | `coaching:message` | Display coaching message (toast or anchored comment balloon) |
+| `paige_show_issue_context` | `{ number, title, summary, labels, url }` | `coaching:issue_context` | Update issue context panel with full GitHub issue metadata |
 
 **Session Scoping**: Tools assume "the current active session" (D27). One user, one session at a time. Tools requiring session context return an MCP error if no session is active.
 
@@ -1977,10 +2056,10 @@ export function assembleUserMessage(context: TriageContext): string {
 
 1. Triage returns `should_nudge: true` with `confidence >= 0.7`
 2. Observer logs `nudge_sent` action with `{ signal, confidence }`
-3. Observer broadcasts `observer:nudge_prompt` via WebSocket:
+3. Observer broadcasts `observer:nudge` via WebSocket:
    ```json
    {
-     "type": "observer:nudge_prompt",
+     "type": "observer:nudge",
      "payload": {
        "signal": "wrong_file",
        "confidence": 0.85,
@@ -2009,7 +2088,7 @@ If `should_nudge: false`:
 
 | Type | Direction | Payload | Trigger |
 |------|-----------|---------|---------|
-| `observer:nudge_prompt` | Server → Client | `{ signal: string, confidence: number, context: { current_file, expected_file, time_in_file, phase_description } }` | Triage says nudge |
+| `observer:nudge` | Server → Client | `{ signal: string, confidence: number, context: { current_file, expected_file, time_in_file, phase_description } }` | Triage says nudge |
 | `observer:mute` | Client → Server | `{ muted: boolean }` | User toggles mute |
 | `observer:status` | Server → Client | `{ active: boolean, muted: boolean, lastEvaluation: string \| null }` | Session start, session end, mute toggle |
 
@@ -2045,7 +2124,7 @@ If `should_nudge: false`:
 - **And** calls Haiku via `callApi<T>()` with the observer-triage prompt template
 - **And** Haiku returns `{ should_nudge: true, confidence: 0.85, signal: "wrong_file", ... }`
 - **And** `nudge_sent` is logged with `{ signal: "wrong_file", confidence: 0.85 }`
-- **And** `observer:nudge_prompt` is broadcast to Electron with signal, confidence, and context
+- **And** `observer:nudge` is broadcast to Electron with signal, confidence, and context
 - **And** `lastNudgeTimestamp` is updated
 
 **Scenario 10.4: Buffer edit threshold triggers evaluation**
@@ -2156,10 +2235,10 @@ If `should_nudge: false`:
 | FR-137 | Context snapshot MUST include: current_phase (or null), last 20 actions, time_since_last_save, time_since_last_nudge, dreyfus_stage, user_idle | High |
 | FR-138 | Dreyfus stage MUST default to `"novice"` when no assessments exist | High |
 | FR-139 | Triage MUST use `callApi<T>()` with model `"haiku"` and `prompts/observer-triage.ts` template | High |
-| FR-140 | If `should_nudge: true` AND `confidence >= 0.7`: log `nudge_sent`, broadcast `observer:nudge_prompt`, update `lastNudgeTimestamp` | High |
+| FR-140 | If `should_nudge: true` AND `confidence >= 0.7`: log `nudge_sent`, broadcast `observer:nudge`, update `lastNudgeTimestamp` | High |
 | FR-141 | If `should_nudge: true` AND `confidence < 0.7`: log `nudge_suppressed` with `reason: "low_confidence"` | High |
 | FR-142 | If `should_nudge: false`: no log, update `lastEvaluationTimestamp` only | High |
-| FR-143 | `observer:nudge_prompt` WebSocket message MUST include signal, confidence, and suggested_context | High |
+| FR-143 | `observer:nudge` WebSocket message MUST include signal, confidence, and suggested_context | High |
 | FR-144 | `observer:mute` WebSocket handler MUST flip mute state, log `observer_muted` action, broadcast `observer:status` | High |
 | FR-145 | `observer:status` MUST be broadcast on session start, session end, and mute toggle | High |
 | FR-146 | Triage API call failure MUST NOT crash or stop the Observer — log failure and continue | High |
@@ -2175,7 +2254,7 @@ If `should_nudge: false`:
 | SC-062 | Observer starts with session | Session creation results in Observer state, EventEmitter subscription, idle timer, and status broadcast |
 | SC-063 | Observer stops with session | `paige_end_session` unsubscribes Observer, clears timer, broadcasts inactive status |
 | SC-064 | Trigger → triage works | File open event triggers Haiku call with correct context snapshot |
-| SC-065 | Nudge delivered | `should_nudge: true` + confidence >= 0.7 results in `observer:nudge_prompt` broadcast |
+| SC-065 | Nudge delivered | `should_nudge: true` + confidence >= 0.7 results in `observer:nudge` broadcast |
 | SC-066 | Cooldown works | Nudge within 120s of previous nudge is suppressed with logged reason |
 | SC-067 | Flow state works | >10 actions in 60s suppresses triage entirely |
 | SC-068 | Mute works | `observer:mute { muted: true }` prevents all evaluations; unmute re-enables |
@@ -3283,7 +3362,7 @@ When `tools` is provided, the SDK includes them in the API request. Server-side 
 | FR-047 | Buffer summary timer cleared on session end and graceful shutdown | Story 4 | High |
 | FR-048 | All 27 action types supported (24 Story 4 + 2 Story 11 + 1 Story 12) | Story 4, 11, 12 | High |
 | FR-049 | All WebSocket messages MUST be JSON `{ type, payload }` | Story 5 | High |
-| FR-050 | TypeScript interfaces for all 50 message types (23 C→S, 27 S→C; includes Stories 9–12 revisions) | Story 5, 9, 10, 11, 12 | High |
+| FR-050 | TypeScript interfaces for all 55 message types (23 C→S, 32 S→C; includes Stories 9–12 revisions) | Story 5, 9, 10, 11, 12 | High |
 | FR-051 | Router: `Map<string, MessageHandler>` for inbound dispatch | Story 5 | High |
 | FR-052 | Handler signature: `(payload, context) => Promise<void>` | Story 5 | High |
 | FR-053 | `connection:hello` stores metadata, responds `connection:init` | Story 5 | High |
@@ -3373,10 +3452,10 @@ When `tools` is provided, the SDK includes them in the API request. Server-side 
 | FR-137 | Context snapshot MUST include: current_phase (or null), last 20 actions, time_since_last_save, time_since_last_nudge, dreyfus_stage, user_idle | Story 10 | High |
 | FR-138 | Dreyfus stage MUST default to `"novice"` when no assessments exist | Story 10 | High |
 | FR-139 | Triage MUST use `callApi<T>()` with model `"haiku"` and `prompts/observer-triage.ts` template | Story 10 | High |
-| FR-140 | If `should_nudge: true` AND `confidence >= 0.7`: log `nudge_sent`, broadcast `observer:nudge_prompt`, update `lastNudgeTimestamp` | Story 10 | High |
+| FR-140 | If `should_nudge: true` AND `confidence >= 0.7`: log `nudge_sent`, broadcast `observer:nudge`, update `lastNudgeTimestamp` | Story 10 | High |
 | FR-141 | If `should_nudge: true` AND `confidence < 0.7`: log `nudge_suppressed` with `reason: "low_confidence"` | Story 10 | High |
 | FR-142 | If `should_nudge: false`: no log, update `lastEvaluationTimestamp` only | Story 10 | High |
-| FR-143 | `observer:nudge_prompt` WebSocket message MUST include signal, confidence, and suggested_context | Story 10 | High |
+| FR-143 | `observer:nudge` WebSocket message MUST include signal, confidence, and suggested_context | Story 10 | High |
 | FR-144 | `observer:mute` WebSocket handler MUST flip mute state, log `observer_muted` action, broadcast `observer:status` | Story 10 | High |
 | FR-145 | `observer:status` MUST be broadcast on session start, session end, and mute toggle | Story 10 | High |
 | FR-146 | Triage API call failure MUST NOT crash or stop the Observer — log failure and continue | Story 10 | High |
@@ -3502,7 +3581,7 @@ dreyfus_assessments (global)
 | SC-062 | Observer starts with session | Session creation results in Observer state, EventEmitter subscription, idle timer, and status broadcast | Story 10 |
 | SC-063 | Observer stops with session | `paige_end_session` unsubscribes Observer, clears timer, broadcasts inactive status | Story 10 |
 | SC-064 | Trigger → triage works | File open event triggers Haiku call with correct context snapshot | Story 10 |
-| SC-065 | Nudge delivered | `should_nudge: true` + confidence >= 0.7 results in `observer:nudge_prompt` broadcast | Story 10 |
+| SC-065 | Nudge delivered | `should_nudge: true` + confidence >= 0.7 results in `observer:nudge` broadcast | Story 10 |
 | SC-066 | Cooldown works | Nudge within 120s of previous nudge is suppressed with logged reason | Story 10 |
 | SC-067 | Flow state works | >10 actions in 60s suppresses triage entirely | Story 10 |
 | SC-068 | Mute works | `observer:mute { muted: true }` prevents all evaluations; unmute re-enables | Story 10 |
@@ -3560,7 +3639,7 @@ dreyfus_assessments (global)
 | 2026-02-11 | Story 5 | Additive | +2 WebSocket message types (`coaching:plan_ready`, `session:completed`) | Story 9 coaching pipeline needs to broadcast plan and session data to Electron |
 | 2026-02-11 | Story 6 | Additive | +2 MCP tools (`paige_run_coaching_pipeline`, `paige_end_session`) | Story 9 coaching pipeline requires MCP entry points |
 | 2026-02-11 | Story 4 | Additive | Action log EventEmitter for Observer subscription | Story 10 Observer needs real-time event stream (D55) |
-| 2026-02-11 | Story 5 | Additive | +3 WebSocket message types (`observer:nudge_prompt`, `observer:mute`, `observer:status`) | Story 10 Observer system |
+| 2026-02-11 | Story 5 | Additive | +3 WebSocket message types (`observer:nudge`, `observer:mute`, `observer:status`) | Story 10 Observer system |
 | 2026-02-11 | Story 4 | Additive | +2 action types (`explain_completed`, `review_completed`) | Story 11 UI-driven API calls |
 | 2026-02-11 | Story 5 | Additive | 2 stub→full upgrades (`user:explain`, `user:review`), +4 server→client types | Story 11 Explain This and Practice Review |
 | 2026-02-11 | Story 4 | Additive | +1 action type (`dashboard_loaded`) | Story 12 Dashboard |
