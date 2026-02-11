@@ -806,12 +806,12 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T406 [GIT] Verify working tree is clean before starting Phase 15
-- [ ] T407 [GIT] Pull and rebase on origin/main if needed
+- [x] T406 [GIT] Verify working tree is clean before starting Phase 15
+- [x] T407 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T408 Create retro/P15.md for this phase
+- [x] T408 Create retro/P15.md for this phase
 - [ ] T409 [GIT] Commit: initialize phase 15 retro
 
 ### Polish Tasks
