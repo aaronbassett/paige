@@ -9,6 +9,7 @@ import { handleBufferUpdate } from './handlers/buffer.js';
 import { handleEditorTabSwitch, handleEditorSelection } from './handlers/editor.js';
 import { handleHintsLevelChange } from './handlers/hints.js';
 import { handleUserIdleStart, handleUserIdleEnd } from './handlers/user.js';
+import { handleObserverMute } from './handlers/observer.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ const handlers = new Map<string, MessageHandler>([
   ['file:create', notImplementedHandler('file:create')],
   ['file:delete', notImplementedHandler('file:delete')],
   ['user:explain', notImplementedHandler('user:explain')],
-  ['observer:mute', notImplementedHandler('observer:mute')],
+  ['observer:mute', handleObserverMute],
   ['practice:submit_solution', notImplementedHandler('practice:submit_solution')],
   ['practice:request_hint', notImplementedHandler('practice:request_hint')],
   ['practice:view_previous_attempts', notImplementedHandler('practice:view_previous_attempts')],
