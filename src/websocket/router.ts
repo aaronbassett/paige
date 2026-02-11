@@ -11,6 +11,7 @@ import { handleHintsLevelChange } from './handlers/hints.js';
 import { handleUserIdleStart, handleUserIdleEnd, handleUserExplain } from './handlers/user.js';
 import { handleObserverMute } from './handlers/observer.js';
 import { handlePracticeSubmitSolution } from './handlers/practice.js';
+import { handleDashboardRequestWs, handleDashboardRefreshIssuesWs } from './handlers/dashboard.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,8 +74,8 @@ const handlers = new Map<string, MessageHandler>([
   ['practice:submit_solution', handlePracticeSubmitSolution],
   ['practice:request_hint', notImplementedHandler('practice:request_hint')],
   ['practice:view_previous_attempts', notImplementedHandler('practice:view_previous_attempts')],
-  ['dashboard:request', notImplementedHandler('dashboard:request')],
-  ['dashboard:refresh_issues', notImplementedHandler('dashboard:refresh_issues')],
+  ['dashboard:request', handleDashboardRequestWs],
+  ['dashboard:refresh_issues', handleDashboardRefreshIssuesWs],
   ['terminal:command', notImplementedHandler('terminal:command')],
   ['tree:expand', notImplementedHandler('tree:expand')],
   ['tree:collapse', notImplementedHandler('tree:collapse')],
