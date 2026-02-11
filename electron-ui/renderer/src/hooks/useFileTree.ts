@@ -64,9 +64,7 @@ export function addNode(tree: TreeNode, targetParentPath: string, node: TreeNode
 
   // Recurse into children if this is a directory
   if (tree.type === 'directory' && tree.children) {
-    const updatedChildren = tree.children.map((child) =>
-      addNode(child, targetParentPath, node),
-    );
+    const updatedChildren = tree.children.map((child) => addNode(child, targetParentPath, node));
     // Only create a new object if something actually changed
     if (updatedChildren.some((child, i) => child !== tree.children![i])) {
       return { ...tree, children: updatedChildren };
@@ -156,7 +154,7 @@ export function useFileTree(): UseFileTreeReturn {
     (path: string) => {
       void send('file:open', { path });
     },
-    [send],
+    [send]
   );
 
   return { tree, openFile };

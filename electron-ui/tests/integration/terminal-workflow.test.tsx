@@ -337,7 +337,7 @@ describe('Terminal workflow integration', () => {
     // Verify term.writeln was called with an empty line and exit code message
     expect(mockTermInstance.writeln).toHaveBeenCalledWith('');
     expect(mockTermInstance.writeln).toHaveBeenCalledWith(
-      expect.stringContaining('Process exited with code 0'),
+      expect.stringContaining('Process exited with code 0')
     );
 
     // Verify exit with signal information
@@ -347,11 +347,9 @@ describe('Terminal workflow integration', () => {
     });
 
     expect(mockTermInstance.writeln).toHaveBeenCalledWith(
-      expect.stringContaining('Process exited with code 1'),
+      expect.stringContaining('Process exited with code 1')
     );
-    expect(mockTermInstance.writeln).toHaveBeenCalledWith(
-      expect.stringContaining('signal: 15'),
-    );
+    expect(mockTermInstance.writeln).toHaveBeenCalledWith(expect.stringContaining('signal: 15'));
   });
 
   // -------------------------------------------------------------------------

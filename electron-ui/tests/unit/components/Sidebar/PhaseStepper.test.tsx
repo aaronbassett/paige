@@ -19,16 +19,27 @@ import { PhaseStepper } from '../../../../renderer/src/components/Sidebar/PhaseS
 
 function makePhases(overrides?: Partial<Phase>[]): Phase[] {
   const defaults: Phase[] = [
-    { number: 1, title: 'Understand the Problem', status: 'complete', summary: 'Read the issue and restate the goal.' },
+    {
+      number: 1,
+      title: 'Understand the Problem',
+      status: 'complete',
+      summary: 'Read the issue and restate the goal.',
+    },
     {
       number: 2,
       title: 'Plan Your Approach',
       status: 'active',
       summary: 'Break the problem into smaller steps.',
       steps: [
-        { title: 'Identify inputs and outputs', description: 'List the function parameters and return type.' },
+        {
+          title: 'Identify inputs and outputs',
+          description: 'List the function parameters and return type.',
+        },
         { title: 'Sketch the algorithm', description: 'Write pseudocode or draw a diagram.' },
-        { title: 'Consider edge cases', description: 'Think about empty inputs, nulls, and boundaries.' },
+        {
+          title: 'Consider edge cases',
+          description: 'Think about empty inputs, nulls, and boundaries.',
+        },
       ],
     },
     { number: 3, title: 'Implement', status: 'pending' },
@@ -44,13 +55,17 @@ function makePhases(overrides?: Partial<Phase>[]): Phase[] {
   }));
 }
 
-function renderStepper(hintLevel: HintLevel = 0, phases?: Phase[], onExpandStep?: PhaseStepperProps['onExpandStep']) {
+function renderStepper(
+  hintLevel: HintLevel = 0,
+  phases?: Phase[],
+  onExpandStep?: PhaseStepperProps['onExpandStep']
+) {
   return render(
     <PhaseStepper
       phases={phases ?? makePhases()}
       hintLevel={hintLevel}
       onExpandStep={onExpandStep}
-    />,
+    />
   );
 }
 
@@ -202,7 +217,9 @@ describe('PhaseStepper', () => {
     it('does not show sub-step descriptions', () => {
       renderStepper(2);
 
-      expect(screen.queryByText('List the function parameters and return type.')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('List the function parameters and return type.')
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -242,7 +259,9 @@ describe('PhaseStepper', () => {
 
       // Close
       await user.click(stepButton);
-      expect(screen.queryByText('List the function parameters and return type.')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('List the function parameters and return type.')
+      ).not.toBeInTheDocument();
       expect(stepButton).toHaveAttribute('aria-expanded', 'false');
     });
 
@@ -262,7 +281,9 @@ describe('PhaseStepper', () => {
       await user.click(secondStep);
       expect(secondStep).toHaveAttribute('aria-expanded', 'true');
       expect(firstStep).toHaveAttribute('aria-expanded', 'false');
-      expect(screen.queryByText('List the function parameters and return type.')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('List the function parameters and return type.')
+      ).not.toBeInTheDocument();
       expect(screen.getByText('Write pseudocode or draw a diagram.')).toBeInTheDocument();
     });
 
@@ -324,13 +345,7 @@ describe('PhaseStepper', () => {
 
   describe('edge cases', () => {
     it('handles phases with no summary gracefully at hint level 1', () => {
-      const phases = makePhases([
-        {},
-        { summary: undefined },
-        {},
-        {},
-        {},
-      ]);
+      const phases = makePhases([{}, { summary: undefined }, {}, {}, {}]);
       renderStepper(1, phases);
 
       // Should not throw, titles still render
@@ -338,13 +353,7 @@ describe('PhaseStepper', () => {
     });
 
     it('handles phases with no steps gracefully at hint level 2', () => {
-      const phases = makePhases([
-        {},
-        { steps: undefined },
-        {},
-        {},
-        {},
-      ]);
+      const phases = makePhases([{}, { steps: undefined }, {}, {}, {}]);
       renderStepper(2, phases);
 
       expect(screen.getByText('Plan Your Approach')).toBeInTheDocument();

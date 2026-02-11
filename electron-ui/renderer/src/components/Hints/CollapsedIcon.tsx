@@ -112,7 +112,7 @@ export function CollapsedIcon({
     (node: HTMLDivElement | null) => {
       refs.setFloating(node);
     },
-    [refs],
+    [refs]
   );
 
   function handleClick(): void {

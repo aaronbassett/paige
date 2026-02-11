@@ -152,7 +152,7 @@ beforeEach(() => {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         lastCreatedSocket = this;
       }
-    },
+    }
   );
 
   // Provide crypto.randomUUID for id generation.
@@ -393,7 +393,11 @@ describe('WebSocketClient', () => {
 
     it('should still send the message over the wire for fire-and-forget types', () => {
       const { client, socket } = connectClient();
-      client.send('buffer:update', { path: '/f.ts', content: 'x', cursorPosition: { line: 1, column: 1 } });
+      client.send('buffer:update', {
+        path: '/f.ts',
+        content: 'x',
+        cursorPosition: { line: 1, column: 1 },
+      });
 
       // Find the buffer:update message in sent messages
       const bufferMsg = socket.sent.find((s) => {
@@ -535,7 +539,11 @@ describe('WebSocketClient', () => {
       socket.simulateClose();
 
       // Queue operations while disconnected
-      const p1 = client.send('buffer:update', { path: '/a.ts', content: 'a', cursorPosition: { line: 1, column: 1 } });
+      const p1 = client.send('buffer:update', {
+        path: '/a.ts',
+        content: 'a',
+        cursorPosition: { line: 1, column: 1 },
+      });
 
       // Reconnect
       vi.advanceTimersByTime(1000);
@@ -700,9 +708,7 @@ describe('WebSocketClient', () => {
       });
 
       expect(handler).toHaveBeenCalledTimes(1);
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'coaching:message' }),
-      );
+      expect(handler).toHaveBeenCalledWith(expect.objectContaining({ type: 'coaching:message' }));
     });
 
     it('should not call handlers for correlated responses', () => {
@@ -785,7 +791,8 @@ describe('WebSocketClient', () => {
       client.on('coaching:message', handler);
 
       // Simulate raw invalid JSON
-      const listeners = (socket as unknown as { listeners: Map<string, Set<WSListener>> }).listeners;
+      const listeners = (socket as unknown as { listeners: Map<string, Set<WSListener>> })
+        .listeners;
       // We need to access the message listeners directly since simulateMessage always JSON.stringifies
       const msgHandlers = listeners?.get('message');
       if (msgHandlers) {

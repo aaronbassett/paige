@@ -44,11 +44,11 @@ export function useFileExplorerHints(): UseFileExplorerHintsReturn {
   // Subscribe to hintManager state changes for React re-renders
   // -------------------------------------------------------------------------
 
-  const [hints, setHints] = useState<ReadonlyMap<string, HintInfo>>(
-    () => hintManager.getAllHints(),
+  const [hints, setHints] = useState<ReadonlyMap<string, HintInfo>>(() =>
+    hintManager.getAllHints()
   );
-  const [autoExpandPaths, setAutoExpandPaths] = useState<ReadonlySet<string>>(
-    () => hintManager.getAutoExpandPaths(),
+  const [autoExpandPaths, setAutoExpandPaths] = useState<ReadonlySet<string>>(() =>
+    hintManager.getAutoExpandPaths()
   );
 
   useEffect(() => {

@@ -19,9 +19,7 @@ function createService(): ReviewNavigationService {
 }
 
 /** Create a review comment with sensible defaults. */
-function makeComment(
-  overrides: Partial<ReviewComment> & { messageId: string },
-): ReviewComment {
+function makeComment(overrides: Partial<ReviewComment> & { messageId: string }): ReviewComment {
   return {
     path: '/src/App.tsx',
     range: { startLine: 1, startColumn: 1, endLine: 1, endColumn: 10 },
@@ -177,10 +175,7 @@ describe('ReviewNavigationService', () => {
     });
 
     it('wraps around from the last comment to the first', () => {
-      const comments = [
-        makeComment({ messageId: '1' }),
-        makeComment({ messageId: '2' }),
-      ];
+      const comments = [makeComment({ messageId: '1' }), makeComment({ messageId: '2' })];
       service.startReview('test', comments);
 
       service.next(); // index 1
@@ -559,7 +554,7 @@ describe('ReviewNavigationService', () => {
       expect(listener3).toHaveBeenCalledTimes(1);
       expect(consoleSpy).toHaveBeenCalledWith(
         '[ReviewNavigationService] Listener error:',
-        'test error',
+        'test error'
       );
 
       consoleSpy.mockRestore();

@@ -166,7 +166,9 @@ function TabCloseButton({
         ...(showDot ? dirtyDotStyle : closeBtnStyle),
         ...(!showDot && isBtnHovered ? closeBtnHoverStyle : undefined),
         // Ensure the dirty dot renders as a button with no default button chrome
-        ...(showDot ? { background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 } : undefined),
+        ...(showDot
+          ? { background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }
+          : undefined),
       }}
       onMouseEnter={() => setIsBtnHovered(true)}
       onMouseLeave={() => setIsBtnHovered(false)}
@@ -227,11 +229,7 @@ function SingleTab({ tab, isActive, onActivate, onClose }: SingleTabProps) {
     >
       <span style={iconStyle}>{tab.icon}</span>
       <span>{filename}</span>
-      <TabCloseButton
-        isDirty={tab.isDirty}
-        isTabHovered={isHovered}
-        onClick={handleClose}
-      />
+      <TabCloseButton isDirty={tab.isDirty} isTabHovered={isHovered} onClick={handleClose} />
     </div>
   );
 }
@@ -291,8 +289,8 @@ function useScrollOverflow(ref: React.RefObject<HTMLDivElement | null>): Overflo
 
 export function EditorTabs({ onCloseTab }: EditorTabsProps) {
   const [tabs, setTabs] = useState<ReadonlyArray<TabState>>(() => editorState.getTabs());
-  const [activeTabPath, setActiveTabPath] = useState<string | undefined>(
-    () => editorState.getActiveTabPath(),
+  const [activeTabPath, setActiveTabPath] = useState<string | undefined>(() =>
+    editorState.getActiveTabPath()
   );
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -315,16 +313,14 @@ export function EditorTabs({ onCloseTab }: EditorTabsProps) {
     (path: string, isDirty: boolean) => {
       if (isDirty) {
         const filename = extractFilename(path);
-        const confirmed = window.confirm(
-          `Discard unsaved changes to ${filename}?`,
-        );
+        const confirmed = window.confirm(`Discard unsaved changes to ${filename}?`);
         if (!confirmed) return;
       }
 
       editorState.closeTab(path);
       onCloseTab?.(path);
     },
-    [onCloseTab],
+    [onCloseTab]
   );
 
   // Don't render the strip when there are no tabs

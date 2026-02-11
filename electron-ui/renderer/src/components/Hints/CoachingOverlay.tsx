@@ -174,14 +174,10 @@ export function CoachingOverlay({
 }: CoachingOverlayProps): React.ReactElement | null {
   // Positions computed in an effect from the Monaco editor instance.
   // Map of messageId -> AnchorPosition (or null if off-screen).
-  const [positions, setPositions] = useState<Map<string, AnchorPosition>>(
-    () => new Map(),
-  );
+  const [positions, setPositions] = useState<Map<string, AnchorPosition>>(() => new Map());
 
   // Filter to messages anchored to the active file
-  const activeMessages = messages.filter(
-    (m) => m.anchor && m.anchor.path === activeFilePath,
-  );
+  const activeMessages = messages.filter((m) => m.anchor && m.anchor.path === activeFilePath);
 
   // -------------------------------------------------------------------------
   // Compute positions and subscribe to editor scroll changes

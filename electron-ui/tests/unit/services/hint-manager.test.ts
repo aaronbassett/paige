@@ -7,10 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  HintManagerService,
-  getAncestorPaths,
-} from '../../../renderer/src/services/hint-manager';
+import { HintManagerService, getAncestorPaths } from '../../../renderer/src/services/hint-manager';
 import type { ExplorerHint } from '@shared/types/entities';
 
 // ---------------------------------------------------------------------------
@@ -166,9 +163,7 @@ describe('HintManagerService', () => {
     });
 
     it('handles obvious hint without directories array', () => {
-      const hints: ExplorerHint[] = [
-        { path: '/src/App.tsx', style: 'obvious' },
-      ];
+      const hints: ExplorerHint[] = [{ path: '/src/App.tsx', style: 'obvious' }];
 
       service.applyHints(hints);
 
@@ -228,9 +223,7 @@ describe('HintManagerService', () => {
     });
 
     it('clamps gradient at distance 3+ for very deep paths', () => {
-      const hints: ExplorerHint[] = [
-        { path: '/a/b/c/d/e/f.ts', style: 'unmissable' },
-      ];
+      const hints: ExplorerHint[] = [{ path: '/a/b/c/d/e/f.ts', style: 'unmissable' }];
 
       service.applyHints(hints);
 
@@ -483,10 +476,7 @@ describe('HintManagerService', () => {
       expect(listener1).toHaveBeenCalledTimes(1);
       expect(throwingListener).toHaveBeenCalledTimes(1);
       expect(listener3).toHaveBeenCalledTimes(1);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '[HintManagerService] Listener error:',
-        'test error',
-      );
+      expect(consoleSpy).toHaveBeenCalledWith('[HintManagerService] Listener error:', 'test error');
 
       consoleSpy.mockRestore();
     });
@@ -514,9 +504,7 @@ describe('HintManagerService', () => {
     });
 
     it('includes directory hints for unmissable style', () => {
-      service.applyHints([
-        { path: '/src/deep/file.ts', style: 'unmissable' },
-      ]);
+      service.applyHints([{ path: '/src/deep/file.ts', style: 'unmissable' }]);
 
       const allHints = service.getAllHints();
       // File + /src + /src/deep = 3 entries

@@ -138,10 +138,42 @@ function ConstructionIllustration() {
 
         {/* Sawhorse / workbench */}
         {/* legs */}
-        <line x1="90" y1="120" x2="80" y2="145" stroke="#6b6960" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="90" y1="120" x2="100" y2="145" stroke="#6b6960" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="120" y1="120" x2="110" y2="145" stroke="#6b6960" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="120" y1="120" x2="130" y2="145" stroke="#6b6960" strokeWidth="2.5" strokeLinecap="round" />
+        <line
+          x1="90"
+          y1="120"
+          x2="80"
+          y2="145"
+          stroke="#6b6960"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+        <line
+          x1="90"
+          y1="120"
+          x2="100"
+          y2="145"
+          stroke="#6b6960"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+        <line
+          x1="120"
+          y1="120"
+          x2="110"
+          y2="145"
+          stroke="#6b6960"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+        <line
+          x1="120"
+          y1="120"
+          x2="130"
+          y2="145"
+          stroke="#6b6960"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
         {/* top plank */}
         <rect x="85" y="116" width="40" height="6" rx="1.5" fill="#b85c3a" />
         {/* cross brace */}
@@ -150,7 +182,16 @@ function ConstructionIllustration() {
 
         {/* Small blocks on workbench */}
         <rect x="92" y="110" width="8" height="6" rx="1" fill="#a8a69e" />
-        <rect x="104" y="108" width="10" height="8" rx="1" fill="#30302e" stroke="#6b6960" strokeWidth="1" />
+        <rect
+          x="104"
+          y="108"
+          width="10"
+          height="8"
+          rx="1"
+          fill="#30302e"
+          stroke="#6b6960"
+          strokeWidth="1"
+        />
 
         {/* Figure — body */}
         {/* Torso */}
@@ -171,7 +212,13 @@ function ConstructionIllustration() {
         <circle cx="55" cy="60" r="1.5" fill="#1a1a18" />
         <circle cx="65" cy="60" r="1.5" fill="#1a1a18" />
         {/* Smile */}
-        <path d="M56 66 Q60 70 64 66" stroke="#1a1a18" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        <path
+          d="M56 66 Q60 70 64 66"
+          stroke="#1a1a18"
+          strokeWidth="1.5"
+          fill="none"
+          strokeLinecap="round"
+        />
 
         {/* Hard hat */}
         <ellipse cx="60" cy="52" rx="16" ry="5" fill="#d97757" />
@@ -180,18 +227,42 @@ function ConstructionIllustration() {
         <ellipse cx="60" cy="52" rx="14" ry="3" fill="#e8956a" opacity="0.4" />
 
         {/* Right arm — reaching toward workbench */}
-        <line x1="72" y1="84" x2="88" y2="108" stroke="#e8956a" strokeWidth="5" strokeLinecap="round" />
+        <line
+          x1="72"
+          y1="84"
+          x2="88"
+          y2="108"
+          stroke="#e8956a"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
         {/* Hand */}
         <circle cx="88" cy="108" r="3" fill="#e8956a" />
 
         {/* Left arm — holding hammer up */}
-        <line x1="48" y1="84" x2="32" y2="68" stroke="#e8956a" strokeWidth="5" strokeLinecap="round" />
+        <line
+          x1="48"
+          y1="84"
+          x2="32"
+          y2="68"
+          stroke="#e8956a"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
         {/* Hand */}
         <circle cx="32" cy="68" r="3" fill="#e8956a" />
 
         {/* Hammer */}
         {/* handle */}
-        <line x1="32" y1="68" x2="26" y2="42" stroke="#a8a69e" strokeWidth="3" strokeLinecap="round" />
+        <line
+          x1="32"
+          y1="68"
+          x2="26"
+          y2="42"
+          stroke="#a8a69e"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
         {/* head */}
         <rect x="18" y="36" width="16" height="8" rx="2" fill="#d97757" />
         {/* head highlight */}
@@ -226,9 +297,7 @@ export function Placeholder({ onNavigate }: PlaceholderProps) {
         <ConstructionIllustration />
       </SvgErrorBoundary>
 
-      <p style={messageStyle}>
-        I&apos;m still learning this one myself... check back soon!
-      </p>
+      <p style={messageStyle}>I&apos;m still learning this one myself... check back soon!</p>
 
       <button
         style={backLinkStyle}

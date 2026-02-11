@@ -279,7 +279,10 @@ class WebSocketClient {
     this.setStatus('reconnecting');
 
     const delayIndex = Math.min(this.reconnectAttempt - 1, RECONNECT_DELAYS.length - 1);
-    const delay = Math.min(RECONNECT_DELAYS[delayIndex] ?? MAX_RECONNECT_DELAY, MAX_RECONNECT_DELAY);
+    const delay = Math.min(
+      RECONNECT_DELAYS[delayIndex] ?? MAX_RECONNECT_DELAY,
+      MAX_RECONNECT_DELAY
+    );
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;

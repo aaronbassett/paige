@@ -123,12 +123,7 @@ export function CommentBalloon({
 
   const { floatingStyles, context } = useFloating({
     placement: 'right',
-    middleware: [
-      offset(8),
-      flip(),
-      shift({ padding: 8 }),
-      arrow({ element: arrowEl }),
-    ],
+    middleware: [offset(8), flip(), shift({ padding: 8 }), arrow({ element: arrowEl })],
     whileElementsMounted: autoUpdate,
     elements: {
       reference: referenceElement,
@@ -145,9 +140,7 @@ export function CommentBalloon({
 
   const emphasizedShadow = `0 0 8px ${borderColor}66, 0 0 2px ${borderColor}44`;
 
-  const baseBorderColor = emphasized
-    ? borderColor
-    : 'var(--border-subtle, #3a3a37)';
+  const baseBorderColor = emphasized ? borderColor : 'var(--border-subtle, #3a3a37)';
 
   const combinedStyle: React.CSSProperties = {
     ...balloonBaseStyle,

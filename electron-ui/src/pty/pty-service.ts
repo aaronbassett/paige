@@ -43,7 +43,7 @@ export function setupPtyIpc(mainWindow: BrowserWindow): () => void {
   // Handle renderer-to-PTY resize
   const handleResize = (
     _event: Electron.IpcMainEvent,
-    size: { cols: number; rows: number },
+    size: { cols: number; rows: number }
   ): void => {
     ptyManager.resize(size.cols, size.rows);
   };

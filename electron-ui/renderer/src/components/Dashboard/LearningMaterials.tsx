@@ -127,7 +127,11 @@ export function LearningMaterials({ materials, onMaterialClick }: LearningMateri
       {materials === null && (
         <div style={listStyle} role="status" aria-label="Loading materials">
           {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-            <div key={i} style={{ ...skeletonCardStyle, animationDelay: `${i * 150}ms` }} aria-hidden="true" />
+            <div
+              key={i}
+              style={{ ...skeletonCardStyle, animationDelay: `${i * 150}ms` }}
+              aria-hidden="true"
+            />
           ))}
         </div>
       )}
@@ -149,8 +153,7 @@ export function LearningMaterials({ materials, onMaterialClick }: LearningMateri
                 style={cardStyle}
                 onClick={() => onMaterialClick()}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background =
-                    'var(--bg-elevated)';
+                  (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-elevated)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLDivElement).style.background = '';

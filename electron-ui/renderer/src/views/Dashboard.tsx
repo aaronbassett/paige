@@ -51,9 +51,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const { send, on } = useWebSocket();
 
   // Dashboard data state
-  const [dreyfusAxes, setDreyfusAxes] = useState<
-    DashboardDreyfusMessage['payload']['axes'] | null
-  >(null);
+  const [dreyfusAxes, setDreyfusAxes] = useState<DashboardDreyfusMessage['payload']['axes'] | null>(
+    null
+  );
   const [stats, setStats] = useState<DashboardStatsMessage['payload'] | null>(null);
   const [inProgressTasks, setInProgressTasks] = useState<
     DashboardInProgressMessage['payload']['tasks'] | null

@@ -36,7 +36,7 @@ const containerStyle: React.CSSProperties = {
   gap: 'var(--space-lg)',
   padding: 'var(--space-xl)',
   background: 'var(--bg-base)',
-  fontFamily: "var(--font-family), monospace",
+  fontFamily: 'var(--font-family), monospace',
 };
 
 const headerStyle: React.CSSProperties = {
@@ -59,7 +59,7 @@ const errorCardStyle: React.CSSProperties = {
 
 const errorLabelStyle: React.CSSProperties = {
   color: 'var(--status-error)',
-  fontFamily: "var(--font-family), monospace",
+  fontFamily: 'var(--font-family), monospace',
   fontSize: 'var(--font-small-size)',
   fontWeight: 600,
   letterSpacing: '0.1em',
@@ -68,7 +68,7 @@ const errorLabelStyle: React.CSSProperties = {
 
 const errorMessageStyle: React.CSSProperties = {
   color: 'var(--text-secondary)',
-  fontFamily: "var(--font-family), monospace",
+  fontFamily: 'var(--font-family), monospace',
   fontSize: 'var(--font-body-size)',
   lineHeight: 'var(--font-body-line-height)',
   textAlign: 'center',
@@ -86,7 +86,7 @@ const primaryButtonStyle: React.CSSProperties = {
   border: 'none',
   borderRadius: '4px',
   color: 'var(--text-primary)',
-  fontFamily: "var(--font-family), monospace",
+  fontFamily: 'var(--font-family), monospace',
   fontSize: 'var(--font-small-size)',
   fontWeight: 600,
   padding: '8px 16px',
@@ -98,7 +98,7 @@ const secondaryButtonStyle: React.CSSProperties = {
   border: '1px solid var(--border-subtle)',
   borderRadius: '4px',
   color: 'var(--text-secondary)',
-  fontFamily: "var(--font-family), monospace",
+  fontFamily: 'var(--font-family), monospace',
   fontSize: 'var(--font-small-size)',
   fontWeight: 500,
   padding: '8px 16px',
@@ -107,7 +107,7 @@ const secondaryButtonStyle: React.CSSProperties = {
 
 const hintStyle: React.CSSProperties = {
   color: 'var(--text-muted)',
-  fontFamily: "var(--font-family), monospace",
+  fontFamily: 'var(--font-family), monospace',
   fontSize: 'var(--font-small-size)',
   textAlign: 'center',
 };
@@ -175,33 +175,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     return (
-      <div
-        className="dot-matrix"
-        style={containerStyle}
-        role="alert"
-        aria-live="assertive"
-      >
+      <div className="dot-matrix" style={containerStyle} role="alert" aria-live="assertive">
         <pre className="figlet-header" style={headerStyle} aria-label="Oops">
-          {'  ___   ___  ____  ____\n'
-          + ' / _ \\ / _ \\|  _ \\/ ___|\n'
-          + '| | | | | | | |_) \\___ \\\n'
-          + '| |_| | |_| |  __/ ___) |\n'
-          + ' \\___/ \\___/|_|   |____/'}
+          {'  ___   ___  ____  ____\n' +
+            ' / _ \\ / _ \\|  _ \\/ ___|\n' +
+            '| | | | | | | |_) \\___ \\\n' +
+            '| |_| | |_| |  __/ ___) |\n' +
+            ' \\___/ \\___/|_|   |____/'}
         </pre>
 
         <div style={errorCardStyle}>
           <span style={errorLabelStyle}>Something went wrong</span>
 
-          {this.state.errorMessage && (
-            <p style={errorMessageStyle}>{this.state.errorMessage}</p>
-          )}
+          {this.state.errorMessage && <p style={errorMessageStyle}>{this.state.errorMessage}</p>}
 
           <div style={buttonRowStyle}>
-            <button
-              style={primaryButtonStyle}
-              onClick={this.handleTryAgain}
-              aria-label="Try again"
-            >
+            <button style={primaryButtonStyle} onClick={this.handleTryAgain} aria-label="Try again">
               Try Again
             </button>
             <button
@@ -214,9 +203,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           </div>
         </div>
 
-        <p style={hintStyle}>
-          If this keeps happening, try restarting the application.
-        </p>
+        <p style={hintStyle}>If this keeps happening, try restarting the application.</p>
       </div>
     );
   }

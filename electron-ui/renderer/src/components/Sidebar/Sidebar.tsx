@@ -122,9 +122,7 @@ export function CoachingSidebar(): React.ReactElement {
       setPhases((prev) => {
         if (prev === null) return prev;
         return prev.map((phase) =>
-          phase.number === payload.phaseNumber
-            ? { ...phase, status: payload.newStatus }
-            : phase,
+          phase.number === payload.phaseNumber ? { ...phase, status: payload.newStatus } : phase
         );
       });
     });
@@ -143,14 +141,14 @@ export function CoachingSidebar(): React.ReactElement {
     (phaseNumber: 1 | 2 | 3 | 4 | 5, stepIndex: number) => {
       void send('phase:expand_step', { phaseNumber, stepIndex });
     },
-    [send],
+    [send]
   );
 
   const handleHintChange = useCallback(
     (level: HintLevel) => {
       setHintLevel(level);
     },
-    [setHintLevel],
+    [setHintLevel]
   );
 
   // ---- Loading state -------------------------------------------------------
@@ -191,11 +189,7 @@ export function CoachingSidebar(): React.ReactElement {
             exit={{ opacity: 0.8 }}
             transition={SPRING_TRANSITION}
           >
-            <PhaseStepper
-              phases={phases}
-              hintLevel={hintLevel}
-              onExpandStep={handleExpandStep}
-            />
+            <PhaseStepper phases={phases} hintLevel={hintLevel} onExpandStep={handleExpandStep} />
           </motion.div>
         </AnimatePresence>
       </div>

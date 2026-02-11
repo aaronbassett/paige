@@ -134,14 +134,12 @@ function useActiveTabPath(): string | undefined {
 
 export function IDE({ onNavigate: _onNavigate }: IDEProps) {
   // Sidebar and terminal visibility state
-  const [leftCollapsed, setLeftCollapsed] = useState(
-    () => window.innerWidth < AUTO_COLLAPSE_WIDTH,
-  );
+  const [leftCollapsed, setLeftCollapsed] = useState(() => window.innerWidth < AUTO_COLLAPSE_WIDTH);
   const [rightCollapsed, setRightCollapsed] = useState(
-    () => window.innerWidth < AUTO_COLLAPSE_WIDTH,
+    () => window.innerWidth < AUTO_COLLAPSE_WIDTH
   );
   const [terminalHidden, setTerminalHidden] = useState(
-    () => window.innerHeight < AUTO_HIDE_TERMINAL_HEIGHT,
+    () => window.innerHeight < AUTO_HIDE_TERMINAL_HEIGHT
   );
 
   // Active tab path for FloatingExplainButton and coaching overlay
@@ -151,8 +149,9 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
   // The ref is used by FloatingExplainButton and auto-dismiss effect. The state
   // variable is used by CoachingOverlay during render (refs can't be read during render).
   const editorInstanceRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
-  const [editorInstance, setEditorInstance] =
-    useState<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
+  const [editorInstance, setEditorInstance] = useState<MonacoEditorNS.IStandaloneCodeEditor | null>(
+    null
+  );
 
   // Sync ref to state after editor mounts. The CodeEditor onMount callback sets
   // the ref; this effect detects the change and syncs it into React state so
@@ -234,7 +233,7 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
             }
           }
         }
-      },
+      }
     );
 
     return () => disposable.dispose();
@@ -248,14 +247,14 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
     (scope: string) => {
       void send('user:review', { scope });
     },
-    [send],
+    [send]
   );
 
   const handleExplain = useCallback(
     (payload: ExplainPayload) => {
       void send('user:explain', payload);
     },
-    [send],
+    [send]
   );
 
   // -------------------------------------------------------------------------

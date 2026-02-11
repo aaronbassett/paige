@@ -41,9 +41,7 @@ vi.mock('framer-motion', () => ({
       layoutId?: unknown;
     }) => <div {...rest}>{children}</div>,
   },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // ---------------------------------------------------------------------------
@@ -98,14 +96,12 @@ function setupHandlerCapture(): {
 } {
   const handlers = new Map<string, Array<(msg: WebSocketMessage) => void>>();
 
-  mockOn.mockImplementation(
-    (type: string, handler: (msg: WebSocketMessage) => void) => {
-      const existing = handlers.get(type) ?? [];
-      existing.push(handler);
-      handlers.set(type, existing);
-      return vi.fn(); // unsubscribe
-    },
-  );
+  mockOn.mockImplementation((type: string, handler: (msg: WebSocketMessage) => void) => {
+    const existing = handlers.get(type) ?? [];
+    existing.push(handler);
+    handlers.set(type, existing);
+    return vi.fn(); // unsubscribe
+  });
 
   const simulateMessage = (type: string, payload: unknown) => {
     const typeHandlers = handlers.get(type);
@@ -355,9 +351,7 @@ describe('Coaching sidebar workflow integration', () => {
     });
 
     // Verify sidebar repopulated with restored data
-    expect(
-      screen.queryByText('Waiting for session...'),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Waiting for session...')).not.toBeInTheDocument();
     expect(screen.getByText('#99')).toBeInTheDocument();
     expect(screen.getByText('Add dark mode')).toBeInTheDocument();
     expect(screen.getByText('enhancement')).toBeInTheDocument();

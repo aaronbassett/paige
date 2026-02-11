@@ -170,7 +170,7 @@ function polarToCartesian(
   cy: number,
   radius: number,
   angleIndex: number,
-  totalAxes: number,
+  totalAxes: number
 ): { x: number; y: number } {
   const angleRad = (2 * Math.PI * angleIndex) / totalAxes - Math.PI / 2;
   return {
@@ -311,14 +311,10 @@ export function DreyfusRadar({ axes }: DreyfusRadarProps): React.JSX.Element {
       {axes === null && <SkeletonPlaceholder />}
 
       {/* Empty: axes is an empty array */}
-      {axes !== null && axes.length === 0 && (
-        <p style={emptyTextStyle}>No skill data yet</p>
-      )}
+      {axes !== null && axes.length === 0 && <p style={emptyTextStyle}>No skill data yet</p>}
 
       {/* Bar chart fallback: 1-2 axes */}
-      {axes !== null && axes.length >= 1 && axes.length <= 2 && (
-        <BarChartFallback axes={axes} />
-      )}
+      {axes !== null && axes.length >= 1 && axes.length <= 2 && <BarChartFallback axes={axes} />}
 
       {/* Spider chart: 3+ axes */}
       {axes !== null && axes.length >= 3 && <SpiderChart axes={axes} />}

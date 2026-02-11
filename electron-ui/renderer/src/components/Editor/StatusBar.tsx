@@ -313,7 +313,7 @@ function ReviewSplitButton({ onReview }: { onReview?: (scope: ReviewScope) => vo
       onReview?.(scope);
       setIsOpen(false);
     },
-    [onReview],
+    [onReview]
   );
 
   return (
@@ -389,7 +389,7 @@ export function StatusBar({
   onReviewExit,
 }: StatusBarProps) {
   const [activeTab, setActiveTab] = useState<TabState | undefined>(() =>
-    editorState.getActiveTab(),
+    editorState.getActiveTab()
   );
 
   useEffect(() => {

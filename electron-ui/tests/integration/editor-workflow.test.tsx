@@ -180,7 +180,7 @@ describe('Editor workflow integration', () => {
     // Simulate the backend responding with file content
     simulateMessage(
       'buffer:content',
-      makeBufferContent('/src/index.ts', 'console.log("hello");', 'typescript'),
+      makeBufferContent('/src/index.ts', 'console.log("hello");', 'typescript')
     );
 
     // Tab should appear in the tab strip
@@ -209,7 +209,7 @@ describe('Editor workflow integration', () => {
     // Open a file
     simulateMessage(
       'buffer:content',
-      makeBufferContent('/src/app.ts', 'const a = 1;', 'typescript'),
+      makeBufferContent('/src/app.ts', 'const a = 1;', 'typescript')
     );
 
     // Verify tab is initially clean
@@ -241,7 +241,7 @@ describe('Editor workflow integration', () => {
     // Open a file
     simulateMessage(
       'buffer:content',
-      makeBufferContent('/src/save-test.ts', 'let x = 0;', 'typescript'),
+      makeBufferContent('/src/save-test.ts', 'let x = 0;', 'typescript')
     );
 
     // Mark it dirty via editorState (simulating an edit)
@@ -273,11 +273,11 @@ describe('Editor workflow integration', () => {
     // Open two files
     simulateMessage(
       'buffer:content',
-      makeBufferContent('/src/first.ts', 'const first = true;', 'typescript'),
+      makeBufferContent('/src/first.ts', 'const first = true;', 'typescript')
     );
     simulateMessage(
       'buffer:content',
-      makeBufferContent('/src/second.ts', 'const second = true;', 'typescript'),
+      makeBufferContent('/src/second.ts', 'const second = true;', 'typescript')
     );
 
     // Second file should be active (last opened)
@@ -312,7 +312,7 @@ describe('Editor workflow integration', () => {
     // Open a file
     simulateMessage(
       'buffer:content',
-      makeBufferContent('/src/closeme.ts', 'const x = 42;', 'typescript'),
+      makeBufferContent('/src/closeme.ts', 'const x = 42;', 'typescript')
     );
 
     // Tab should exist
@@ -351,7 +351,7 @@ describe('Editor workflow integration', () => {
     // Open a file and mark it dirty
     simulateMessage(
       'buffer:content',
-      makeBufferContent('/src/dirty.ts', 'const dirty = true;', 'typescript'),
+      makeBufferContent('/src/dirty.ts', 'const dirty = true;', 'typescript')
     );
     act(() => {
       editorState.setDirty('/src/dirty.ts', 'const dirty = false;');

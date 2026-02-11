@@ -107,9 +107,7 @@ export function useCoachingMessages(): UseCoachingMessagesReturn {
       const { payload } = msg as CoachingClearMessage;
 
       if (payload.messageIds && payload.messageIds.length > 0) {
-        setMessages((prev) =>
-          prev.filter((m) => !payload.messageIds!.includes(m.messageId)),
-        );
+        setMessages((prev) => prev.filter((m) => !payload.messageIds!.includes(m.messageId)));
         payload.messageIds.forEach((id) => dismissCoachingToast(id));
       } else {
         setMessages([]);

@@ -36,7 +36,7 @@ const headerStyle: React.CSSProperties = {
 };
 
 const logoStyle: React.CSSProperties = {
-  fontFamily: "var(--font-family), monospace",
+  fontFamily: 'var(--font-family), monospace',
   fontWeight: 700,
   fontSize: 'var(--font-h3-size)',
   color: 'var(--accent-primary)',
@@ -72,15 +72,12 @@ export function AppShell() {
   const [currentView, setCurrentView] = useState<AppView>('dashboard');
   const [, setNavContext] = useState<NavigationContext>({});
 
-  const handleNavigate = useCallback(
-    (view: AppView, context?: { issueNumber?: number }) => {
-      setCurrentView(view);
-      if (context) {
-        setNavContext(context);
-      }
-    },
-    [],
-  );
+  const handleNavigate = useCallback((view: AppView, context?: { issueNumber?: number }) => {
+    setCurrentView(view);
+    if (context) {
+      setNavContext(context);
+    }
+  }, []);
 
   const handleBack = useCallback(() => {
     setCurrentView('dashboard');
