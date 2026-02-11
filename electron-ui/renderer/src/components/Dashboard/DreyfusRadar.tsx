@@ -302,7 +302,7 @@ function SpiderChart({ axes }: SpiderChartProps): React.JSX.Element {
 
 export function DreyfusRadar({ axes }: DreyfusRadarProps): React.JSX.Element {
   return (
-    <div style={containerStyle}>
+    <section style={containerStyle} aria-label="Dreyfus skill radar">
       <pre className="figlet-header" style={headerStyle}>
         SKILLS
       </pre>
@@ -322,6 +322,6 @@ export function DreyfusRadar({ axes }: DreyfusRadarProps): React.JSX.Element {
 
       {/* Spider chart: 3+ axes */}
       {axes !== null && axes.length >= 3 && <SpiderChart axes={axes} />}
-    </div>
+    </section>
   );
 }

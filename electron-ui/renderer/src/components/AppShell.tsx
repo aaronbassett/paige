@@ -106,6 +106,7 @@ export function AppShell() {
           ...headerStyle,
           paddingLeft: isMacOS() ? '70px' : 'var(--space-md)',
         }}
+        role="banner"
       >
         <span style={logoStyle}>PAIGE</span>
 

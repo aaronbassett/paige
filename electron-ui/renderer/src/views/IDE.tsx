@@ -266,16 +266,18 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
   const rightWidth = rightCollapsed ? SIDEBAR_RIGHT_COLLAPSED : SIDEBAR_RIGHT_EXPANDED;
 
   return (
-    <div
+    <main
       style={{
         display: 'flex',
         height: '100%',
         overflow: 'hidden',
         background: 'var(--bg-base)',
       }}
+      aria-label="IDE workspace"
     >
       {/* Left Sidebar: File Explorer */}
-      <motion.div
+      <motion.nav
+        aria-label="File explorer"
         style={{
           height: '100%',
           background: 'var(--bg-surface)',
@@ -308,7 +310,7 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
             />
           </div>
         )}
-      </motion.div>
+      </motion.nav>
 
       {/* Center: Editor + Status Bar + Terminal */}
       <div
@@ -378,7 +380,8 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
       </div>
 
       {/* Right Sidebar: Coaching */}
-      <motion.div
+      <motion.aside
+        aria-label="Coaching panel"
         style={{
           height: '100%',
           background: 'var(--bg-surface)',
@@ -401,10 +404,10 @@ export function IDE({ onNavigate: _onNavigate }: IDEProps) {
           {!rightCollapsed && <span style={sidebarLabelStyle}>Coaching</span>}
         </div>
         {!rightCollapsed && <CoachingSidebar />}
-      </motion.div>
+      </motion.aside>
 
       {/* Toast container for unanchored coaching messages */}
       <CoachingToastContainer />
-    </div>
+    </main>
   );
 }

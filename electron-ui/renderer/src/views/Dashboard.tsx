@@ -130,7 +130,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const hasInProgressTasks = inProgressTasks !== null && inProgressTasks.length > 0;
 
   return (
-    <div className="dot-matrix" style={scrollContainerStyle}>
+    <main className="dot-matrix" style={scrollContainerStyle} aria-label="Dashboard">
       {/* Row 1: Dreyfus Radar (38%) + Stats Bento (62%) */}
       <div style={{ ...gridRowStyle, gridTemplateColumns: '38fr 62fr' }}>
         <DreyfusRadar axes={dreyfusAxes} />
@@ -154,6 +154,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <GitHubIssues issues={issues} onIssueClick={handleIssueClick} />
         <LearningMaterials materials={materials} onMaterialClick={handlePlaceholderNav} />
       </div>
-    </div>
+    </main>
   );
 }
