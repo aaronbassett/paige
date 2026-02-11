@@ -690,13 +690,13 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T344 [GIT] Verify working tree is clean before starting Phase 13
-- [ ] T345 [GIT] Pull and rebase on origin/main if needed
+- [x] T344 [GIT] Verify working tree is clean before starting Phase 13
+- [x] T345 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T346 [US11] Create retro/P13.md for this phase
-- [ ] T347 [GIT] Commit: initialize phase 13 retro
+- [x] T346 [US11] Create retro/P13.md for this phase
+- [x] T347 [GIT] Commit: initialize phase 13 retro
 
 ### Tests for User Story 11
 
