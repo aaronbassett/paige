@@ -1,34 +1,102 @@
+import { sql } from 'kysely';
 import type { AppDatabase } from '../db.js';
-import type { ActionLogEntry } from '../../types/domain.js';
+import type { ActionLogEntry, ActionType, ApiCallLogEntry } from '../../types/domain.js';
+
+// ── Action Log Queries ─────────────────────────────────────────────────────
 
 /**
  * Retrieves all action log entries for a given session, ordered by created_at ASC.
  */
-export function getActionsBySession(
-  _db: AppDatabase,
-  _sessionId: number,
+export async function getActionsBySession(
+  db: AppDatabase,
+  sessionId: number,
 ): Promise<ActionLogEntry[]> {
-  return Promise.reject(new Error('Not implemented'));
+  return db
+    .selectFrom('action_log')
+    .selectAll()
+    .where('session_id', '=', sessionId)
+    .orderBy('created_at', 'asc')
+    .execute() as Promise<ActionLogEntry[]>;
 }
 
 /**
  * Retrieves action log entries for a session filtered by action type.
  */
-export function getActionsByType(
-  _db: AppDatabase,
-  _sessionId: number,
-  _actionType: string,
+export async function getActionsByType(
+  db: AppDatabase,
+  sessionId: number,
+  actionType: ActionType,
 ): Promise<ActionLogEntry[]> {
-  return Promise.reject(new Error('Not implemented'));
+  return db
+    .selectFrom('action_log')
+    .selectAll()
+    .where('session_id', '=', sessionId)
+    .where('action_type', '=', actionType)
+    .orderBy('created_at', 'asc')
+    .execute() as Promise<ActionLogEntry[]>;
 }
 
 /**
  * Retrieves the most recent N actions for a session, ordered by created_at DESC.
  */
-export function getRecentActions(
-  _db: AppDatabase,
-  _sessionId: number,
-  _limit: number,
+export async function getRecentActions(
+  db: AppDatabase,
+  sessionId: number,
+  limit: number,
 ): Promise<ActionLogEntry[]> {
-  return Promise.reject(new Error('Not implemented'));
+  return db
+    .selectFrom('action_log')
+    .selectAll()
+    .where('session_id', '=', sessionId)
+    .orderBy('created_at', 'desc')
+    .orderBy('id', 'desc')
+    .limit(limit)
+    .execute() as Promise<ActionLogEntry[]>;
+}
+
+// ── API Call Log Queries ───────────────────────────────────────────────────
+
+/**
+ * Retrieves all API call log entries for a given session, ordered by created_at ASC.
+ */
+export async function getApiCallsBySession(
+  db: AppDatabase,
+  sessionId: number,
+): Promise<ApiCallLogEntry[]> {
+  return db
+    .selectFrom('api_call_log')
+    .selectAll()
+    .where('session_id', '=', sessionId)
+    .orderBy('created_at', 'asc')
+    .execute() as Promise<ApiCallLogEntry[]>;
+}
+
+/** Aggregated stats for API calls within a session. */
+export interface ApiCallStats {
+  totalCost: number;
+  avgLatencyMs: number;
+  callCount: number;
+}
+
+/**
+ * Returns aggregated cost, latency, and call count for all API calls in a session.
+ *
+ * Returns zeroed stats when no API calls exist for the given session.
+ */
+export async function getApiCallStats(db: AppDatabase, sessionId: number): Promise<ApiCallStats> {
+  const result = await db
+    .selectFrom('api_call_log')
+    .select([
+      sql<number>`COALESCE(SUM(cost_estimate), 0)`.as('totalCost'),
+      sql<number>`COALESCE(AVG(latency_ms), 0)`.as('avgLatencyMs'),
+      sql<number>`COUNT(*)`.as('callCount'),
+    ])
+    .where('session_id', '=', sessionId)
+    .executeTakeFirstOrThrow();
+
+  return {
+    totalCost: Number(result.totalCost),
+    avgLatencyMs: Number(result.avgLatencyMs),
+    callCount: Number(result.callCount),
+  };
 }
