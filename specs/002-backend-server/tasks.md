@@ -514,12 +514,12 @@
 
 ### Git Workflow - Phase Start
 
-- [ ] T252 [GIT] Verify working tree is clean before starting Phase 10
-- [ ] T253 [GIT] Pull and rebase on origin/main if needed
+- [x] T252 [GIT] Verify working tree is clean before starting Phase 10
+- [x] T253 [GIT] Pull and rebase on origin/main if needed
 
 ### Retro Initialization
 
-- [ ] T254 [US8] Create retro/P10.md for this phase
+- [x] T254 [US8] Create retro/P10.md for this phase
 - [ ] T255 [GIT] Commit: initialize phase 10 retro
 
 ### Tests for User Story 8
