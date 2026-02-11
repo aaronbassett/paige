@@ -348,70 +348,70 @@ Phase 10 (Polish)
 
 ### Phase Start
 
-- [ ] T139 [GIT] Verify working tree is clean before starting Phase 3
-- [ ] T140 [GIT] Pull and rebase on origin/main if needed
-- [ ] T141 [US3] Create retro/P3.md for this phase
-- [ ] T142 [GIT] Commit: initialize phase 3 retro
+- [x] T139 [GIT] Verify working tree is clean before starting Phase 3
+- [x] T140 [GIT] Pull and rebase on origin/main if needed
+- [x] T141 [US3] Create retro/P3.md for this phase
+- [x] T142 [GIT] Commit: initialize phase 3 retro
 
 ### Dashboard Layout
 
-- [ ] T143 [US3] Update renderer/src/views/Dashboard.tsx with golden ratio grid (38:62 / 62:38) (use devs:react-dev agent)
-- [ ] T144 [US3] Add figlet headers for each section
-- [ ] T145 [US3] Add scrollable container with smooth scrolling
-- [ ] T146 [GIT] Commit: implement dashboard layout
+- [x] T143 [US3] Update renderer/src/views/Dashboard.tsx with golden ratio grid (38:62 / 62:38) (use devs:react-dev agent)
+- [x] T144 [US3] Add figlet headers for each section
+- [x] T145 [US3] Add scrollable container with smooth scrolling
+- [x] T146 [GIT] Commit: implement dashboard layout
 
 ### Dreyfus Radar Component
 
-- [ ] T147 [P] [US3] Create renderer/src/components/Dashboard/DreyfusRadar.tsx spider chart (use devs:react-dev agent)
-- [ ] T148 [P] [US3] Add axes for skill dimensions (1-5 Novice→Expert)
-- [ ] T149 [P] [US3] Connect to dashboard:dreyfus WebSocket message
-- [ ] T150 [P] [US3] Add graceful degradation for 1-2 axes (bar chart fallback)
-- [ ] T151 [GIT] Commit: create Dreyfus radar component
+- [x] T147 [P] [US3] Create renderer/src/components/Dashboard/DreyfusRadar.tsx spider chart (use devs:react-dev agent)
+- [x] T148 [P] [US3] Add axes for skill dimensions (1-5 Novice→Expert)
+- [x] T149 [P] [US3] Connect to dashboard:dreyfus WebSocket message
+- [x] T150 [P] [US3] Add graceful degradation for 1-2 axes (bar chart fallback)
+- [x] T151 [GIT] Commit: create Dreyfus radar component
 
 ### Stats Bento Component
 
-- [ ] T152 [P] [US3] Create renderer/src/components/Dashboard/StatsBento.tsx 6-card grid (use devs:react-dev agent)
-- [ ] T153 [P] [US3] Add period switcher (today/this_week/this_month)
-- [ ] T154 [P] [US3] Connect to dashboard:stats WebSocket message
-- [ ] T155 [P] [US3] Add zero stats onboarding message
-- [ ] T156 [GIT] Commit: create stats bento component
+- [x] T152 [P] [US3] Create renderer/src/components/Dashboard/StatsBento.tsx 6-card grid (use devs:react-dev agent)
+- [x] T153 [P] [US3] Add period switcher (today/this_week/this_month)
+- [x] T154 [P] [US3] Connect to dashboard:stats WebSocket message
+- [x] T155 [P] [US3] Add zero stats onboarding message
+- [x] T156 [GIT] Commit: create stats bento component
 
 ### In-Progress Tasks Component
 
-- [ ] T157 [P] [US3] Create renderer/src/components/Dashboard/InProgressTasks.tsx task cards (use devs:react-dev agent)
-- [ ] T158 [P] [US3] Connect to dashboard:in_progress WebSocket message
-- [ ] T159 [P] [US3] Add resume click handler (sends dashboard:resume_task)
-- [ ] T160 [P] [US3] Add conditional row visibility (hidden when empty)
-- [ ] T161 [GIT] Commit: create in-progress tasks component
+- [x] T157 [P] [US3] Create renderer/src/components/Dashboard/InProgressTasks.tsx task cards (use devs:react-dev agent)
+- [x] T158 [P] [US3] Connect to dashboard:in_progress WebSocket message
+- [x] T159 [P] [US3] Add resume click handler (sends dashboard:resume_task)
+- [x] T160 [P] [US3] Add conditional row visibility (hidden when empty)
+- [x] T161 [GIT] Commit: create in-progress tasks component
 
 ### GitHub Issues Component
 
-- [ ] T162 [P] [US3] Create renderer/src/components/Dashboard/GitHubIssues.tsx scrollable list (use devs:react-dev agent)
-- [ ] T163 [P] [US3] Add issue cards with number/title/labels
-- [ ] T164 [P] [US3] Connect to dashboard:issues WebSocket message
-- [ ] T165 [P] [US3] Add issue card click → zoom to IDE transition
-- [ ] T166 [P] [US3] Add empty state ("No issues assigned")
-- [ ] T167 [GIT] Commit: create GitHub issues component
+- [x] T162 [P] [US3] Create renderer/src/components/Dashboard/GitHubIssues.tsx scrollable list (use devs:react-dev agent)
+- [x] T163 [P] [US3] Add issue cards with number/title/labels
+- [x] T164 [P] [US3] Connect to dashboard:issues WebSocket message
+- [x] T165 [P] [US3] Add issue card click → zoom to IDE transition
+- [x] T166 [P] [US3] Add empty state ("No issues assigned")
+- [x] T167 [GIT] Commit: create GitHub issues component
 
 ### Practice Challenges Component
 
-- [ ] T168 [P] [US3] Create renderer/src/components/Dashboard/PracticeChallenges.tsx challenge cards (use devs:react-dev agent)
-- [ ] T169 [P] [US3] Connect to dashboard:challenges WebSocket message
-- [ ] T170 [P] [US3] Add click → navigate to placeholder view
-- [ ] T171 [GIT] Commit: create practice challenges component
+- [x] T168 [P] [US3] Create renderer/src/components/Dashboard/PracticeChallenges.tsx challenge cards (use devs:react-dev agent)
+- [x] T169 [P] [US3] Connect to dashboard:challenges WebSocket message
+- [x] T170 [P] [US3] Add click → navigate to placeholder view
+- [x] T171 [GIT] Commit: create practice challenges component
 
 ### Learning Materials Component
 
-- [ ] T172 [P] [US3] Create renderer/src/components/Dashboard/LearningMaterials.tsx material cards (use devs:react-dev agent)
-- [ ] T173 [P] [US3] Connect to dashboard:materials WebSocket message
-- [ ] T174 [P] [US3] Add click → navigate to placeholder view
-- [ ] T175 [GIT] Commit: create learning materials component
+- [x] T172 [P] [US3] Create renderer/src/components/Dashboard/LearningMaterials.tsx material cards (use devs:react-dev agent)
+- [x] T173 [P] [US3] Connect to dashboard:materials WebSocket message
+- [x] T174 [P] [US3] Add click → navigate to placeholder view
+- [x] T175 [GIT] Commit: create learning materials component
 
 ### Loading & Empty States
 
-- [ ] T176 [US3] Add skeleton loading blocks for all sections (use devs:react-dev agent)
-- [ ] T177 [US3] Add empty state messages for zero data
-- [ ] T178 [GIT] Commit: add loading and empty states
+- [x] T176 [US3] Add skeleton loading blocks for all sections (use devs:react-dev agent)
+- [x] T177 [US3] Add empty state messages for zero data
+- [x] T178 [GIT] Commit: add loading and empty states
 
 ### Integration Test
 
