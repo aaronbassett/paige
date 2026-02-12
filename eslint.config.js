@@ -21,6 +21,8 @@ export default [
       "!.*.js",
       // Root-level .ts config files lack type-aware parser context
       "*.config.ts",
+      // Electron UI has its own ESLint config
+      "electron-ui/**/*",
     ],
   },
 

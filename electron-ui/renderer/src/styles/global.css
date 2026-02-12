@@ -1,0 +1,93 @@
+/*
+ * global.css — Master stylesheet for the Paige Electron UI
+ *
+ * This file imports all design system stylesheets in dependency order
+ * and sets base styles for the application shell.
+ *
+ * Import order matters:
+ *   1. design-tokens.css  — CSS custom properties (no output, just :root vars)
+ *   2. typography.css     — Font loading + type scale utility classes
+ *   3. animations.css     — Keyframe definitions + animation utilities
+ *   4. ascii-treatments.css — Retro visual overlays (scanlines, dots, noise)
+ */
+
+@import './design-tokens.css';
+@import './typography.css';
+@import './animations.css';
+@import './ascii-treatments.css';
+@import './editor-decorations.css';
+
+/* ---------------------------------------------------------------------------
+ * CSS Reset (minimal, targeted for Electron)
+ * ------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family:
+    var(--font-family), ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+    'DejaVu Sans Mono', monospace;
+  font-size: var(--font-body-size);
+  font-weight: var(--font-body-weight);
+  line-height: var(--font-body-line-height);
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------------------------------------------------------------------
+ * Selection Styling
+ * ------------------------------------------------------------------------- */
+
+::selection {
+  background: rgba(217, 119, 87, 0.3);
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------------------------
+ * Scrollbar Styling
+ * ------------------------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-inset);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* ---------------------------------------------------------------------------
+ * Focus Styling
+ * ------------------------------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}

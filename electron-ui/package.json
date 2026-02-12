@@ -1,0 +1,82 @@
+{
+  "name": "paige-electron-ui",
+  "version": "0.1.0",
+  "description": "Paige Electron UI — coaching IDE for junior developers",
+  "type": "module",
+  "main": "dist/src/main.js",
+  "scripts": {
+    "dev": "vite --config renderer/vite.config.ts",
+    "dev:electron": "tsc -p tsconfig.main.json && electron .",
+    "build": "tsc -p tsconfig.main.json && vite build --config renderer/vite.config.ts",
+    "build:electron": "npm run build && electron-builder",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,css,md}\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.main.json",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  },
+  "keywords": [
+    "paige",
+    "electron",
+    "coaching",
+    "ide"
+  ],
+  "author": "Aaron Bassett",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@floating-ui/react": "^0.27.17",
+    "@monaco-editor/react": "^4.7.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "framer-motion": "^12.34.0",
+    "node-pty": "^1.1.0",
+    "react": "^19.2.4",
+    "react-arborist": "^3.4.3",
+    "react-dom": "^19.2.4",
+    "react-toastify": "^11.0.5",
+    "vscode-icons-js": "^11.6.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^25.2.3",
+    "@types/react": "^19.2.13",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
+    "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/ui": "^4.0.18",
+    "concurrently": "^9.2.1",
+    "electron": "^40.3.0",
+    "electron-builder": "^26.7.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "happy-dom": "^20.6.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  }
+}

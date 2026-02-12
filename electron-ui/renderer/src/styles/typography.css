@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* Typography utility classes
+ * Uses CSS custom properties defined in design-tokens.css.
+ * JetBrains Mono with system monospace fallback for font loading failures.
+ */
+
+.text-display {
+  font-family:
+    var(--font-family), ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+    'DejaVu Sans Mono', monospace;
+  font-size: var(--font-display-size);
+  font-weight: var(--font-display-weight);
+  line-height: var(--font-display-line-height);
+  color: var(--text-primary);
+}
+
+.text-h1 {
+  font-family:
+    var(--font-family), ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+    'DejaVu Sans Mono', monospace;
+  font-size: var(--font-h1-size);
+  font-weight: var(--font-h1-weight);
+  line-height: var(--font-h1-line-height);
+  color: var(--text-primary);
+}
+
+.text-h2 {
+  font-family:
+    var(--font-family), ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+    'DejaVu Sans Mono', monospace;
+  font-size: var(--font-h2-size);
+  font-weight: var(--font-h2-weight);
+  line-height: var(--font-h2-line-height);
+  color: var(--text-primary);
+}
+
+.text-h3 {
+  font-family:
+    var(--font-family), ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+    'DejaVu Sans Mono', monospace;
+  font-size: var(--font-h3-size);
+  font-weight: var(--font-h3-weight);
+  line-height: var(--font-h3-line-height);
+  color: var(--text-primary);
+}
+
+.text-body {
+  font-family:
+    var(--font-family), ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+    'DejaVu Sans Mono', monospace;
+  font-size: var(--font-body-size);
+  font-weight: var(--font-body-weight);
+  line-height: var(--font-body-line-height);
+  color: var(--text-primary);
+}
+
+.text-small {
+  font-family:
+    var(--font-family), ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+    'DejaVu Sans Mono', monospace;
+  font-size: var(--font-small-size);
+  font-weight: var(--font-small-weight);
+  line-height: var(--font-small-line-height);
+  color: var(--text-primary);
+}
+
+.text-code {
+  font-family:
+    var(--font-family), ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+    'DejaVu Sans Mono', monospace;
+  font-size: var(--font-code-size);
+  line-height: var(--font-code-line-height);
+  color: var(--text-primary);
+}
