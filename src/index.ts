@@ -129,7 +129,7 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
 
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
-    server.listen(config.port, () => {
+    server.listen(config.port, env.host, () => {
       server.removeListener('error', reject);
       resolve();
     });
@@ -143,10 +143,11 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
   console.log(
     [
       `[server] Paige backend ready`,
+      `  Host:      ${env.host}`,
       `  Port:      ${String(listeningPort)}`,
       `  Project:   ${env.projectDir}`,
-      `  MCP:       http://localhost:${String(listeningPort)}/mcp`,
-      `  WebSocket: ws://localhost:${String(listeningPort)}/ws`,
+      `  MCP:       http://${env.host}:${String(listeningPort)}/mcp`,
+      `  WebSocket: ws://${env.host}:${String(listeningPort)}/ws`,
     ].join('\n'),
   );
 

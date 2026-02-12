@@ -5,7 +5,9 @@ import { randomUUID } from 'node:crypto';
 import type { Server, IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket as WsWebSocket } from 'ws';
+import { ZodError } from 'zod';
 import { routeMessage } from './router.js';
+import { validateClientMessage } from './schemas.js';
 import type {
   ServerToClientMessage,
   ClientToServerMessage,
@@ -91,26 +93,26 @@ export function createWebSocketServer(server: Server): WebSocketServerHandle {
         return;
       }
 
-      // Validate { type, data } envelope
-      if (
-        typeof parsed !== 'object' ||
-        parsed === null ||
-        !('type' in parsed) ||
-        !('data' in parsed)
-      ) {
-        sendError(ws, 'INVALID_MESSAGE', 'Message must contain "type" and "data" fields');
+      // Validate message envelope and data payload with Zod
+      let validatedMessage: { type: string; data: unknown };
+      try {
+        validatedMessage = validateClientMessage(parsed);
+      } catch (err) {
+        if (err instanceof ZodError) {
+          const firstError = err.issues[0];
+          const field = firstError?.path.join('.') ?? 'unknown';
+          const message = `Invalid message: ${field} ${firstError?.message ?? 'validation failed'}`;
+          sendError(ws, 'INVALID_MESSAGE', message, {
+            validation_errors: err.issues,
+          });
+        } else {
+          sendError(ws, 'INVALID_MESSAGE', 'Message validation failed');
+        }
         return;
       }
 
-      const envelope = parsed as { type: string; data: unknown };
-
-      if (typeof envelope.type !== 'string') {
-        sendError(ws, 'INVALID_MESSAGE', 'Message "type" field must be a string');
-        return;
-      }
-
-      // Route to the appropriate handler
-      routeMessage(ws, envelope as ClientToServerMessage, connectionId);
+      // Route to the appropriate handler (validated message is safe to cast)
+      routeMessage(ws, validatedMessage as ClientToServerMessage, connectionId);
     });
 
     ws.on('close', () => {

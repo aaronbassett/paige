@@ -523,7 +523,7 @@ describe('Observer triage system (integration)', () => {
     const suppressedActions = await getActionsByType(db, sessionId, 'nudge_suppressed');
     const cooldownSuppressed = suppressedActions.find((a) => {
       const data = JSON.parse(a.data!) as Record<string, unknown>;
-      return data.reason === 'cooldown';
+      return data['reason'] === 'cooldown';
     });
     expect(cooldownSuppressed).toBeDefined();
   });

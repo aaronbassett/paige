@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { homedir } from 'node:os';
 
 export interface EnvConfig {
+  host: string;
   port: number;
   projectDir: string;
   dataDir: string;
@@ -16,6 +17,9 @@ export interface EnvConfig {
  */
 export function loadEnv(): EnvConfig {
   const errors: string[] = [];
+
+  // HOST: optional, default 127.0.0.1 (localhost only for security)
+  const host = process.env['HOST'] ?? '127.0.0.1';
 
   // PORT: optional, default 3001, must be a valid port number
   const rawPort = process.env['PORT'];
@@ -67,6 +71,7 @@ export function loadEnv(): EnvConfig {
   }
 
   return {
+    host,
     port,
     projectDir,
     dataDir,

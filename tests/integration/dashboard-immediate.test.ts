@@ -328,10 +328,10 @@ describe('handleDashboardRequest (integration)', () => {
     };
     expect(firstCall.type).toBe('dashboard:state');
     expect(Array.isArray(firstCall.data.dreyfus)).toBe(true);
-    expect(typeof firstCall.data.stats.total_sessions).toBe('number');
-    expect(typeof firstCall.data.stats.total_actions).toBe('number');
-    expect(typeof firstCall.data.stats.total_api_calls).toBe('number');
-    expect(typeof firstCall.data.stats.total_cost).toBe('number');
+    expect(typeof firstCall.data.stats['total_sessions']).toBe('number');
+    expect(typeof firstCall.data.stats['total_actions']).toBe('number');
+    expect(typeof firstCall.data.stats['total_api_calls']).toBe('number');
+    expect(typeof firstCall.data.stats['total_cost']).toBe('number');
   });
 
   // ── Test 10: Returns flowsCompleted with per-flow status booleans ──────────
@@ -367,9 +367,9 @@ describe('handleDashboardRequest (integration)', () => {
     const logArgs = mockLogAction.mock.calls[0]!;
     expect(logArgs[2]).toBe('dashboard_loaded');
     const flowData = logArgs[3] as Record<string, boolean>;
-    expect(typeof flowData.state).toBe('boolean');
-    expect(typeof flowData.issues).toBe('boolean');
-    expect(typeof flowData.challenges).toBe('boolean');
-    expect(typeof flowData.learning_materials).toBe('boolean');
+    expect(typeof flowData['state']).toBe('boolean');
+    expect(typeof flowData['issues']).toBe('boolean');
+    expect(typeof flowData['challenges']).toBe('boolean');
+    expect(typeof flowData['learning_materials']).toBe('boolean');
   });
 });
