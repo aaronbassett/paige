@@ -1,1 +1,7 @@
-cd electron-ui && npx lint-staged
+# Run lint-staged for backend (root level)
+pnpm exec lint-staged
+
+# Run lint-staged for electron-ui if it exists
+if [ -d "electron-ui" ]; then
+  cd electron-ui && npx lint-staged
+fi

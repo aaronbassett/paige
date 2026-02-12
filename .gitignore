@@ -64,6 +64,12 @@ coverage/
 # Worktrees
 .worktrees/
 
+# Database
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
 # Misc
 *.pid
 *.seed

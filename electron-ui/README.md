@@ -111,26 +111,26 @@ Pre-commit hooks (husky + lint-staged) automatically lint and format staged file
 
 ## Key Technologies
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Framework | Electron 40 | Desktop app shell (Chromium + Node.js) |
-| UI | React 19 | Component library |
-| Bundler | Vite 7 | Fast builds + HMR for renderer |
-| Editor | Monaco (@monaco-editor/react) | VS Code-based code editor |
-| Terminal | xterm.js + node-pty | Embedded terminal emulator |
-| File Tree | react-arborist | Virtualized tree (500+ files) |
-| Animation | Framer Motion | Spring-physics UI transitions |
-| Positioning | @floating-ui/react | Comment balloon placement |
-| Communication | WebSocket (native) | Backend server connection |
+| Layer         | Technology                    | Purpose                                |
+| ------------- | ----------------------------- | -------------------------------------- |
+| Framework     | Electron 40                   | Desktop app shell (Chromium + Node.js) |
+| UI            | React 19                      | Component library                      |
+| Bundler       | Vite 7                        | Fast builds + HMR for renderer         |
+| Editor        | Monaco (@monaco-editor/react) | VS Code-based code editor              |
+| Terminal      | xterm.js + node-pty           | Embedded terminal emulator             |
+| File Tree     | react-arborist                | Virtualized tree (500+ files)          |
+| Animation     | Framer Motion                 | Spring-physics UI transitions          |
+| Positioning   | @floating-ui/react            | Comment balloon placement              |
+| Communication | WebSocket (native)            | Backend server connection              |
 
 ## Keyboard Shortcuts (in-app)
 
-| Shortcut | Action |
-|----------|--------|
-| Cmd/Ctrl+R | Reload renderer |
-| Cmd/Ctrl+Alt+I | Toggle DevTools |
-| Cmd/Ctrl+S | Save file |
-| Cmd/Ctrl+W | Close tab |
+| Shortcut         | Action           |
+| ---------------- | ---------------- |
+| Cmd/Ctrl+R       | Reload renderer  |
+| Cmd/Ctrl+Alt+I   | Toggle DevTools  |
+| Cmd/Ctrl+S       | Save file        |
+| Cmd/Ctrl+W       | Close tab        |
 | Cmd/Ctrl+Shift+H | Cycle hint level |
 
 ## Architecture Notes
