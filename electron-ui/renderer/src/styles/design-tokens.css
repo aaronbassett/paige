@@ -1,0 +1,135 @@
+/*
+ * Paige Design System — Design Tokens
+ * ====================================
+ * Single source of truth for ALL design values used across the application.
+ * No raw hex values, pixel sizes, or magic numbers should appear outside this file.
+ *
+ * Usage: reference tokens via var(--token-name) in component styles.
+ *
+ * Palette: warm, earthy tones with terracotta accents on dark backgrounds.
+ * Typography: monospace-first (JetBrains Mono) for a developer-tool aesthetic.
+ * Animations: spring physics presets consumed by Framer Motion.
+ * Layout: fixed dimensions for the IDE-style shell (header, sidebars, panels).
+ */
+
+:root {
+  /* ------------------------------------------------------------------ */
+  /* Color Palette (19 colors)                                          */
+  /* ------------------------------------------------------------------ */
+
+  /* Backgrounds */
+  --bg-base: #1a1a18; /* warm black, olive undertone */
+  --bg-surface: #252523; /* panel / card backgrounds */
+  --bg-elevated: #30302e; /* hover states, active panels */
+  --bg-inset: #141413; /* terminal, code editor */
+
+  /* Accent — terracotta range */
+  --accent-primary: #d97757; /* terracotta — default accent */
+  --accent-warm: #e8956a; /* lighter terracotta for hover */
+  --accent-deep: #b85c3a; /* darker terracotta for pressed */
+
+  /* Text */
+  --text-primary: #faf9f5; /* parchment white */
+  --text-secondary: #a8a69e; /* labels, metadata */
+  --text-muted: #6b6960; /* disabled, subtle */
+
+  /* Hint glow (used for breathing animation on hints) */
+  --hint-glow: rgba(217, 119, 87, 0.4);
+
+  /* Phase indicators */
+  --phase-pending: #6b6960;
+  --phase-active: #d97757;
+  --phase-complete: #7cb87c; /* warm green */
+
+  /* Status colors */
+  --status-error: #e05252;
+  --status-warning: #d4a843;
+  --status-success: #7cb87c;
+  --status-info: #6b9bd2;
+
+  /* Borders */
+  --border-subtle: #30302e;
+  --border-active: rgba(217, 119, 87, 0.6);
+
+  /* ------------------------------------------------------------------ */
+  /* Typography Scale (7 levels)                                        */
+  /* ------------------------------------------------------------------ */
+
+  --font-family: 'JetBrains Mono', monospace;
+
+  /* Display */
+  --font-display-size: 48px;
+  --font-display-weight: 700;
+  --font-display-line-height: 1.2;
+
+  /* Heading 1 */
+  --font-h1-size: 32px;
+  --font-h1-weight: 700;
+  --font-h1-line-height: 1.3;
+
+  /* Heading 2 */
+  --font-h2-size: 24px;
+  --font-h2-weight: 600;
+  --font-h2-line-height: 1.3;
+
+  /* Heading 3 */
+  --font-h3-size: 18px;
+  --font-h3-weight: 600;
+  --font-h3-line-height: 1.4;
+
+  /* Body */
+  --font-body-size: 14px;
+  --font-body-weight: 400;
+  --font-body-line-height: 1.6;
+
+  /* Small */
+  --font-small-size: 12px;
+  --font-small-weight: 500;
+  --font-small-line-height: 1.4;
+
+  /* Code (inline / editor) */
+  --font-code-size: 14px;
+  --font-code-line-height: 1.5;
+
+  /* ------------------------------------------------------------------ */
+  /* Spring Animation Presets (consumed by Framer Motion)                */
+  /* ------------------------------------------------------------------ */
+
+  /* Gentle — slow, soft transitions (tooltips, fade-ins) */
+  --spring-gentle-stiffness: 120;
+  --spring-gentle-damping: 14;
+
+  /* Expressive — lively, bouncy motion (hint glow, celebrations) */
+  --spring-expressive-stiffness: 260;
+  --spring-expressive-damping: 20;
+
+  /* Standard — balanced, general-purpose spring */
+  --spring-standard-stiffness: 300;
+  --spring-standard-damping: 28;
+
+  /* Snappy — fast, precise interactions (panel open/close) */
+  --spring-snappy-stiffness: 400;
+  --spring-snappy-damping: 35;
+
+  /* ------------------------------------------------------------------ */
+  /* Spacing Scale                                                      */
+  /* ------------------------------------------------------------------ */
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* ------------------------------------------------------------------ */
+  /* Layout Dimensions                                                  */
+  /* ------------------------------------------------------------------ */
+
+  --header-height: 48px;
+  --sidebar-left-width: 220px;
+  --sidebar-right-width: 280px;
+  --sidebar-collapsed-width: 32px;
+  --status-bar-height: 32px;
+  --terminal-height-ratio: 30%;
+  --editor-height-ratio: 70%;
+}
