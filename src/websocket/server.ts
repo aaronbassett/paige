@@ -50,7 +50,13 @@ function sendError(
  * Connections on any other path receive a 404 response.
  */
 export function createWebSocketServer(server: Server): WebSocketServerHandle {
-  const wss = new WebSocketServer({ noServer: true });
+  const wss = new WebSocketServer({
+    noServer: true,
+    // Limit message size to 10MB to prevent memory exhaustion from large file buffers.
+    // Messages exceeding this limit will cause the connection to close with error.
+    // This accommodates large source files while preventing abuse or accidental DoS.
+    maxPayload: 10 * 1024 * 1024,
+  });
 
   // Handle HTTP upgrade requests — only accept /ws path
   server.on('upgrade', (request: IncomingMessage, socket: Duplex, head: Buffer) => {
