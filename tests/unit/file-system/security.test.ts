@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomBytes } from 'node:crypto';
@@ -87,7 +87,8 @@ describe('validatePath', () => {
 
     it('rejects a direct symlink to an outside file', () => {
       const fileLink = join(projectDir, 'outside-file-link');
-      symlinkSync('/etc/hostname', fileLink);
+      // Use /etc/hosts which exists on all Unix systems
+      symlinkSync('/etc/hosts', fileLink);
 
       expect(() => validatePath('outside-file-link', projectDir)).toThrow();
     });
@@ -98,17 +99,17 @@ describe('validatePath', () => {
   describe('valid relative paths', () => {
     it('resolves a simple filename in the project root', () => {
       const result = validatePath('README.md', projectDir);
-      expect(result).toBe(join(projectDir, 'README.md'));
+      expect(result).toBe(realpathSync(join(projectDir, 'README.md')));
     });
 
     it('resolves a nested relative path', () => {
       const result = validatePath('src/index.ts', projectDir);
-      expect(result).toBe(join(projectDir, 'src', 'index.ts'));
+      expect(result).toBe(realpathSync(join(projectDir, 'src', 'index.ts')));
     });
 
     it('resolves a deeply nested relative path', () => {
       const result = validatePath('src/nested/deep.ts', projectDir);
-      expect(result).toBe(join(projectDir, 'src', 'nested', 'deep.ts'));
+      expect(result).toBe(realpathSync(join(projectDir, 'src', 'nested', 'deep.ts')));
     });
   });
 
@@ -117,17 +118,17 @@ describe('validatePath', () => {
   describe('paths with .. that stay within PROJECT_DIR', () => {
     it('allows src/../README.md (resolves to project root)', () => {
       const result = validatePath('src/../README.md', projectDir);
-      expect(result).toBe(join(projectDir, 'README.md'));
+      expect(result).toBe(realpathSync(join(projectDir, 'README.md')));
     });
 
     it('allows src/nested/../../README.md', () => {
       const result = validatePath('src/nested/../../README.md', projectDir);
-      expect(result).toBe(join(projectDir, 'README.md'));
+      expect(result).toBe(realpathSync(join(projectDir, 'README.md')));
     });
 
     it('allows src/nested/../index.ts', () => {
       const result = validatePath('src/nested/../index.ts', projectDir);
-      expect(result).toBe(join(projectDir, 'src', 'index.ts'));
+      expect(result).toBe(realpathSync(join(projectDir, 'src', 'index.ts')));
     });
   });
 
@@ -137,12 +138,12 @@ describe('validatePath', () => {
     it('accepts an absolute path that is inside PROJECT_DIR', () => {
       const absPath = join(projectDir, 'src', 'index.ts');
       const result = validatePath(absPath, projectDir);
-      expect(result).toBe(absPath);
+      expect(result).toBe(realpathSync(absPath));
     });
 
     it('accepts the PROJECT_DIR root itself', () => {
       const result = validatePath(projectDir, projectDir);
-      expect(result).toBe(projectDir);
+      expect(result).toBe(realpathSync(projectDir));
     });
   });
 
@@ -165,7 +166,7 @@ describe('validatePath', () => {
 
     it('handles paths with double slashes', () => {
       const result = validatePath('src//index.ts', projectDir);
-      expect(result).toBe(join(projectDir, 'src', 'index.ts'));
+      expect(result).toBe(realpathSync(join(projectDir, 'src', 'index.ts')));
     });
 
     it('rejects null byte injection', () => {
