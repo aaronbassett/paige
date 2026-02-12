@@ -1,0 +1,104 @@
+/*
+ * animations.css — CSS keyframe fallbacks and utility classes
+ *
+ * The primary animation system uses Framer Motion spring presets defined in JS.
+ * Spring preset parameters (for reference, defined in design-tokens.css as
+ * custom properties and exported from the animation config module):
+ *
+ *   --spring-gentle:     stiffness 120, damping 14
+ *   --spring-standard:   stiffness 300, damping 28
+ *   --spring-expressive: stiffness 260, damping 20
+ *   --spring-snappy:     stiffness 400, damping 35
+ *
+ * This file provides CSS @keyframes fallbacks for contexts where Framer Motion
+ * is not available (e.g. pure-CSS decorations, file explorer glows, loading
+ * states before React mounts).
+ */
+
+/* ---------------------------------------------------------------------------
+ * Keyframes
+ * ------------------------------------------------------------------------- */
+
+/* Hint glow breathing: opacity oscillation for hinted file tree nodes */
+@keyframes breathe {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Active phase indicator pulse: subtle scale oscillation */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Fade in: opacity entrance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fade out: opacity exit */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Utility Classes
+ * ------------------------------------------------------------------------- */
+
+.animate-breathe {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 300ms ease-in-out forwards;
+}
+
+.animate-fade-out {
+  animation: fadeOut 300ms ease-in-out forwards;
+}
+
+/* ---------------------------------------------------------------------------
+ * Reduced Motion
+ *
+ * Users who prefer reduced motion get all animations and transitions
+ * effectively disabled. This covers both the CSS keyframe utilities above
+ * and any inline transition/animation styles applied elsewhere.
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
