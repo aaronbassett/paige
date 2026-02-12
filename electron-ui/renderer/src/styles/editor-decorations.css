@@ -1,0 +1,169 @@
+/*
+ * editor-decorations.css — Monaco Editor Decoration Styles
+ * ========================================================
+ * Visual styles for Monaco editor decorations (line highlights, gutter markers,
+ * squiggly underlines) applied by the backend via WebSocket.
+ *
+ * Monaco uses absolute positioning for decorations within its rendering context.
+ * Classes are applied via the Monaco decorations API (deltaDecorations) and
+ * must work without transitions or animations.
+ *
+ * Naming convention: {style}-{type}
+ *   style = hint | error | warning | success
+ *   type  = highlight | gutter | squiggly
+ *
+ * Color palette (from design-tokens.css):
+ *   --accent-primary (#d97757) — terracotta
+ *   --status-error   (#e05252) — red
+ *   --status-warning (#d4a843) — gold
+ *   --status-success (#7d9c6f) — green (note: accent-green, not phase-complete)
+ */
+
+/* ---------------------------------------------------------------------------
+ * Decoration Color Tokens (scoped to editor decorations)
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* Terracotta (hint) */
+  --deco-hint-color: #d97757;
+  --deco-hint-bg: rgba(217, 119, 87, 0.08);
+
+  /* Red (error) */
+  --deco-error-color: #e05252;
+  --deco-error-bg: rgba(224, 82, 82, 0.12);
+
+  /* Gold (warning) */
+  --deco-warning-color: #d4a843;
+  --deco-warning-bg: rgba(212, 168, 67, 0.1);
+
+  /* Green (success) */
+  --deco-success-color: #7d9c6f;
+  --deco-success-bg: rgba(125, 156, 111, 0.1);
+}
+
+/* ---------------------------------------------------------------------------
+ * Line Highlights (whole-line background tints)
+ *
+ * Applied via Monaco's `isWholeLine: true` + `className` option.
+ * These add a subtle colored tint behind the entire line.
+ * ------------------------------------------------------------------------- */
+
+.hint-highlight {
+  background: var(--deco-hint-bg);
+}
+
+.error-highlight {
+  background: var(--deco-error-bg);
+}
+
+.warning-highlight {
+  background: var(--deco-warning-bg);
+}
+
+.success-highlight {
+  background: var(--deco-success-bg);
+}
+
+/* ---------------------------------------------------------------------------
+ * Gutter Markers (colored dots in glyph margin)
+ *
+ * Applied via Monaco's `glyphMarginClassName` option.
+ * Each renders an 8px colored circle centered in the glyph margin column
+ * using a ::before pseudo-element.
+ * ------------------------------------------------------------------------- */
+
+.hint-gutter::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--deco-hint-color);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.error-gutter::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--deco-error-color);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.warning-gutter::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--deco-warning-color);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.success-gutter::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--deco-success-color);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* ---------------------------------------------------------------------------
+ * Squiggly Underlines (wavy underlines beneath text)
+ *
+ * Applied via Monaco's `inlineClassName` option.
+ * Uses background-image with an inline SVG wave pattern, positioned at the
+ * bottom of the text span. The SVG draws a 4px-period sine wave that tiles
+ * horizontally, producing the classic "squiggly" error underline.
+ *
+ * SVG wave: a cubic bezier path in a 4x3 viewBox, repeating via
+ * background-repeat: repeat-x.
+ * ------------------------------------------------------------------------- */
+
+.hint-squiggly {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3' width='4' height='3'%3E%3Cpath d='M0 3 C0.5 0, 1.5 0, 2 3 C2.5 6, 3.5 6, 4 3' fill='none' stroke='%23d97757' stroke-width='0.7'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom left;
+  background-size: 4px 3px;
+  padding-bottom: 3px;
+}
+
+.error-squiggly {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3' width='4' height='3'%3E%3Cpath d='M0 3 C0.5 0, 1.5 0, 2 3 C2.5 6, 3.5 6, 4 3' fill='none' stroke='%23e05252' stroke-width='0.7'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom left;
+  background-size: 4px 3px;
+  padding-bottom: 3px;
+}
+
+.warning-squiggly {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3' width='4' height='3'%3E%3Cpath d='M0 3 C0.5 0, 1.5 0, 2 3 C2.5 6, 3.5 6, 4 3' fill='none' stroke='%23d4a843' stroke-width='0.7'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom left;
+  background-size: 4px 3px;
+  padding-bottom: 3px;
+}
+
+.success-squiggly {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3' width='4' height='3'%3E%3Cpath d='M0 3 C0.5 0, 1.5 0, 2 3 C2.5 6, 3.5 6, 4 3' fill='none' stroke='%237d9c6f' stroke-width='0.7'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom left;
+  background-size: 4px 3px;
+  padding-bottom: 3px;
+}

@@ -28,7 +28,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.ts": [
+    "{src,tests}/**/*.ts": [
       "eslint --max-warnings=0 --no-warn-ignored",
       "prettier --check"
     ]
