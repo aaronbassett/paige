@@ -162,7 +162,7 @@ export interface ConnectionInitMessage extends BaseMessage {
     projectDir: string;
     capabilities: {
       chromadb_available: boolean;
-      gh_cli_available: boolean;
+      github_api_available: boolean;
     };
     featureFlags: {
       observer_enabled: boolean;

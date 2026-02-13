@@ -12,6 +12,8 @@ import { handleUserIdleStart, handleUserIdleEnd, handleUserExplain } from './han
 import { handleObserverMute } from './handlers/observer.js';
 import { handlePracticeSubmitSolution } from './handlers/practice.js';
 import { handleDashboardRequestWs, handleDashboardRefreshIssuesWs } from './handlers/dashboard.js';
+import { handleReposList, handleReposActivity } from './handlers/repos.js';
+import { handleSessionStartRepo, handleSessionSelectIssue } from './handlers/session-start.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +82,10 @@ const handlers = new Map<string, MessageHandler>([
   ['practice:view_previous_attempts', notImplementedHandler('practice:view_previous_attempts')],
   ['dashboard:request', handleDashboardRequestWs],
   ['dashboard:refresh_issues', handleDashboardRefreshIssuesWs],
+  ['repos:list', handleReposList],
+  ['repos:activity', handleReposActivity],
+  ['session:start_repo', handleSessionStartRepo],
+  ['session:select_issue', handleSessionSelectIssue],
   ['terminal:command', notImplementedHandler('terminal:command')],
   ['tree:expand', notImplementedHandler('tree:expand')],
   ['tree:collapse', notImplementedHandler('tree:collapse')],
