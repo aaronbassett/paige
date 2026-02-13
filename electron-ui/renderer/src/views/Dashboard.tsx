@@ -1,5 +1,5 @@
 /**
- * Dashboard — Home screen view with 6 sections in golden ratio grid.
+ * Dashboard -- Home screen view with 6 sections in golden ratio grid.
  *
  * Layout (golden ratio 38:62 / 62:38):
  *   Row 1: Dreyfus radar (38%) + Stats bento with period switcher (62%)
@@ -7,6 +7,8 @@
  *   Row 3: GitHub issues (62%) + Learning materials (38%)
  *
  * All data flows from backend via WebSocket messages.
+ * Note: GitHub issues are now managed internally by the GitHubIssues component
+ * via its own WebSocket subscriptions (dashboard:issue, dashboard:issues_complete).
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -15,7 +17,6 @@ import type {
   DashboardDreyfusMessage,
   DashboardStatsMessage,
   DashboardInProgressMessage,
-  DashboardIssuesMessage,
   DashboardChallengesMessage,
   DashboardMaterialsMessage,
   WebSocketMessage,
@@ -50,7 +51,7 @@ const gridRowStyle: React.CSSProperties = {
 export function Dashboard({ onNavigate }: DashboardProps) {
   const { send, on } = useWebSocket();
 
-  // Dashboard data state
+  // Dashboard data state (issues removed -- now managed by GitHubIssues)
   const [dreyfusAxes, setDreyfusAxes] = useState<DashboardDreyfusMessage['payload']['axes'] | null>(
     null
   );
@@ -58,7 +59,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const [inProgressTasks, setInProgressTasks] = useState<
     DashboardInProgressMessage['payload']['tasks'] | null
   >(null);
-  const [issues, setIssues] = useState<DashboardIssuesMessage['payload']['issues'] | null>(null);
   const [challenges, setChallenges] = useState<
     DashboardChallengesMessage['payload']['challenges'] | null
   >(null);
@@ -66,7 +66,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     DashboardMaterialsMessage['payload']['materials'] | null
   >(null);
 
-  // Subscribe to all 6 dashboard WebSocket messages
+  // Subscribe to dashboard WebSocket messages (issues removed)
   useEffect(() => {
     const unsubs = [
       on('dashboard:dreyfus', (msg: WebSocketMessage) => {
@@ -80,10 +80,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       on('dashboard:in_progress', (msg: WebSocketMessage) => {
         const m = msg as DashboardInProgressMessage;
         setInProgressTasks(m.payload.tasks);
-      }),
-      on('dashboard:issues', (msg: WebSocketMessage) => {
-        const m = msg as DashboardIssuesMessage;
-        setIssues(m.payload.issues);
       }),
       on('dashboard:challenges', (msg: WebSocketMessage) => {
         const m = msg as DashboardChallengesMessage;
@@ -105,14 +101,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       send('dashboard:stats_period', { period });
     },
     [send]
-  );
-
-  const handleIssueClick = useCallback(
-    (issueNumber: number) => {
-      send('dashboard:start_issue', { issueNumber });
-      onNavigate('ide', { issueNumber });
-    },
-    [send, onNavigate]
   );
 
   const handleResumeTask = useCallback(
@@ -151,7 +139,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Row 3: GitHub Issues (62%) + Learning Materials (38%) */}
       <div style={{ ...gridRowStyle, gridTemplateColumns: '62fr 38fr' }}>
-        <GitHubIssues issues={issues} onIssueClick={handleIssueClick} />
+        <GitHubIssues onNavigate={onNavigate} />
         <LearningMaterials materials={materials} onMaterialClick={handlePlaceholderNav} />
       </div>
     </main>

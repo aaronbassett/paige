@@ -1,32 +1,32 @@
 /**
- * GitHubIssues — Dashboard section showing assigned GitHub issues.
+ * GitHubIssues -- Dashboard section showing scored GitHub issues.
  *
- * Displays a scrollable list of issue cards with colored label pills.
- * Clicking an issue triggers navigation to the IDE view for that issue.
- * Handles loading (skeleton), empty, and populated states.
+ * Manages its own WebSocket subscriptions:
+ *   - `dashboard:issue` -- individual scored issues streamed one at a time
+ *   - `dashboard:issues_complete` -- signal that all issues have been sent
+ *
+ * Features:
+ *   - Progressive rendering: issues accumulate into state as they arrive
+ *   - Layout toggle: full / condensed / list modes
+ *   - Framer Motion entrance animations (fade + slide-up + scale)
+ *   - Skeleton placeholders while waiting for the first issue
+ *   - Click opens IssueModal with full details
  */
+
+import { useState, useEffect, useCallback } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import type { ScoredIssue, AppView } from '@shared/types/entities';
+import type {
+  DashboardSingleIssueMessage,
+  WebSocketMessage,
+} from '@shared/types/websocket-messages';
+import { useWebSocket } from '../../hooks/useWebSocket';
+import { IssueCard, type IssueLayoutMode } from './IssueCard';
+import { IssueLayoutToggle } from './IssueLayoutToggle';
+import { IssueModal } from './IssueModal';
 
 interface GitHubIssuesProps {
-  issues: Array<{
-    number: number;
-    title: string;
-    labels: Array<{ name: string; color: string }>;
-    url: string;
-  }> | null;
-  onIssueClick: (issueNumber: number) => void;
-}
-
-/**
- * Determines whether white or dark text provides better contrast
- * against the given hex background color using luminance calculation.
- */
-function getContrastColor(hexColor: string): string {
-  const hex = hexColor.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5 ? '#1a1a18' : '#faf9f5';
+  onNavigate: (view: AppView, context?: { issueNumber?: number }) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -39,67 +39,42 @@ const containerStyle: React.CSSProperties = {
   borderRadius: '8px',
 };
 
-const listStyle: React.CSSProperties = {
-  maxHeight: '300px',
+const headerRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginBottom: 'var(--space-sm)',
+};
+
+const fullGridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+  gap: 'var(--space-sm)',
+  maxHeight: '400px',
   overflowY: 'auto',
+};
+
+const condensedGridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+  gap: 'var(--space-xs)',
+  maxHeight: '400px',
+  overflowY: 'auto',
+};
+
+const listContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 'var(--space-sm)',
-};
-
-const cardStyle: React.CSSProperties = {
-  padding: 'var(--space-sm) var(--space-md)',
-  borderRadius: '6px',
-  border: '1px solid var(--border-subtle)',
-  cursor: 'pointer',
-  transition: 'background 0.15s ease',
-};
-
-const issueNumberStyle: React.CSSProperties = {
-  color: 'var(--accent-primary)',
-  fontFamily: 'var(--font-family)',
-  fontSize: 'var(--font-body-size)',
-  fontWeight: 600,
-  marginRight: 'var(--space-xs)',
-  flexShrink: 0,
-};
-
-const titleStyle: React.CSSProperties = {
-  color: 'var(--text-primary)',
-  fontFamily: 'var(--font-family)',
-  fontSize: 'var(--font-body-size)',
-  lineHeight: 1.4,
-  display: '-webkit-box',
-  WebkitLineClamp: 2,
-  WebkitBoxOrient: 'vertical',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  margin: 0,
-};
-
-const labelsContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
   gap: 'var(--space-xs)',
-  marginTop: 'var(--space-xs)',
+  maxHeight: '400px',
+  overflowY: 'auto',
 };
-
-const labelPillStyle = (color: string): React.CSSProperties => ({
-  display: 'inline-flex',
-  alignItems: 'center',
-  borderRadius: '10px',
-  padding: '2px 8px',
-  fontSize: 'var(--font-small-size)',
-  fontFamily: 'var(--font-family)',
-  backgroundColor: color.startsWith('#') ? color : `#${color}`,
-  color: getContrastColor(color),
-  lineHeight: 1.4,
-});
 
 const skeletonCardStyle: React.CSSProperties = {
-  ...cardStyle,
+  borderRadius: '8px',
+  border: '1px solid var(--border-subtle)',
   cursor: 'default',
-  height: '60px',
+  height: '80px',
   background: 'var(--bg-elevated)',
   animation: 'breathe 2s ease-in-out infinite',
 };
@@ -113,19 +88,87 @@ const emptyStyle: React.CSSProperties = {
 };
 
 // ---------------------------------------------------------------------------
+// Layout style selector
+// ---------------------------------------------------------------------------
+
+function getListStyle(layout: IssueLayoutMode): React.CSSProperties {
+  switch (layout) {
+    case 'full':
+      return fullGridStyle;
+    case 'condensed':
+      return condensedGridStyle;
+    case 'list':
+      return listContainerStyle;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function GitHubIssues({ issues, onIssueClick }: GitHubIssuesProps) {
+export function GitHubIssues({ onNavigate }: GitHubIssuesProps) {
+  const { on } = useWebSocket();
+
+  // Issue accumulation state
+  const [issues, setIssues] = useState<ScoredIssue[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Layout mode state
+  const [layout, setLayout] = useState<IssueLayoutMode>('full');
+
+  // Modal state
+  const [selectedIssue, setSelectedIssue] = useState<ScoredIssue | null>(null);
+
+  // Subscribe to streaming issue messages
+  useEffect(() => {
+    // Reset when component mounts (e.g., navigating back to dashboard)
+    setIssues([]);
+    setLoading(true);
+
+    const unsubs = [
+      on('dashboard:issue', (msg: WebSocketMessage) => {
+        const m = msg as DashboardSingleIssueMessage;
+        setIssues((prev) => {
+          // Avoid duplicates by issue number
+          if (prev.some((i) => i.number === m.payload.issue.number)) {
+            return prev;
+          }
+          return [...prev, m.payload.issue];
+        });
+        // First issue arrived, stop showing skeleton
+        setLoading(false);
+      }),
+      on('dashboard:issues_complete', () => {
+        setLoading(false);
+      }),
+    ];
+
+    return () => {
+      unsubs.forEach((unsub) => unsub());
+    };
+  }, [on]);
+
+  const handleIssueClick = useCallback((issue: ScoredIssue) => {
+    setSelectedIssue(issue);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setSelectedIssue(null);
+  }, []);
+
   return (
     <section style={containerStyle} aria-label="GitHub issues">
-      <pre className="figlet-header" style={{ fontSize: '18px' }}>
-        ISSUES
-      </pre>
+      {/* Header with title and layout toggle */}
+      <div style={headerRowStyle}>
+        <pre className="figlet-header" style={{ fontSize: '18px', margin: 0 }}>
+          ISSUES
+        </pre>
+        <IssueLayoutToggle current={layout} onChange={setLayout} />
+      </div>
 
       {/* Loading state: skeleton placeholders */}
-      {issues === null && (
-        <div style={listStyle} role="status" aria-label="Loading issues">
+      {loading && issues.length === 0 && (
+        <div style={getListStyle(layout)} role="status" aria-label="Loading issues">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
@@ -136,51 +179,33 @@ export function GitHubIssues({ issues, onIssueClick }: GitHubIssuesProps) {
         </div>
       )}
 
-      {/* Empty state */}
-      {issues !== null && issues.length === 0 && <p style={emptyStyle}>No issues assigned</p>}
-
-      {/* Populated state */}
-      {issues !== null && issues.length > 0 && (
-        <div style={listStyle}>
-          {issues.map((issue) => (
-            <div
-              key={issue.number}
-              style={cardStyle}
-              onClick={() => onIssueClick(issue.number)}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-elevated)';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.background = '';
-              }}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onIssueClick(issue.number);
-                }
-              }}
-              aria-label={`Issue #${issue.number}: ${issue.title}`}
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <span style={issueNumberStyle}>#{issue.number}</span>
-                <p style={titleStyle}>{issue.title}</p>
-              </div>
-
-              {issue.labels.length > 0 && (
-                <div style={labelsContainerStyle}>
-                  {issue.labels.map((label) => (
-                    <span key={label.name} style={labelPillStyle(label.color)}>
-                      {label.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+      {/* Empty state (loading complete, no issues) */}
+      {!loading && issues.length === 0 && (
+        <p style={emptyStyle}>No issues found</p>
       )}
+
+      {/* Populated state with progressive rendering */}
+      {issues.length > 0 && (
+        <AnimatePresence mode="popLayout">
+          <div style={getListStyle(layout)}>
+            {issues.map((issue) => (
+              <IssueCard
+                key={issue.number}
+                issue={issue}
+                layout={layout}
+                onClick={() => handleIssueClick(issue)}
+              />
+            ))}
+          </div>
+        </AnimatePresence>
+      )}
+
+      {/* Issue detail modal */}
+      <IssueModal
+        issue={selectedIssue}
+        onClose={handleCloseModal}
+        onNavigate={onNavigate}
+      />
     </section>
   );
 }
