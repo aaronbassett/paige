@@ -67,7 +67,7 @@ export function registerLifecycleTools(server: McpServer): void {
       setActiveSessionId(session.id);
 
       // Create and start the Observer for this session
-      activeObserver = new Observer({ sessionId: session.id });
+      activeObserver = new Observer({ sessionId: session.id, repoPath: project_dir });
       activeObserver.start();
 
       return {
