@@ -149,7 +149,8 @@ describe('assembleState (Dashboard Flow 1)', () => {
   it('returns Dreyfus assessments mapped to DreyfusAssessmentEntry format', async () => {
     const result = await assembleState('all_time');
 
-    expect(result.dreyfus).toHaveLength(2);
+    // 2 real assessments + 4 defaults (React, Git, State Management, Error Handling)
+    expect(result.dreyfus).toHaveLength(6);
     expect(result.dreyfus[0]).toEqual({
       skill_area: 'TypeScript',
       stage: 'Competent',
@@ -160,6 +161,15 @@ describe('assembleState (Dashboard Flow 1)', () => {
       stage: 'Advanced Beginner',
       confidence: 0.6,
     });
+    // Remaining 4 are defaults at Novice
+    const defaults = result.dreyfus.slice(2);
+    expect(defaults.every((d) => d.stage === 'Novice' && d.confidence === 0.2)).toBe(true);
+    expect(defaults.map((d) => d.skill_area)).toEqual([
+      'React',
+      'Git',
+      'State Management',
+      'Error Handling',
+    ]);
   });
 
   // ── Test 2: Returns stats in DashboardStatsData format ──────────────────────
@@ -247,7 +257,7 @@ describe('assembleState (Dashboard Flow 1)', () => {
 
   // ── Test 7: Fresh install with no data ──────────────────────────────────────
 
-  it('fresh install with no data returns zeros and empty arrays', async () => {
+  it('fresh install with no data returns default Dreyfus axes and zeros', async () => {
     mockGetAllDreyfus.mockResolvedValue([]);
     mockGetSessionCountByPeriod.mockResolvedValue(0);
     mockGetActionCountByPeriod.mockResolvedValue(0);
@@ -256,7 +266,17 @@ describe('assembleState (Dashboard Flow 1)', () => {
 
     const result = await assembleState('all_time');
 
-    expect(result.dreyfus).toEqual([]);
+    // When no assessments exist, assembleState returns default skill areas at Novice
+    expect(result.dreyfus).toHaveLength(6);
+    expect(result.dreyfus.every((d) => d.stage === 'Novice' && d.confidence === 0.2)).toBe(true);
+    expect(result.dreyfus.map((d) => d.skill_area)).toEqual([
+      'TypeScript',
+      'React',
+      'Testing',
+      'Git',
+      'State Management',
+      'Error Handling',
+    ]);
     expect(result.stats.period).toBe('all_time');
     expect(result.stats.stats.sessions).toEqual({ value: 0, change: 0, unit: 'count' });
     expect(result.stats.stats.actions).toEqual({ value: 0, change: 0, unit: 'count' });

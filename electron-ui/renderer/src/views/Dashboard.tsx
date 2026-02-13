@@ -147,7 +147,20 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     <main className="dot-matrix" style={scrollContainerStyle} aria-label="Dashboard">
       {/* Row 1: Dreyfus Radar (38%) + Stats Bento (62%) */}
       <div style={{ ...gridRowStyle, gridTemplateColumns: '38fr 62fr' }}>
-        <DreyfusRadar axes={dreyfusAxes} />
+        <DreyfusRadar
+          axes={dreyfusAxes}
+          overallStage={
+            stats?.stats.dreyfus_progression ? String(stats.stats.dreyfus_progression.value) : null
+          }
+          selfSufficiency={
+            stats?.stats.self_sufficiency && typeof stats.stats.self_sufficiency.value === 'number'
+              ? stats.stats.self_sufficiency.value
+              : null
+          }
+          selfSufficiencyChange={
+            stats?.stats.self_sufficiency ? stats.stats.self_sufficiency.change : null
+          }
+        />
         <StatsBento stats={stats} onPeriodChange={handleStatsPeriodChange} />
       </div>
 

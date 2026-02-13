@@ -2,9 +2,20 @@
 // Synchronous, <100ms target
 
 import type { StatsPeriod, DashboardStateData } from '../../types/websocket.js';
+import type { DreyfusStage } from '../../types/domain.js';
 import { getDatabase } from '../../database/db.js';
 import { getAllDreyfus } from '../../database/queries/dreyfus.js';
 import { generateDummyStats } from '../../database/queries/stats.js';
+
+/** Default skill areas shown when no Dreyfus assessments exist yet. */
+const DEFAULT_DREYFUS: Array<{ skill_area: string; stage: DreyfusStage; confidence: number }> = [
+  { skill_area: 'TypeScript', stage: 'Novice', confidence: 0.2 },
+  { skill_area: 'React', stage: 'Novice', confidence: 0.2 },
+  { skill_area: 'Testing', stage: 'Novice', confidence: 0.2 },
+  { skill_area: 'Git', stage: 'Novice', confidence: 0.2 },
+  { skill_area: 'State Management', stage: 'Novice', confidence: 0.2 },
+  { skill_area: 'Error Handling', stage: 'Novice', confidence: 0.2 },
+];
 
 /**
  * Assembles immediate dashboard state: Dreyfus stages + stats filtered by period.
@@ -23,13 +34,17 @@ export async function assembleState(statsPeriod: StatsPeriod): Promise<Dashboard
     throw new Error('Database not initialized. Cannot assemble dashboard state.');
   }
 
-  // Load Dreyfus assessments and map to entry format
+  // Load Dreyfus assessments and merge with defaults for missing skill areas.
+  // This ensures the radar chart always has 3+ axes (spider chart requires 3).
   const assessments = await getAllDreyfus(db);
-  const dreyfus = assessments.map((a) => ({
+  const realEntries = assessments.map((a) => ({
     skill_area: a.skill_area,
     stage: a.stage,
     confidence: a.confidence,
   }));
+  const realSkills = new Set(realEntries.map((e) => e.skill_area));
+  const fillers = DEFAULT_DREYFUS.filter((d) => !realSkills.has(d.skill_area));
+  const dreyfus = [...realEntries, ...fillers];
 
   // Generate dummy stats for all 25 stat types
   const stats = generateDummyStats(statsPeriod);
