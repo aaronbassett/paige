@@ -249,6 +249,73 @@ export interface SessionSelectIssueWsData {
   readonly issueNumber: number;
 }
 
+// ── Planning Message Data ───────────────────────────────────────────────────
+
+export interface PlanningStartedData {
+  readonly sessionId: string;
+  readonly issueTitle: string;
+}
+
+export interface PlanningProgressData {
+  readonly message: string;
+  readonly toolName?: string | undefined;
+  readonly filePath?: string | undefined;
+}
+
+export type PlanningPhase = 'fetching' | 'exploring' | 'planning' | 'writing_hints';
+
+export interface PlanningPhaseUpdateData {
+  readonly phase: PlanningPhase;
+  readonly progress: number;
+}
+
+export interface PlanTask {
+  readonly title: string;
+  readonly description: string;
+  readonly targetFiles: readonly string[];
+  readonly hints: {
+    readonly low: string;
+    readonly medium: string;
+    readonly high: string;
+  };
+}
+
+export interface PlanPhase {
+  readonly number: number;
+  readonly title: string;
+  readonly description: string;
+  readonly hint: string;
+  readonly status: 'pending' | 'active';
+  readonly tasks: readonly PlanTask[];
+}
+
+export interface PlanningCompleteData {
+  readonly sessionId: string;
+  readonly plan: {
+    readonly title: string;
+    readonly summary: string;
+    readonly phases: readonly PlanPhase[];
+  };
+  readonly fileTree: readonly import('../file-system/tree.js').TreeNode[];
+  readonly fileHints: readonly {
+    readonly path: string;
+    readonly style: 'subtle' | 'obvious' | 'unmissable';
+    readonly phase: number;
+  }[];
+  readonly issueContext: {
+    readonly title: string;
+    readonly number: number;
+    readonly body: string;
+    readonly labels: readonly string[];
+    readonly url: string;
+  };
+}
+
+export interface PlanningErrorData {
+  readonly sessionId: string;
+  readonly error: string;
+}
+
 // ── Server -> Client Message Data ───────────────────────────────────────────
 
 export interface ConnectionInitData {
@@ -861,7 +928,32 @@ export interface DashboardIssuesCompleteMessage {
   readonly data: DashboardIssuesCompleteData;
 }
 
-/** Union of all 38 server-to-client message types. */
+export interface PlanningStartedMessage {
+  readonly type: 'planning:started';
+  readonly data: PlanningStartedData;
+}
+
+export interface PlanningProgressMessage {
+  readonly type: 'planning:progress';
+  readonly data: PlanningProgressData;
+}
+
+export interface PlanningPhaseUpdateMessage {
+  readonly type: 'planning:phase_update';
+  readonly data: PlanningPhaseUpdateData;
+}
+
+export interface PlanningCompleteMessage {
+  readonly type: 'planning:complete';
+  readonly data: PlanningCompleteData;
+}
+
+export interface PlanningErrorMessage {
+  readonly type: 'planning:error';
+  readonly data: PlanningErrorData;
+}
+
+/** Union of all 43 server-to-client message types. */
 export type ServerToClientMessage =
   | ConnectionInitMessage
   | ConnectionErrorMessage
@@ -898,7 +990,12 @@ export type ServerToClientMessage =
   | SessionRepoStartedMessage
   | SessionIssueSelectedResponseMessage
   | DashboardSingleIssueMessage
-  | DashboardIssuesCompleteMessage;
+  | DashboardIssuesCompleteMessage
+  | PlanningStartedMessage
+  | PlanningProgressMessage
+  | PlanningPhaseUpdateMessage
+  | PlanningCompleteMessage
+  | PlanningErrorMessage;
 
 // ── Combined Type ───────────────────────────────────────────────────────────
 
