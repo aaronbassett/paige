@@ -79,3 +79,5 @@ coverage/
 
 # Overmind
 .overmind.sock
+.overmind.env
+!.overmind.env.example
