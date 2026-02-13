@@ -15,12 +15,12 @@ import { useEffect, useState, useCallback } from 'react';
 import type { AppView } from '@shared/types/entities';
 import type {
   DashboardDreyfusMessage,
-  DashboardStatsMessage,
   DashboardInProgressMessage,
   DashboardChallengesMessage,
   DashboardMaterialsMessage,
   WebSocketMessage,
 } from '@shared/types/websocket-messages';
+import type { DashboardStatsPayload, StatsPeriod } from '../components/Dashboard/stats/types';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { DreyfusRadar } from '../components/Dashboard/DreyfusRadar';
 import { StatsBento } from '../components/Dashboard/StatsBento';
@@ -32,8 +32,6 @@ import { LearningMaterials } from '../components/Dashboard/LearningMaterials';
 interface DashboardProps {
   onNavigate: (view: AppView, context?: { issueNumber?: number }) => void;
 }
-
-type StatsPeriod = 'today' | 'this_week' | 'this_month';
 
 const scrollContainerStyle: React.CSSProperties = {
   height: '100%',
@@ -55,7 +53,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const [dreyfusAxes, setDreyfusAxes] = useState<DashboardDreyfusMessage['payload']['axes'] | null>(
     null
   );
-  const [stats, setStats] = useState<DashboardStatsMessage['payload'] | null>(null);
+  const [stats, setStats] = useState<DashboardStatsPayload | null>(null);
   const [inProgressTasks, setInProgressTasks] = useState<
     DashboardInProgressMessage['payload']['tasks'] | null
   >(null);
@@ -74,8 +72,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         setDreyfusAxes(m.payload.axes);
       }),
       on('dashboard:stats', (msg: WebSocketMessage) => {
-        const m = msg as DashboardStatsMessage;
-        setStats(m.payload);
+        // Cast to new DashboardStatsPayload shape; backend will be updated in Tasks 11-14
+        setStats(msg.payload as DashboardStatsPayload);
       }),
       on('dashboard:in_progress', (msg: WebSocketMessage) => {
         const m = msg as DashboardInProgressMessage;
