@@ -36,7 +36,11 @@ function sendError(
   message: string,
   context?: Record<string, unknown>,
 ): void {
-  const errorMsg = { type: 'connection:error', data: { code, message, context } };
+  const errorMsg = {
+    type: 'connection:error',
+    payload: { code, message, context },
+    timestamp: Date.now()
+  };
   if (ws.readyState === WsWebSocket.OPEN) {
     ws.send(JSON.stringify(errorMsg));
   }
@@ -146,10 +150,25 @@ export function createWebSocketServer(server: Server): WebSocketServerHandle {
 /**
  * Broadcasts a typed message to all connected WebSocket clients.
  * Skips clients whose readyState is not OPEN.
+ *
+ * Transforms backend message format { type, data } to the wire format
+ * expected by the Electron UI: { type, payload, timestamp }.
+ *
+ * Accepts both strict ServerToClientMessage and loose { type, data } for
+ * messages where frontend/backend type names diverge (e.g. dashboard).
+ *
  * @param message - Server-to-client message envelope (type + data)
  */
-export function broadcast(message: ServerToClientMessage): void {
-  const serialized = JSON.stringify(message);
+export function broadcast(message: ServerToClientMessage | { type: string; data: unknown }): void {
+  // Extract the 'data' field from the backend message format.
+  // All ServerToClientMessage variants have a 'data' field.
+  const data = 'data' in message ? message.data : undefined;
+  const wireMessage = {
+    type: message.type,
+    payload: data,
+    timestamp: Date.now(),
+  };
+  const serialized = JSON.stringify(wireMessage);
   for (const ws of clients.values()) {
     if (ws.readyState === WsWebSocket.OPEN) {
       ws.send(serialized);
@@ -160,11 +179,20 @@ export function broadcast(message: ServerToClientMessage): void {
 /**
  * Sends a message to a specific connected client by connectionId.
  * Silently ignores if the client is not found or not in OPEN state.
+ *
+ * Transforms backend message format { type, data } to the wire format
+ * expected by the Electron UI: { type, payload, timestamp }.
  */
 export function sendToClient(connectionId: string, message: ServerToClientMessage): void {
   const ws = clients.get(connectionId);
   if (ws && ws.readyState === WsWebSocket.OPEN) {
-    ws.send(JSON.stringify(message));
+    const data = 'data' in message ? message.data : undefined;
+    const wireMessage = {
+      type: message.type,
+      payload: data,
+      timestamp: Date.now(),
+    };
+    ws.send(JSON.stringify(wireMessage));
   }
 }
 

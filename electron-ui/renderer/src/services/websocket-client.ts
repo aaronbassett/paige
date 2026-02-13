@@ -73,7 +73,7 @@ class WebSocketClient {
   private url: string;
   private operationQueue: QueuedOperation[] = [];
 
-  constructor(url = 'ws://localhost:8080') {
+  constructor(url = 'ws://localhost:3001/ws') {
     this.url = url;
   }
 
@@ -208,13 +208,17 @@ class WebSocketClient {
     this.reconnectAttempt = 0;
     this.setStatus('connected');
 
-    // Send the connection:ready handshake
-    this.sendImmediate('connection:ready', {
-      clientVersion: CLIENT_VERSION,
-      capabilities: ['monaco', 'xterm', 'file-tree'],
+    // Send the connection:hello handshake (server expects this format)
+    this.sendImmediate('connection:hello', {
+      version: CLIENT_VERSION,
+      platform: navigator.platform,
+      windowSize: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      },
     }).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[WebSocketClient] Failed to send connection:ready:', message);
+      console.error('[WebSocketClient] Failed to send connection:hello:', message);
     });
 
     // Flush any queued operations
@@ -334,22 +338,16 @@ class WebSocketClient {
       return Promise.reject(new Error('WebSocket is not open'));
     }
 
-    const id = generateId();
-    const message: BaseMessage = {
+    // Server expects { type, data } format (not payload/id/timestamp)
+    const message = {
       type: type as MessageType,
-      payload,
-      id,
-      timestamp: Date.now(),
+      data: payload,
     };
 
     this.ws.send(JSON.stringify(message));
 
-    // Fire-and-forget types: no response expected
-    if (isFireAndForget(type)) {
-      return Promise.resolve();
-    }
-
-    // Correlated request: wait for response
+    // All messages are fire-and-forget (server doesn't support correlation)
+    return Promise.resolve();
     return new Promise<WebSocketMessage>((resolve, reject) => {
       const timeout = setTimeout(() => {
         this.correlations.delete(id);

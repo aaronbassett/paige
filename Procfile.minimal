@@ -1,0 +1,14 @@
+# Paige E2E Demo - Minimal Setup (No Optional Services)
+# Start minimal services: overmind start -f Procfile.minimal
+
+# Backend Server (Required)
+# Runs on port 3001 with MCP endpoint (/mcp) and WebSocket (/ws)
+backend: cd $PROJECT_ROOT && pnpm dev
+
+# Vite Dev Server (Required for Electron UI)
+# Hot module replacement for renderer process
+vite: cd $PROJECT_ROOT/electron-ui && npm run dev
+
+# Electron App (Required for UI)
+# Wait 3 seconds for Vite to start, then launch Electron
+electron: sleep 3 && cd $PROJECT_ROOT/electron-ui && npm run dev:electron

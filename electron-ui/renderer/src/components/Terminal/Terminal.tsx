@@ -84,6 +84,7 @@ const TERMINAL_OPTIONS = {
 export function TerminalPanel() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { send, on } = useWebSocket();
+  const ptySpawnedRef = useRef(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -107,6 +108,22 @@ export function TerminalPanel() {
 
     // Initial fit (must happen after open)
     fitAddon.fit();
+
+    // -----------------------------------------------------------------------
+    // Spawn PTY when connection:init is received with projectDir
+    // -----------------------------------------------------------------------
+
+    const unsubInit = on('connection:init', (msg) => {
+      if (ptySpawnedRef.current) return;
+
+      const payload = msg.payload as { projectDir?: string };
+      const projectDir = payload.projectDir;
+
+      if (projectDir) {
+        ptyBridge.spawn(projectDir);
+        ptySpawnedRef.current = true;
+      }
+    });
 
     // -----------------------------------------------------------------------
     // Bidirectional PTY connection
@@ -142,10 +159,10 @@ export function TerminalPanel() {
     // Resize handling
     // -----------------------------------------------------------------------
 
-    // Sync PTY dimensions when terminal resizes and notify backend
+    // Sync PTY dimensions when terminal resizes (handled locally by Electron PTY)
     const resizeDisposable = term.onResize(({ cols, rows }) => {
       ptyBridge.resize(cols, rows);
-      void send('terminal:resize', { cols, rows });
+      // Note: Backend doesn't need to know about terminal resize (PTY is local)
     });
 
     // Observe container size changes and refit
@@ -173,6 +190,7 @@ export function TerminalPanel() {
     // -----------------------------------------------------------------------
 
     return () => {
+      unsubInit();
       unsubNudge();
       resizeObserver.disconnect();
       resizeDisposable.dispose();

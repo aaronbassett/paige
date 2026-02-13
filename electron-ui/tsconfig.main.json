@@ -20,5 +20,5 @@
     "outDir": "dist"
   },
   "include": ["src/**/*", "shared/**/*"],
-  "exclude": ["node_modules", "dist", "renderer"]
+  "exclude": ["node_modules", "dist", "renderer", "src/preload.ts"]
 }

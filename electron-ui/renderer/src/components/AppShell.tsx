@@ -69,7 +69,7 @@ const viewVariants = {
 };
 
 export function AppShell() {
-  const [currentView, setCurrentView] = useState<AppView>('dashboard');
+  const [currentView, setCurrentView] = useState<AppView>('ide'); // Start with IDE view for demo
   const [, setNavContext] = useState<NavigationContext>({});
 
   const handleNavigate = useCallback((view: AppView, context?: { issueNumber?: number }) => {
