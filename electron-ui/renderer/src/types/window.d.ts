@@ -8,6 +8,9 @@
  */
 
 interface PaigeTerminalAPI {
+  /** Spawn a new PTY with the given working directory. */
+  spawn: (cwd?: string) => void;
+
   /** Send raw data (user keystrokes) to the PTY process. */
   write: (data: string) => void;
 

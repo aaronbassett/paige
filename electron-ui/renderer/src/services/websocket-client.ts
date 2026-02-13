@@ -12,9 +12,7 @@
 
 import type {
   MessageType,
-  ClientMessageType,
   WebSocketMessage,
-  BaseMessage,
 } from '@shared/types/websocket-messages';
 
 // ---------------------------------------------------------------------------
@@ -51,9 +49,6 @@ const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000] as const;
 
 /** Maximum reconnect delay cap (ms). */
 const MAX_RECONNECT_DELAY = 30_000;
-
-/** Default timeout for correlated request/response pairs (ms). */
-const CORRELATION_TIMEOUT = 30_000;
 
 /** Client version sent in the connection:ready handshake. */
 const CLIENT_VERSION = '0.1.0';
@@ -348,14 +343,6 @@ class WebSocketClient {
 
     // All messages are fire-and-forget (server doesn't support correlation)
     return Promise.resolve();
-    return new Promise<WebSocketMessage>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        this.correlations.delete(id);
-        reject(new Error(`Request timed out after ${CORRELATION_TIMEOUT}ms: ${type}`));
-      }, CORRELATION_TIMEOUT);
-
-      this.correlations.set(id, { resolve, reject, timeout });
-    });
   }
 
   // -------------------------------------------------------------------------
@@ -374,45 +361,6 @@ class WebSocketClient {
       }
     }
   }
-}
-
-// ---------------------------------------------------------------------------
-// Helper functions
-// ---------------------------------------------------------------------------
-
-/** Generate a unique correlation ID. */
-function generateId(): string {
-  // Use crypto.randomUUID where available (modern browsers + Electron),
-  // fall back to a timestamp + random suffix for older environments.
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-}
-
-/**
- * Message types that are fire-and-forget (no correlated server response expected).
- * These are high-frequency editor events that the server ingests but does not
- * acknowledge individually.
- */
-const FIRE_AND_FORGET_TYPES: ReadonlySet<string> = new Set<ClientMessageType>([
-  'buffer:update',
-  'editor:cursor',
-  'editor:scroll',
-  'editor:selection',
-  'terminal:input',
-  'terminal:resize',
-  'user:idle_start',
-  'user:idle_end',
-  'user:navigation',
-  'coaching:dismiss',
-  'coaching:feedback',
-  'hints:level_change',
-  'phase:expand_step',
-]);
-
-function isFireAndForget(type: string): boolean {
-  return FIRE_AND_FORGET_TYPES.has(type);
 }
 
 // ---------------------------------------------------------------------------
