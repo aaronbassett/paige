@@ -44,12 +44,7 @@ export type CardType =
   | 'dreyfus'
   | 'issues_worked';
 
-export type HeroType =
-  | 'sparkline'
-  | 'bar_chart'
-  | 'donut'
-  | 'issues_pills'
-  | 'dreyfus_timeline';
+export type HeroType = 'sparkline' | 'bar_chart' | 'donut' | 'issues_pills' | 'dreyfus_timeline';
 
 export interface StatDefinition {
   readonly id: StatId;

@@ -18,7 +18,8 @@ import {
   handleDashboardStatsPeriodWs,
 } from './handlers/dashboard.js';
 import { handleReposList, handleReposActivity } from './handlers/repos.js';
-import { handleSessionStartRepo, handleSessionSelectIssue } from './handlers/session-start.js';
+import { handleSessionStartRepo } from './handlers/session-start.js';
+import { handlePlanningStart } from './handlers/planning.js';
 import { handleFsRequestTree } from './handlers/file-tree.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -92,7 +93,7 @@ const handlers = new Map<string, MessageHandler>([
   ['repos:list', handleReposList],
   ['repos:activity', handleReposActivity],
   ['session:start_repo', handleSessionStartRepo],
-  ['session:select_issue', handleSessionSelectIssue],
+  ['session:select_issue', handlePlanningStart],
   ['terminal:command', notImplementedHandler('terminal:command')],
   ['tree:expand', notImplementedHandler('tree:expand')],
   ['tree:collapse', notImplementedHandler('tree:collapse')],

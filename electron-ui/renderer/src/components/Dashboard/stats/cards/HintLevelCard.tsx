@@ -42,11 +42,7 @@ const legendDotStyle = (color: string): React.CSSProperties => ({
   backgroundColor: color,
 });
 
-const LEVEL_COLORS = [
-  'var(--status-success)',
-  'var(--status-warning)',
-  'var(--status-error)',
-];
+const LEVEL_COLORS = ['var(--status-success)', 'var(--status-warning)', 'var(--status-error)'];
 
 export function HintLevelCard({ stat, data }: { stat: StatDefinition; data: StatPayload }) {
   const Icon = stat.icon;

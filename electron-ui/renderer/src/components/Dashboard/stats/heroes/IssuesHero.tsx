@@ -73,13 +73,7 @@ function Pill({ label, color, count }: { label: string; color: string; count: nu
   );
 }
 
-export function IssuesHero({
-  stat,
-  data,
-}: {
-  stat: StatDefinition;
-  data: StatPayload;
-}) {
+export function IssuesHero({ stat, data }: { stat: StatDefinition; data: StatPayload }) {
   const Icon = stat.icon;
   const pills = data.pills ?? [];
 
@@ -98,12 +92,7 @@ export function IssuesHero({
       </div>
       <div style={pillsContainerStyle}>
         {pills.map((pill) => (
-          <Pill
-            key={pill.label}
-            label={pill.label}
-            color={pill.color}
-            count={pill.count}
-          />
+          <Pill key={pill.label} label={pill.label} color={pill.color} count={pill.count} />
         ))}
       </div>
     </div>

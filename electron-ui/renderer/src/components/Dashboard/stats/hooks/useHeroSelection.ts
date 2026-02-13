@@ -4,17 +4,14 @@ import type { StatId, HeroDirection } from '../types';
 
 export function useHeroSelection(
   activeStats: readonly StatId[],
-  seed: string, // changes on period change / filter change to trigger re-randomization
+  seed: string // changes on period change / filter change to trigger re-randomization
 ): ReadonlySet<StatId> {
   return useMemo(() => {
     const heroCandidates = activeStats.filter((id) => STATS_BY_ID.get(id)?.hero);
     if (heroCandidates.length === 0) return new Set<StatId>();
 
     // Simple seeded shuffle using the seed string
-    const hash = Array.from(seed).reduce(
-      (h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0,
-      0,
-    );
+    const hash = Array.from(seed).reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0);
     const shuffled = [...heroCandidates].sort((a, b) => {
       const ha = ((hash + a.charCodeAt(0)) * 2654435761) >>> 0;
       const hb = ((hash + b.charCodeAt(0)) * 2654435761) >>> 0;

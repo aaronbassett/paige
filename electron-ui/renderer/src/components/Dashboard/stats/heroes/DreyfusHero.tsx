@@ -115,10 +115,7 @@ function TimelineNode({
         <span
           style={{
             ...levelNameStyle,
-            color:
-              status === 'future'
-                ? 'var(--text-muted)'
-                : 'var(--text-primary)',
+            color: status === 'future' ? 'var(--text-muted)' : 'var(--text-primary)',
           }}
         >
           {level}
@@ -129,13 +126,7 @@ function TimelineNode({
   );
 }
 
-export function DreyfusHero({
-  stat,
-  data,
-}: {
-  stat: StatDefinition;
-  data: StatPayload;
-}) {
+export function DreyfusHero({ stat, data }: { stat: StatDefinition; data: StatPayload }) {
   const Icon = stat.icon;
   const currentLevel = typeof data.value === 'string' ? data.value : 'Novice';
   const progression = data.progression ?? [];

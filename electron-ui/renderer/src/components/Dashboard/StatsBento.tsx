@@ -85,8 +85,7 @@ export function StatsBento({ stats, onPeriodChange }: StatsBentoProps) {
   }, [activeStats, heroSet]);
 
   const isLoading = stats === null;
-  const allZero =
-    stats !== null && Object.values(stats.stats).every((s) => s.value === 0);
+  const allZero = stats !== null && Object.values(stats.stats).every((s) => s.value === 0);
 
   return (
     <section style={containerStyle} aria-label="Coding statistics">
@@ -128,9 +127,7 @@ export function StatsBento({ stats, onPeriodChange }: StatsBentoProps) {
               visibleStats.map(({ id, isHero }, index) => {
                 const data = stats.stats[id];
                 if (!data) return null;
-                return (
-                  <StatCard key={id} statId={id} data={data} isHero={isHero} index={index} />
-                );
+                return <StatCard key={id} statId={id} data={data} isHero={isHero} index={index} />;
               })
             )}
           </AnimatePresence>

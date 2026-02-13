@@ -14,13 +14,7 @@ import {
   DreyfusCard,
   IssuesWorkedCard,
 } from './cards';
-import {
-  SparklineHero,
-  BarChartHero,
-  DonutHero,
-  IssuesHero,
-  DreyfusHero,
-} from './heroes';
+import { SparklineHero, BarChartHero, DonutHero, IssuesHero, DreyfusHero } from './heroes';
 
 const CARD_TYPE_MAP: Record<CardType, typeof BigNumberCard> = {
   big_number: BigNumberCard,

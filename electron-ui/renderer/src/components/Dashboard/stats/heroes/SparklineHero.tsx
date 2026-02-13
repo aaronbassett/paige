@@ -30,13 +30,7 @@ const valueStyle: React.CSSProperties = {
   lineHeight: 1.2,
 };
 
-export function SparklineHero({
-  stat,
-  data,
-}: {
-  stat: StatDefinition;
-  data: StatPayload;
-}) {
+export function SparklineHero({ stat, data }: { stat: StatDefinition; data: StatPayload }) {
   const Icon = stat.icon;
   const points = data.sparkline ?? [];
   const lineData = [
@@ -55,11 +49,7 @@ export function SparklineHero({
         </span>
         <AnimatedNumber
           value={typeof data.value === 'number' ? data.value : 0}
-          format={
-            data.unit === 'percentage'
-              ? (n: number) => `${n.toFixed(1)}%`
-              : undefined
-          }
+          format={data.unit === 'percentage' ? (n: number) => `${n.toFixed(1)}%` : undefined}
           style={valueStyle}
         />
         <ChangeIndicator change={data.change} />

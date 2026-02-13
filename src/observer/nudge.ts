@@ -1,26 +1,49 @@
-// Nudge delivery via WebSocket broadcast
+// Nudge delivery via WebSocket broadcast, optionally enriched by the Agent SDK
+// nudge agent. Falls back to raw signal/context when the agent returns null.
 
 import { broadcast } from '../websocket/server.js';
+import { generateNudge } from '../planning/nudge-agent.js';
 import type { ServerToClientMessage, NudgeSignal } from '../types/websocket.js';
 
 export interface NudgePayload {
   signal: string;
   confidence: number;
   context: string;
+  phase: string;
+  currentFile: string | null;
+  repoPath: string;
 }
 
 /**
- * Broadcasts an observer:nudge message to all connected WebSocket clients.
- * Casts the string signal to NudgeSignal since the Observer may produce
- * arbitrary string signals at runtime.
+ * Generates a coaching nudge via the Agent SDK and broadcasts it as an
+ * `observer:nudge` WebSocket message. If the nudge agent returns null
+ * (failure or empty result), falls back to broadcasting the raw signal
+ * and context from the triage result.
  */
-export function deliverNudge(payload: NudgePayload): void {
+export async function deliverNudge(payload: NudgePayload): Promise<void> {
+  let nudgeContext = payload.context;
+
+  try {
+    const agentMessage = await generateNudge({
+      sessionContext: payload.context,
+      currentPhase: payload.phase,
+      currentFile: payload.currentFile,
+      repoPath: payload.repoPath,
+    });
+
+    if (agentMessage !== null) {
+      nudgeContext = agentMessage;
+    }
+  } catch {
+    // Agent failure — fall back to raw triage context silently
+  }
+
   const message: ServerToClientMessage = {
     type: 'observer:nudge',
     data: {
       signal: payload.signal as NudgeSignal,
       confidence: payload.confidence,
-      context: payload.context,
+      context: nudgeContext,
     },
   };
   broadcast(message);

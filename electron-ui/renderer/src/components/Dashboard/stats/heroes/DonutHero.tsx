@@ -48,13 +48,7 @@ interface DonutDatum {
   color: string;
 }
 
-export function DonutHero({
-  stat,
-  data,
-}: {
-  stat: StatDefinition;
-  data: StatPayload;
-}) {
+export function DonutHero({ stat, data }: { stat: StatDefinition; data: StatPayload }) {
   const Icon = stat.icon;
   const isTall = stat.hero?.direction === 'tall';
   const breakdown = data.breakdown ?? [];
@@ -63,7 +57,9 @@ export function DonutHero({
   const pieData: DonutDatum[] = breakdown.map((b, i) => ({
     id: b.label,
     value: b.value,
-    color: isHintLevel ? (HINT_COLORS[i] ?? CHART_COLORS.primary) : (b.color ?? CHART_COLORS.primary),
+    color: isHintLevel
+      ? (HINT_COLORS[i] ?? CHART_COLORS.primary)
+      : (b.color ?? CHART_COLORS.primary),
   }));
 
   const formatValue = (): ((n: number) => string) | undefined => {

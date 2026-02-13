@@ -36,21 +36,18 @@ const valueStyle: React.CSSProperties = {
   lineHeight: 1.2,
 };
 
-export function BarChartHero({
-  stat,
-  data,
-}: {
-  stat: StatDefinition;
-  data: StatPayload;
-}) {
+export function BarChartHero({ stat, data }: { stat: StatDefinition; data: StatPayload }) {
   const Icon = stat.icon;
   const isTall = stat.hero?.direction === 'tall';
   const breakdown = data.breakdown ?? [];
 
-  const barData = breakdown.map((b) => ({
-    category: b.label,
-    amount: b.value,
-  } as Record<string, string | number>));
+  const barData = breakdown.map(
+    (b) =>
+      ({
+        category: b.label,
+        amount: b.value,
+      }) as Record<string, string | number>
+  );
 
   const formatValue = (): ((n: number) => string) | undefined => {
     if (data.unit === 'currency') return (n: number) => `$${n.toFixed(2)}`;

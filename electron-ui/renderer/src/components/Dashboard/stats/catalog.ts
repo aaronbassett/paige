@@ -181,7 +181,7 @@ export const STATS_CATALOG: readonly StatDefinition[] = [
 ] as const;
 
 export const STATS_BY_ID: ReadonlyMap<StatId, StatDefinition> = new Map(
-  STATS_CATALOG.map((s) => [s.id, s]),
+  STATS_CATALOG.map((s) => [s.id, s])
 );
 
 export const DEFAULT_ACTIVE_STATS: readonly StatId[] = [

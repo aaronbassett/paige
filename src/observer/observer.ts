@@ -12,6 +12,7 @@ import type { ActionType } from '../types/domain.js';
 
 export interface ObserverOptions {
   sessionId: number;
+  repoPath?: string;
   cooldownMs?: number;
   flowStateThreshold?: number;
   flowStateWindowMs?: number;
@@ -44,6 +45,7 @@ const USER_INITIATED_ACTIONS: ReadonlySet<ActionType> = new Set([
 
 export class Observer {
   private readonly sessionId: number;
+  private readonly repoPath: string;
   private readonly cooldownMs: number;
   private readonly flowStateThreshold: number;
   private readonly flowStateWindowMs: number;
@@ -61,6 +63,7 @@ export class Observer {
 
   constructor(options: ObserverOptions) {
     this.sessionId = options.sessionId;
+    this.repoPath = options.repoPath ?? '';
     this.cooldownMs = options.cooldownMs ?? 120_000;
     this.flowStateThreshold = options.flowStateThreshold ?? 10;
     this.flowStateWindowMs = options.flowStateWindowMs ?? 60_000;
@@ -218,11 +221,14 @@ export class Observer {
         return;
       }
 
-      // Deliver nudge
-      deliverNudge({
+      // Deliver nudge (enriched by Agent SDK when available)
+      await deliverNudge({
         signal: result.signal,
         confidence: result.confidence,
         context: result.reasoning,
+        phase: context.activePhase?.title ?? 'unknown',
+        currentFile: context.openFiles[0] ?? null,
+        repoPath: this.repoPath,
       });
       this._lastNudgeTime = Date.now();
 

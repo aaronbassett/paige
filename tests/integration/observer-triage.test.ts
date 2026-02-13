@@ -118,7 +118,7 @@ describe('Observer triage system (integration)', () => {
 
     // Default mock: runTriage returns no-nudge
     mockRunTriage.mockResolvedValue(noNudgeResult());
-    mockDeliverNudge.mockReturnValue(undefined);
+    mockDeliverNudge.mockResolvedValue(undefined);
     mockBroadcastObserverStatus.mockReturnValue(undefined);
   });
 

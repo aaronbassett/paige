@@ -299,8 +299,14 @@ export function IssueModal({ issue, onClose, onNavigate }: IssueModalProps) {
 
   const handleWorkOnThis = useCallback(() => {
     if (issue) {
-      send('session:select_issue', { issueNumber: issue.number });
-      onNavigate('ide', { issueNumber: issue.number });
+      send('session:select_issue', {
+        issueNumber: issue.number,
+        issueTitle: issue.title,
+        issueBody: issue.body,
+        issueLabels: issue.labels.map((l) => l.name),
+        issueUrl: issue.htmlUrl,
+      });
+      onNavigate('planning');
     }
   }, [issue, send, onNavigate]);
 

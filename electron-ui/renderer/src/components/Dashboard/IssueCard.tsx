@@ -26,7 +26,7 @@ interface IssueCardProps {
 }
 
 // ---------------------------------------------------------------------------
-// Module-level typewriter tracking — survives remounts
+// Module-level typewriter tracking -- survives remounts
 // ---------------------------------------------------------------------------
 
 const animatedSummaries = new Set<number>();
@@ -465,7 +465,7 @@ export function IssueCard({ issue, layout, onClick, index = 0 }: IssueCardProps)
 
       {/* Card content layered above mountain */}
       <div style={cardContentStyle}>
-        {/* Title row — single line */}
+        {/* Title row -- single line */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-xs)' }}>
           <span style={issueNumberCardStyle}>#{issue.number}</span>
           <p style={fullTitleStyle}>{issue.title}</p>
