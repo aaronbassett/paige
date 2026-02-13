@@ -1,7 +1,7 @@
 /**
  * WebSocket message type definitions for the Paige Electron UI.
  *
- * Defines all 51 message types exchanged between the Electron client
+ * Defines all 54 message types exchanged between the Electron client
  * and the backend server over WebSocket. Matches the protocol contract
  * in specs/001-electron-ui/contracts/websocket-protocol.md v1.0.0.
  *
@@ -11,10 +11,10 @@
 import type { IssueContext, Phase, TreeNode, HintLevel, AppView } from './entities';
 
 // ---------------------------------------------------------------------------
-// MessageType — string literal union of all 51 message types
+// MessageType — string literal union of all 54 message types
 // ---------------------------------------------------------------------------
 
-/** Server-to-client message type literals (28 types). */
+/** Server-to-client message type literals (30 types). */
 export type ServerMessageType =
   // Connection lifecycle (3)
   | 'connection:hello'
@@ -53,9 +53,12 @@ export type ServerMessageType =
   // Errors (3)
   | 'error:file_not_found'
   | 'error:permission_denied'
-  | 'error:general';
+  | 'error:general'
+  // Audio streaming (2)
+  | 'audio:chunk'
+  | 'audio:complete';
 
-/** Client-to-server message type literals (23 types). */
+/** Client-to-server message type literals (24 types). */
 export type ClientMessageType =
   // Connection lifecycle (1)
   | 'connection:ready'
@@ -87,9 +90,11 @@ export type ClientMessageType =
   | 'user:idle_end'
   | 'user:navigation'
   // Phase actions (1)
-  | 'phase:expand_step';
+  | 'phase:expand_step'
+  // Audio control (1)
+  | 'audio:control';
 
-/** All 51 message types (server + client). */
+/** All 54 message types (server + client). */
 export type MessageType = ServerMessageType | ClientMessageType;
 
 // ---------------------------------------------------------------------------
@@ -98,7 +103,7 @@ export type MessageType = ServerMessageType | ClientMessageType;
 
 /** Common envelope for all WebSocket messages. */
 export interface BaseMessage {
-  /** One of the 51 defined message types. */
+  /** One of the 54 defined message types. */
   type: MessageType;
   /** Type-specific payload (narrowed by each concrete interface). */
   payload: unknown;
@@ -127,7 +132,7 @@ export interface InlinePosition {
 }
 
 // ---------------------------------------------------------------------------
-// Server -> Client message interfaces (28)
+// Server -> Client message interfaces (30)
 // ---------------------------------------------------------------------------
 
 // -- Connection lifecycle (3) ------------------------------------------------
@@ -461,8 +466,30 @@ export interface ErrorGeneralMessage extends BaseMessage {
   };
 }
 
+// -- Audio streaming (2) ---------------------------------------------------
+
+/** Streamed audio chunk correlated to a coaching message. */
+export interface AudioChunkMessage extends BaseMessage {
+  type: 'audio:chunk';
+  payload: {
+    messageId: string;
+    chunk: string; // Base64-encoded MP3
+    sequence: number;
+  };
+}
+
+/** Audio stream complete signal. */
+export interface AudioCompleteMessage extends BaseMessage {
+  type: 'audio:complete';
+  payload: {
+    messageId: string;
+    totalChunks: number;
+    durationMs: number;
+  };
+}
+
 // ---------------------------------------------------------------------------
-// Client -> Server message interfaces (23)
+// Client -> Server message interfaces (24)
 // ---------------------------------------------------------------------------
 
 // -- Connection lifecycle (1) ------------------------------------------------
@@ -683,11 +710,22 @@ export interface PhaseExpandStepMessage extends BaseMessage {
   };
 }
 
+// -- Audio control (1) -----------------------------------------------------
+
+/** User audio control action. */
+export interface AudioControlMessage extends BaseMessage {
+  type: 'audio:control';
+  payload: {
+    action: 'mute' | 'unmute' | 'skip';
+    messageId?: string;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Aggregate union types
 // ---------------------------------------------------------------------------
 
-/** Union of all 28 server-to-client messages. */
+/** Union of all 30 server-to-client messages. */
 export type ServerMessage =
   | ConnectionHelloMessage
   | ConnectionInitMessage
@@ -716,9 +754,11 @@ export type ServerMessage =
   | ObserverNudgeMessage
   | ErrorFileNotFoundMessage
   | ErrorPermissionDeniedMessage
-  | ErrorGeneralMessage;
+  | ErrorGeneralMessage
+  | AudioChunkMessage
+  | AudioCompleteMessage;
 
-/** Union of all 23 client-to-server messages. */
+/** Union of all 24 client-to-server messages. */
 export type ClientMessage =
   | ConnectionReadyMessage
   | DashboardStatsPeriodMessage
@@ -742,9 +782,10 @@ export type ClientMessage =
   | UserIdleStartMessage
   | UserIdleEndMessage
   | UserNavigationMessage
-  | PhaseExpandStepMessage;
+  | PhaseExpandStepMessage
+  | AudioControlMessage;
 
-/** Union of all 51 WebSocket messages. */
+/** Union of all 54 WebSocket messages. */
 export type WebSocketMessage = ServerMessage | ClientMessage;
 
 // ---------------------------------------------------------------------------

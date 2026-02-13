@@ -411,6 +411,7 @@ const FIRE_AND_FORGET_TYPES: ReadonlySet<string> = new Set<ClientMessageType>([
   'coaching:feedback',
   'hints:level_change',
   'phase:expand_step',
+  'audio:control',
 ]);
 
 function isFireAndForget(type: string): boolean {
