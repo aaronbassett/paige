@@ -131,6 +131,11 @@ const reviewRequestDataSchema = z.object({
   phaseId: z.number(),
 });
 
+const audioControlDataSchema = z.object({
+  action: z.enum(['mute', 'unmute', 'skip']),
+  messageId: z.string().optional(),
+});
+
 // ── Message Envelope Schema ─────────────────────────────────────────────────
 
 /**
@@ -173,6 +178,7 @@ export const messageDataSchemas = {
   'tree:expand': treeExpandDataSchema,
   'tree:collapse': treeCollapseDataSchema,
   'review:request': reviewRequestDataSchema,
+  'audio:control': audioControlDataSchema,
 } as const;
 
 /**

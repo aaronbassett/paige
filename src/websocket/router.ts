@@ -12,6 +12,8 @@ import { handleUserIdleStart, handleUserIdleEnd, handleUserExplain } from './han
 import { handleObserverMute } from './handlers/observer.js';
 import { handlePracticeSubmitSolution } from './handlers/practice.js';
 import { handleDashboardRequestWs, handleDashboardRefreshIssuesWs } from './handlers/dashboard.js';
+import { handleAudioControl } from './handlers/audio-control.js';
+import type { AudioControlData } from '../tts/tts-types.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +82,22 @@ const handlers = new Map<string, MessageHandler>([
   ['tree:expand', notImplementedHandler('tree:expand')],
   ['tree:collapse', notImplementedHandler('tree:collapse')],
   ['review:request', notImplementedHandler('review:request')],
+  [
+    'audio:control',
+    (_ws, data) => {
+      handleAudioControl(data as AudioControlData, {
+        onMute: () => {
+          /* TTS mute state managed by tts-bridge (Task 6) */
+        },
+        onUnmute: () => {
+          /* TTS unmute state managed by tts-bridge (Task 6) */
+        },
+        onSkip: () => {
+          /* TTS abort managed by tts-bridge (Task 6) */
+        },
+      });
+    },
+  ],
 ]);
 
 // ── Public API ───────────────────────────────────────────────────────────────
