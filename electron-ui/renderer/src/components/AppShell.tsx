@@ -5,9 +5,12 @@
  * IDE, and Placeholder views based on `currentView` state.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AppView } from '@shared/types/entities';
+import type { SessionRepoStartedMessage, WebSocketMessage } from '@shared/types/websocket-messages';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { Landing } from '../views/Landing';
 import { Dashboard } from '../views/Dashboard';
 import { IDE } from '../views/IDE';
 import { Placeholder } from '../views/Placeholder';
@@ -69,8 +72,11 @@ const viewVariants = {
 };
 
 export function AppShell() {
-  const [currentView, setCurrentView] = useState<AppView>('ide'); // Start with IDE view for demo
+  const [currentView, setCurrentView] = useState<AppView>('landing');
   const [, setNavContext] = useState<NavigationContext>({});
+  const [, setCurrentRepo] = useState<{ owner: string; repo: string } | null>(null);
+
+  const { send, on } = useWebSocket();
 
   const handleNavigate = useCallback((view: AppView, context?: { issueNumber?: number }) => {
     setCurrentView(view);
@@ -80,12 +86,44 @@ export function AppShell() {
   }, []);
 
   const handleBack = useCallback(() => {
-    setCurrentView('dashboard');
+    switch (currentView) {
+      case 'ide':
+      case 'placeholder':
+        setCurrentView('dashboard');
+        break;
+      case 'dashboard':
+        setCurrentView('landing');
+        setCurrentRepo(null);
+        break;
+      default:
+        break;
+    }
     setNavContext({});
-  }, []);
+  }, [currentView]);
+
+  /** Handle repo selection from the landing page. */
+  const handleSelectRepo = useCallback(
+    (repo: { owner: string; repo: string }) => {
+      setCurrentRepo(repo);
+      send('session:start_repo', { owner: repo.owner, repo: repo.repo });
+    },
+    [send]
+  );
+
+  /** Listen for session:repo_started to transition to dashboard. */
+  useEffect(() => {
+    const unsub = on('session:repo_started', (msg: WebSocketMessage) => {
+      const m = msg as SessionRepoStartedMessage;
+      setCurrentRepo({ owner: m.payload.owner, repo: m.payload.repo });
+      setCurrentView('dashboard');
+    });
+    return unsub;
+  }, [on]);
 
   const renderView = () => {
     switch (currentView) {
+      case 'landing':
+        return <Landing onSelectRepo={handleSelectRepo} />;
       case 'dashboard':
         return <Dashboard onNavigate={handleNavigate} />;
       case 'ide':
@@ -108,7 +146,7 @@ export function AppShell() {
         <span style={logoStyle}>PAIGE</span>
 
         <AnimatePresence>
-          {currentView !== 'dashboard' && (
+          {currentView !== 'landing' && (
             <motion.button
               style={backButtonStyle}
               onClick={handleBack}
@@ -117,9 +155,12 @@ export function AppShell() {
               exit={{ opacity: 0, x: -8 }}
               transition={{ type: 'spring', ...SPRING_EXPRESSIVE }}
               whileHover={{ borderColor: 'var(--accent-primary)' }}
-              aria-label="Back to dashboard"
+              aria-label={
+                currentView === 'dashboard' ? 'Back to project picker' : 'Back to dashboard'
+              }
             >
-              &larr; Dashboard
+              &larr;{' '}
+              {currentView === 'dashboard' ? 'Projects' : 'Dashboard'}
             </motion.button>
           )}
         </AnimatePresence>
