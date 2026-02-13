@@ -256,7 +256,7 @@ export interface ConnectionInitData {
   readonly projectDir: string;
   readonly capabilities: {
     readonly chromadb_available: boolean;
-    readonly gh_cli_available: boolean;
+    readonly github_api_available: boolean;
   };
   readonly featureFlags: {
     readonly observer_enabled: boolean;
