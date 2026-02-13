@@ -3,7 +3,7 @@
 import type { WebSocket as WsWebSocket } from 'ws';
 import { handleDashboardRequest, handleDashboardRefreshIssues } from '../../dashboard/handler.js';
 import { getActiveRepo } from '../../mcp/session.js';
-import type { DashboardRequestData } from '../../types/websocket.js';
+import type { DashboardRequestData, StatsPeriod } from '../../types/websocket.js';
 
 /**
  * Handles `dashboard:request` messages from Electron clients.
@@ -28,6 +28,27 @@ export function handleDashboardRequestWs(
   void handleDashboardRequest(statsPeriod, connectionId, owner, repoName).catch((err: unknown) => {
     // eslint-disable-next-line no-console
     console.error('[ws-handler:dashboard] Dashboard request failed:', err);
+  });
+}
+
+/**
+ * Handles `dashboard:stats_period` messages from Electron clients.
+ * Triggered when Dashboard mounts or when user switches the period dropdown.
+ * Extracts `period` (matching the frontend field name) and delegates to handleDashboardRequest.
+ */
+export function handleDashboardStatsPeriodWs(
+  _ws: WsWebSocket,
+  data: unknown,
+  connectionId: string,
+): void {
+  const { period } = data as { period: StatsPeriod };
+  const repo = getActiveRepo();
+  const owner = repo?.owner ?? '';
+  const repoName = repo?.repo ?? '';
+
+  void handleDashboardRequest(period, connectionId, owner, repoName).catch((err: unknown) => {
+    // eslint-disable-next-line no-console
+    console.error('[ws-handler:dashboard] Stats period change failed:', err);
   });
 }
 

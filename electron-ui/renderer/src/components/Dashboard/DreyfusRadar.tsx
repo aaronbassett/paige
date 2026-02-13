@@ -9,8 +9,13 @@
  *   1 = Novice, 2 = Advanced Beginner, 3 = Competent, 4 = Proficient, 5 = Expert
  */
 
+import { ChangeIndicator } from './stats/shared/ChangeIndicator';
+
 interface DreyfusRadarProps {
   axes: Array<{ skill: string; level: 1 | 2 | 3 | 4 | 5 }> | null;
+  overallStage: string | null;
+  selfSufficiency: number | null;
+  selfSufficiencyChange: number | null;
 }
 
 /** Human-readable labels for each Dreyfus level. */
@@ -23,6 +28,17 @@ const LEVEL_LABELS: Record<number, string> = {
 };
 
 const MAX_LEVEL = 5;
+
+/** Coaching-focused descriptions for each Dreyfus stage. */
+const STAGE_DESCRIPTIONS: Record<string, string> = {
+  Novice:
+    "Following rules and recipes. You're building the foundation — every expert started here.",
+  'Advanced Beginner':
+    "Recognizing patterns from experience. You're connecting the dots between concepts.",
+  Competent: 'Solving problems with deliberate planning. You can tackle unfamiliar challenges.',
+  Proficient: 'Seeing the bigger picture intuitively. Your instincts guide good decisions.',
+  Expert: 'Deep intuition meets adaptability. You teach others and shape best practices.',
+};
 
 // ---------------------------------------------------------------------------
 // Shared styles
@@ -47,6 +63,49 @@ const emptyTextStyle: React.CSSProperties = {
   fontSize: 'var(--font-body-size)',
   textAlign: 'center',
   padding: 'var(--space-lg) 0',
+};
+
+const dividerStyle: React.CSSProperties = {
+  borderTop: '1px solid var(--border-subtle)',
+  margin: 'var(--space-md) 0',
+};
+
+const stagePillStyle: React.CSSProperties = {
+  display: 'inline-block',
+  padding: '4px 12px',
+  borderRadius: '12px',
+  backgroundColor: 'color-mix(in srgb, var(--accent-primary) 15%, transparent)',
+  color: 'var(--accent-primary)',
+  fontSize: 'var(--font-body-size)',
+  fontWeight: 700,
+  lineHeight: 1.2,
+};
+
+const stageDescriptionStyle: React.CSSProperties = {
+  color: 'var(--text-muted)',
+  fontFamily: 'var(--font-family)',
+  fontSize: 'var(--font-small-size)',
+  margin: 'var(--space-sm) 0 0',
+  lineHeight: 1.4,
+};
+
+const selfSufficiencyRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'baseline',
+  justifyContent: 'space-between',
+};
+
+const selfSufficiencyLabelStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-family)',
+  fontSize: 'var(--font-small-size)',
+  color: 'var(--text-secondary)',
+};
+
+const selfSufficiencyValueStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-family)',
+  fontSize: 'var(--font-h2-size)',
+  fontWeight: 700,
+  color: 'var(--text-primary)',
 };
 
 // ---------------------------------------------------------------------------
@@ -300,7 +359,12 @@ function SpiderChart({ axes }: SpiderChartProps): React.JSX.Element {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function DreyfusRadar({ axes }: DreyfusRadarProps): React.JSX.Element {
+export function DreyfusRadar({
+  axes,
+  overallStage,
+  selfSufficiency,
+  selfSufficiencyChange,
+}: DreyfusRadarProps): React.JSX.Element {
   return (
     <section style={containerStyle} aria-label="Dreyfus skill radar">
       <pre className="figlet-header" style={headerStyle}>
@@ -318,6 +382,39 @@ export function DreyfusRadar({ axes }: DreyfusRadarProps): React.JSX.Element {
 
       {/* Spider chart: 3+ axes */}
       {axes !== null && axes.length >= 3 && <SpiderChart axes={axes} />}
+
+      {/* Overall Dreyfus stage */}
+      {overallStage !== null && (
+        <>
+          <div style={dividerStyle} />
+          <div>
+            <span style={stagePillStyle} data-testid="stage-pill">
+              {overallStage}
+            </span>
+            {STAGE_DESCRIPTIONS[overallStage] && (
+              <p style={stageDescriptionStyle}>{STAGE_DESCRIPTIONS[overallStage]}</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Self-sufficiency indicator */}
+      {selfSufficiency !== null && (
+        <>
+          <div style={dividerStyle} />
+          <div style={selfSufficiencyRowStyle}>
+            <div>
+              <span style={selfSufficiencyLabelStyle}>Self-Sufficiency</span>
+              <div>
+                <span style={selfSufficiencyValueStyle} data-testid="self-sufficiency-value">
+                  {selfSufficiency}%
+                </span>
+              </div>
+            </div>
+            {selfSufficiencyChange !== null && <ChangeIndicator change={selfSufficiencyChange} />}
+          </div>
+        </>
+      )}
     </section>
   );
 }

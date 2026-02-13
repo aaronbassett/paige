@@ -9,11 +9,15 @@ export interface CreateSessionInput {
   started_at: string;
   issue_number?: number | null;
   issue_title?: string | null;
+  last_activity_at?: string;
 }
 
 export interface UpdateSessionInput {
   status?: 'active' | 'completed';
   ended_at?: string | null;
+  last_activity_at?: string;
+  issue_number?: number | null;
+  issue_title?: string | null;
 }
 
 // ── Queries ─────────────────────────────────────────────────────────────────
@@ -34,6 +38,7 @@ export async function createSession(db: AppDatabase, input: CreateSessionInput):
       issue_number: input.issue_number ?? null,
       issue_title: input.issue_title ?? null,
       ended_at: null,
+      last_activity_at: input.last_activity_at ?? input.started_at,
     } as never)
     .executeTakeFirstOrThrow();
 
@@ -80,6 +85,15 @@ export async function updateSession(
   }
   if (input.ended_at !== undefined) {
     updates['ended_at'] = input.ended_at;
+  }
+  if (input.last_activity_at !== undefined) {
+    updates['last_activity_at'] = input.last_activity_at;
+  }
+  if (input.issue_number !== undefined) {
+    updates['issue_number'] = input.issue_number;
+  }
+  if (input.issue_title !== undefined) {
+    updates['issue_title'] = input.issue_title;
   }
 
   // Guard: nothing to update

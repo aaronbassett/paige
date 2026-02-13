@@ -116,7 +116,9 @@ export async function fetchRepoActivity(fullName: string): Promise<RepoActivityE
     });
 
     // Map to RepoActivityEntry[], filtering to last 30 days
-    const activities: RepoActivityEntry[] = (data as Array<{ timestamp: string; activity_type: string }>)
+    const activities: RepoActivityEntry[] = (
+      data as Array<{ timestamp: string; activity_type: string }>
+    )
       .filter((entry) => entry.timestamp >= since)
       .map((entry) => ({
         timestamp: entry.timestamp,

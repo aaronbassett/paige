@@ -65,7 +65,7 @@ export async function logApiCall(db: Kysely<DatabaseTables>, entry: ApiCallInput
 
 /**
  * Returns the total API call count within the given time period.
- * Period: '7d' = last 7 days, '30d' = last 30 days, 'all' = no filter.
+ * Period: 'today' = today, 'last_week' = last 7 days, 'last_month' = last 30 days, 'all_time' = no filter.
  */
 export async function getApiCallCountByPeriod(
   db: Kysely<DatabaseTables>,
@@ -75,8 +75,9 @@ export async function getApiCallCountByPeriod(
     .selectFrom('api_call_log')
     .select([sql<number>`COALESCE(COUNT(*), 0)`.as('count')]);
 
-  if (period !== 'all') {
-    const interval = period === '7d' ? '-7 days' : '-30 days';
+  if (period !== 'all_time') {
+    const interval =
+      period === 'today' ? '-1 days' : period === 'last_week' ? '-7 days' : '-30 days';
     query = query.where('created_at', '>=', sql<string>`datetime('now', ${interval})`);
   }
 
@@ -86,7 +87,7 @@ export async function getApiCallCountByPeriod(
 
 /**
  * Returns the total estimated cost (USD) within the given time period.
- * Period: '7d' = last 7 days, '30d' = last 30 days, 'all' = no filter.
+ * Period: 'today' = today, 'last_week' = last 7 days, 'last_month' = last 30 days, 'all_time' = no filter.
  */
 export async function getApiCostByPeriod(
   db: Kysely<DatabaseTables>,
@@ -96,8 +97,9 @@ export async function getApiCostByPeriod(
     .selectFrom('api_call_log')
     .select([sql<number>`COALESCE(SUM(cost_estimate), 0)`.as('totalCost')]);
 
-  if (period !== 'all') {
-    const interval = period === '7d' ? '-7 days' : '-30 days';
+  if (period !== 'all_time') {
+    const interval =
+      period === 'today' ? '-1 days' : period === 'last_week' ? '-7 days' : '-30 days';
     query = query.where('created_at', '>=', sql<string>`datetime('now', ${interval})`);
   }
 

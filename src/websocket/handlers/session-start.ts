@@ -7,9 +7,9 @@ import { execSync } from 'node:child_process';
 import type { WebSocket as WsWebSocket } from 'ws';
 import { sendToClient } from '../server.js';
 import { loadEnv } from '../../config/env.js';
-import { setActiveRepo, getActiveRepo } from '../../mcp/session.js';
+import { setActiveRepo, getActiveSessionId } from '../../mcp/session.js';
 import { getDatabase } from '../../database/db.js';
-import { createSession } from '../../database/queries/sessions.js';
+import { updateSession } from '../../database/queries/sessions.js';
 import { assembleAndStreamIssues } from '../../dashboard/flows/issues.js';
 import type {
   SessionStartRepoData,
@@ -88,8 +88,8 @@ export function handleSessionStartRepo(
 /**
  * Handles `session:select_issue` messages from Electron clients.
  *
- * 1. Creates a new session record in SQLite
- * 2. Sends `session:issue_selected` confirmation with session ID
+ * Session was already resolved by the router's pre-dispatch step.
+ * This handler just associates the issue with the existing session.
  */
 export async function handleSessionSelectIssue(
   _ws: WsWebSocket,
@@ -98,36 +98,27 @@ export async function handleSessionSelectIssue(
 ): Promise<void> {
   const { issueNumber } = data as SessionSelectIssueWsData;
 
-  const db = getDatabase();
-  if (db === null) {
+  const sessionId = getActiveSessionId();
+  if (sessionId === null) {
     // eslint-disable-next-line no-console
-    console.error('[ws-handler:session-start] Database not available for session creation');
+    console.error('[ws-handler:session-start] No active session for issue selection');
     return;
   }
 
-  // Determine the project directory from the active repo context
-  const env = loadEnv();
-  // The active repo should have been set by a prior session:start_repo call
-  const activeRepo = getActiveRepo();
-
-  let projectDir: string;
-  if (activeRepo !== null) {
-    projectDir = join(env.dataDir, 'repos', activeRepo.owner, activeRepo.repo);
-  } else {
-    // Fallback to the configured project dir
-    projectDir = env.projectDir;
+  const db = getDatabase();
+  if (db === null) {
+    // eslint-disable-next-line no-console
+    console.error('[ws-handler:session-start] Database not available for issue association');
+    return;
   }
 
-  const session = await createSession(db, {
-    project_dir: projectDir,
-    status: 'active',
-    started_at: new Date().toISOString(),
+  // Associate the issue with the existing session
+  await updateSession(db, sessionId, {
     issue_number: issueNumber,
-    issue_title: null, // Will be populated later when coaching pipeline starts
   });
 
   sendToClient(connectionId, {
     type: 'session:issue_selected',
-    data: { sessionId: session.id, issueNumber },
+    data: { sessionId, issueNumber },
   } as SessionIssueSelectedResponseMessage);
 }

@@ -133,9 +133,10 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
     const action = event.type === 'unlink' ? 'remove' : event.type;
 
     // Include node data for 'add' so the tree can insert it
-    const node = action === 'add'
-      ? { name: basename(event.path), path: event.path, type: 'file' as const }
-      : undefined;
+    const node =
+      action === 'add'
+        ? { name: basename(event.path), path: event.path, type: 'file' as const }
+        : undefined;
 
     broadcast({
       type: 'fs:tree_update',

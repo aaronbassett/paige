@@ -31,7 +31,7 @@ export interface SummarizableIssue {
 export async function summarizeIssue(
   issue: SummarizableIssue,
   dreyfusContext: string,
-  sessionId: number,
+  sessionId: number | null,
 ): Promise<IssueSummaryResponse> {
   const cacheKey = `issue:${String(issue.number)}:${issue.updated_at}`;
 
@@ -43,9 +43,7 @@ export async function summarizeIssue(
 
   // Build prompts
   const labelsText =
-    issue.labels.length > 0
-      ? `Labels: ${issue.labels.map((l) => l.name).join(', ')}`
-      : 'No labels';
+    issue.labels.length > 0 ? `Labels: ${issue.labels.map((l) => l.name).join(', ')}` : 'No labels';
 
   const systemPrompt =
     'You summarise GitHub issues in 1-2 sentences and assess their difficulty ' +

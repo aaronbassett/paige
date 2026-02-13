@@ -19,8 +19,9 @@ import type { UserExplainData, UserIdleEndData, UserIdleStartData } from '../../
  */
 function safeLogAction(actionType: ActionType, data?: Record<string, unknown>): void {
   const db = getDatabase();
-  if (db) {
-    logAction(db, 0, actionType, data).catch((err: unknown) => {
+  const sessionId = getActiveSessionId();
+  if (db !== null && sessionId !== null) {
+    logAction(db, sessionId, actionType, data).catch((err: unknown) => {
       // eslint-disable-next-line no-console
       console.error(`[ws-handler:user] Failed to log action "${actionType}":`, err);
     });

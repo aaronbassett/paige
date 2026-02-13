@@ -9,6 +9,7 @@ import { loadEnv } from '../../config/env.js';
 import { getDatabase } from '../../database/db.js';
 import { getSession } from '../../database/queries/sessions.js';
 import { getActiveSessionId } from '../session.js';
+import { resolveSession } from '../../session/resolve.js';
 
 /** Registers read tools on the MCP server. */
 export function registerReadTools(server: McpServer): void {
@@ -111,15 +112,21 @@ function registerGetSessionState(server: McpServer): void {
     'Returns the current coaching session state including session ID, project directory, and status',
     { include: z.array(z.string()).optional() },
     async () => {
-      const sessionId = getActiveSessionId();
+      let sessionId = getActiveSessionId();
 
+      // Fallback: if no active session (e.g. after backend restart), try to resolve one
       if (sessionId === null) {
-        return {
-          content: [
-            { type: 'text' as const, text: JSON.stringify({ error: 'No active session' }) },
-          ],
-          isError: true,
-        };
+        try {
+          const resolved = await resolveSession();
+          sessionId = resolved.sessionId;
+        } catch {
+          return {
+            content: [
+              { type: 'text' as const, text: JSON.stringify({ error: 'No active session' }) },
+            ],
+            isError: true,
+          };
+        }
       }
 
       const db = getDatabase();

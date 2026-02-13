@@ -78,7 +78,7 @@ export async function handleConnectionHello(
   // Trigger dashboard data load so the dashboard populates on startup
   // This runs async — individual flows broadcast/stream as they complete
   const repo = getActiveRepo();
-  handleDashboardRequest('7d', connectionId, repo?.owner ?? '', repo?.repo ?? '').catch(
+  handleDashboardRequest('last_week', connectionId, repo?.owner ?? '', repo?.repo ?? '').catch(
     (err: unknown) => {
       // eslint-disable-next-line no-console
       console.error('[ws-handler:connection] Failed to load initial dashboard data:', err);

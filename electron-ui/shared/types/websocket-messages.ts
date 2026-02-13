@@ -8,7 +8,16 @@
  * All types are named exports -- no default export.
  */
 
-import type { IssueContext, Phase, TreeNode, HintLevel, AppView, RepoInfo, RepoActivityEntry, ScoredIssue } from './entities';
+import type {
+  IssueContext,
+  Phase,
+  TreeNode,
+  HintLevel,
+  AppView,
+  RepoInfo,
+  RepoActivityEntry,
+  ScoredIssue,
+} from './entities';
 
 // ---------------------------------------------------------------------------
 // MessageType — string literal union of all 51 message types
@@ -247,12 +256,29 @@ export interface DashboardDreyfusMessage extends BaseMessage {
 export interface DashboardStatsMessage extends BaseMessage {
   type: 'dashboard:stats';
   payload: {
-    period: 'today' | 'this_week' | 'this_month';
-    stats: Array<{
-      label: string;
-      value: number;
-      change: number;
-    }>;
+    period: 'today' | 'last_week' | 'last_month' | 'all_time';
+    stats: Partial<
+      Record<
+        string,
+        {
+          value: number | string;
+          change: number;
+          unit: 'count' | 'duration' | 'currency' | 'percentage' | 'text';
+          sparkline?: ReadonlyArray<{ x: string; y: number }>;
+          breakdown?: ReadonlyArray<{
+            label: string;
+            value: number;
+            color?: string;
+          }>;
+          pills?: ReadonlyArray<{
+            label: string;
+            color: string;
+            count: number;
+          }>;
+          progression?: ReadonlyArray<{ skill: string; level: string }>;
+        }
+      >
+    >;
   };
 }
 
@@ -649,7 +675,7 @@ export interface ConnectionReadyMessage extends BaseMessage {
 export interface DashboardStatsPeriodMessage extends BaseMessage {
   type: 'dashboard:stats_period';
   payload: {
-    period: 'today' | 'this_week' | 'this_month';
+    period: 'today' | 'last_week' | 'last_month' | 'all_time';
   };
 }
 

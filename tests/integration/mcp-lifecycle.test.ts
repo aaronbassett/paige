@@ -144,30 +144,31 @@ describe('MCP tool surface (integration)', () => {
 
       const data = extractJson(result) as {
         session_id: number;
-        project_dir: string;
         status: string;
       };
 
       expect(data.session_id).toBeTypeOf('number');
       expect(data.session_id).toBeGreaterThan(0);
-      expect(data.project_dir).toBe(tempProjectDir);
       expect(data.status).toBe('active');
     });
 
-    it('paige_start_session while session is active returns error', async () => {
+    it('paige_start_session while session is active is idempotent', async () => {
       // First session
-      await client.callTool({
+      const first = await client.callTool({
+        name: 'paige_start_session',
+        arguments: { project_dir: tempProjectDir },
+      });
+      const firstData = extractJson(first) as { session_id: number };
+
+      // Second session attempt should return the same session (idempotent)
+      const second = await client.callTool({
         name: 'paige_start_session',
         arguments: { project_dir: tempProjectDir },
       });
 
-      // Second session attempt should fail
-      const result = await client.callTool({
-        name: 'paige_start_session',
-        arguments: { project_dir: tempProjectDir },
-      });
-
-      expect(result.isError).toBe(true);
+      expect(second.isError).not.toBe(true);
+      const secondData = extractJson(second) as { session_id: number };
+      expect(secondData.session_id).toBe(firstData.session_id);
     });
 
     it('paige_end_session ends the current session', async () => {

@@ -110,7 +110,11 @@ const practiceViewPreviousAttemptsDataSchema = z.object({
 });
 
 const dashboardRequestDataSchema = z.object({
-  statsPeriod: z.enum(['7d', '30d', 'all']),
+  statsPeriod: z.enum(['today', 'last_week', 'last_month', 'all_time']),
+});
+
+const dashboardStatsPeriodDataSchema = z.object({
+  period: z.enum(['today', 'last_week', 'last_month', 'all_time']),
 });
 
 const dashboardRefreshIssuesDataSchema = z.object({});
@@ -145,6 +149,8 @@ const sessionStartRepoDataSchema = z.object({
 const sessionSelectIssueWsDataSchema = z.object({
   issueNumber: z.number(),
 });
+
+const fsRequestTreeDataSchema = z.object({});
 
 // ── Message Envelope Schema ─────────────────────────────────────────────────
 
@@ -184,6 +190,7 @@ export const messageDataSchemas = {
   'practice:view_previous_attempts': practiceViewPreviousAttemptsDataSchema,
   'dashboard:request': dashboardRequestDataSchema,
   'dashboard:refresh_issues': dashboardRefreshIssuesDataSchema,
+  'dashboard:stats_period': dashboardStatsPeriodDataSchema,
   'terminal:command': terminalCommandDataSchema,
   'tree:expand': treeExpandDataSchema,
   'tree:collapse': treeCollapseDataSchema,
@@ -192,6 +199,7 @@ export const messageDataSchemas = {
   'repos:activity': reposActivityRequestDataSchema,
   'session:start_repo': sessionStartRepoDataSchema,
   'session:select_issue': sessionSelectIssueWsDataSchema,
+  'fs:request_tree': fsRequestTreeDataSchema,
 } as const;
 
 /**

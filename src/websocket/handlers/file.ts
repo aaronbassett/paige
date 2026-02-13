@@ -7,6 +7,7 @@ import { loadEnv } from '../../config/env.js';
 import { getDatabase } from '../../database/db.js';
 import { readFile, writeFile } from '../../file-system/file-ops.js';
 import { logAction } from '../../logger/action-log.js';
+import { getActiveSessionId } from '../../mcp/session.js';
 import type { ActionType } from '../../types/domain.js';
 import type { FileOpenData, FileSaveData } from '../../types/websocket.js';
 
@@ -41,8 +42,9 @@ function sendError(
  */
 function safeLogAction(actionType: ActionType, data?: Record<string, unknown>): void {
   const db = getDatabase();
-  if (db) {
-    logAction(db, 0, actionType, data).catch((err: unknown) => {
+  const sessionId = getActiveSessionId();
+  if (db !== null && sessionId !== null) {
+    logAction(db, sessionId, actionType, data).catch((err: unknown) => {
       // eslint-disable-next-line no-console
       console.error(`[ws-handler:file] Failed to log action "${actionType}":`, err);
     });

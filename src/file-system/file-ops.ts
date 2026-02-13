@@ -179,8 +179,8 @@ export function detectLanguage(filePath: string): string {
   // Handle extensionless files by filename
   const filename = filePath.split('/').pop()?.toLowerCase() ?? '';
   const FILENAME_MAP: Record<string, string> = {
-    'dockerfile': 'dockerfile',
-    'makefile': 'shell',
+    dockerfile: 'dockerfile',
+    makefile: 'shell',
     '.gitignore': 'ini',
     '.env': 'ini',
     '.env.local': 'ini',

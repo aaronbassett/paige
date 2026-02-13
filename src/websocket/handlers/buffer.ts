@@ -7,6 +7,7 @@ import type { WebSocket as WsWebSocket } from 'ws';
 import { updateBuffer } from '../../file-system/buffer-cache.js';
 import { getDatabase } from '../../database/db.js';
 import { checkSignificantChange } from '../../logger/action-log.js';
+import { getActiveSessionId } from '../../mcp/session.js';
 import type { BufferUpdateData } from '../../types/websocket.js';
 
 // ── Handler ──────────────────────────────────────────────────────────────────
@@ -24,10 +25,11 @@ export function handleBufferUpdate(_ws: WsWebSocket, data: unknown, _connectionI
   // Convert character offset to CursorPosition { line, column }
   updateBuffer(path, content, { line: 0, column: cursorPosition });
 
-  // Fire-and-forget: check for significant change if DB is available
+  // Fire-and-forget: check for significant change if DB and session are available
   const db = getDatabase();
-  if (db !== null) {
-    checkSignificantChange(db, 0, path, content.length).catch((err: unknown) => {
+  const sessionId = getActiveSessionId();
+  if (db !== null && sessionId !== null) {
+    checkSignificantChange(db, sessionId, path, content.length).catch((err: unknown) => {
       // eslint-disable-next-line no-console
       console.error('[buffer] checkSignificantChange failed:', err);
     });
