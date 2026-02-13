@@ -8,7 +8,7 @@
  * All types are named exports -- no default export.
  */
 
-import type { IssueContext, Phase, TreeNode, HintLevel, AppView } from './entities';
+import type { IssueContext, Phase, TreeNode, HintLevel, AppView, RepoInfo, RepoActivityEntry, ScoredIssue } from './entities';
 
 // ---------------------------------------------------------------------------
 // MessageType — string literal union of all 51 message types
@@ -53,7 +53,14 @@ export type ServerMessageType =
   // Errors (3)
   | 'error:file_not_found'
   | 'error:permission_denied'
-  | 'error:general';
+  | 'error:general'
+  // Landing page / repo picker (6)
+  | 'repos:list_response'
+  | 'repo:activity'
+  | 'session:repo_started'
+  | 'session:issue_selected'
+  | 'dashboard:issue'
+  | 'dashboard:issues_complete';
 
 /** Client-to-server message type literals (23 types). */
 export type ClientMessageType =
@@ -87,7 +94,12 @@ export type ClientMessageType =
   | 'user:idle_end'
   | 'user:navigation'
   // Phase actions (1)
-  | 'phase:expand_step';
+  | 'phase:expand_step'
+  // Landing page / repo picker (4)
+  | 'repos:list'
+  | 'repos:activity'
+  | 'session:start_repo'
+  | 'session:select_issue';
 
 /** All 51 message types (server + client). */
 export type MessageType = ServerMessageType | ClientMessageType;
@@ -470,8 +482,59 @@ export interface ErrorGeneralMessage extends BaseMessage {
   };
 }
 
+// -- Landing page / repo picker (6) ------------------------------------------
+
+/** List of repositories the user has access to. */
+export interface ReposListResponseMessage extends BaseMessage {
+  type: 'repos:list_response';
+  payload: {
+    repos: RepoInfo[];
+  };
+}
+
+/** Activity data for a single repository. */
+export interface RepoActivityResponseMessage extends BaseMessage {
+  type: 'repo:activity';
+  payload: {
+    repo: string;
+    activities: RepoActivityEntry[];
+  };
+}
+
+/** Confirmation that a repo-based session has started. */
+export interface SessionRepoStartedMessage extends BaseMessage {
+  type: 'session:repo_started';
+  payload: {
+    owner: string;
+    repo: string;
+  };
+}
+
+/** Confirmation that an issue was selected for a session. */
+export interface SessionIssueSelectedMessage extends BaseMessage {
+  type: 'session:issue_selected';
+  payload: {
+    sessionId: number;
+    issueNumber: number;
+  };
+}
+
+/** A single scored issue streamed from the backend. */
+export interface DashboardSingleIssueMessage extends BaseMessage {
+  type: 'dashboard:issue';
+  payload: {
+    issue: ScoredIssue;
+  };
+}
+
+/** Signal that all issues have been streamed. */
+export interface DashboardIssuesCompleteMessage extends BaseMessage {
+  type: 'dashboard:issues_complete';
+  payload: Record<string, never>;
+}
+
 // ---------------------------------------------------------------------------
-// Client -> Server message interfaces (23)
+// Client -> Server message interfaces (27)
 // ---------------------------------------------------------------------------
 
 // -- Connection lifecycle (1) ------------------------------------------------
@@ -692,6 +755,39 @@ export interface PhaseExpandStepMessage extends BaseMessage {
   };
 }
 
+// -- Landing page / repo picker (4) ------------------------------------------
+
+/** Request the list of repos the user has access to. */
+export interface ReposListRequestMessage extends BaseMessage {
+  type: 'repos:list';
+  payload: Record<string, never>;
+}
+
+/** Request activity data for specific repos. */
+export interface ReposActivityRequestMessage extends BaseMessage {
+  type: 'repos:activity';
+  payload: {
+    repos: string[];
+  };
+}
+
+/** Start a session with a specific repo. */
+export interface SessionStartRepoMessage extends BaseMessage {
+  type: 'session:start_repo';
+  payload: {
+    owner: string;
+    repo: string;
+  };
+}
+
+/** Select an issue within the current repo session. */
+export interface SessionSelectIssueMessage extends BaseMessage {
+  type: 'session:select_issue';
+  payload: {
+    issueNumber: number;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Aggregate union types
 // ---------------------------------------------------------------------------
@@ -725,9 +821,15 @@ export type ServerMessage =
   | ObserverNudgeMessage
   | ErrorFileNotFoundMessage
   | ErrorPermissionDeniedMessage
-  | ErrorGeneralMessage;
+  | ErrorGeneralMessage
+  | ReposListResponseMessage
+  | RepoActivityResponseMessage
+  | SessionRepoStartedMessage
+  | SessionIssueSelectedMessage
+  | DashboardSingleIssueMessage
+  | DashboardIssuesCompleteMessage;
 
-/** Union of all 23 client-to-server messages. */
+/** Union of all 27 client-to-server messages. */
 export type ClientMessage =
   | ConnectionReadyMessage
   | DashboardStatsPeriodMessage
@@ -751,9 +853,13 @@ export type ClientMessage =
   | UserIdleStartMessage
   | UserIdleEndMessage
   | UserNavigationMessage
-  | PhaseExpandStepMessage;
+  | PhaseExpandStepMessage
+  | ReposListRequestMessage
+  | ReposActivityRequestMessage
+  | SessionStartRepoMessage
+  | SessionSelectIssueMessage;
 
-/** Union of all 51 WebSocket messages. */
+/** Union of all 61 WebSocket messages. */
 export type WebSocketMessage = ServerMessage | ClientMessage;
 
 // ---------------------------------------------------------------------------
