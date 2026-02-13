@@ -50,6 +50,9 @@ const containerStyle: React.CSSProperties = {
   background: 'var(--bg-surface)',
   padding: 'var(--space-md)',
   borderRadius: '8px',
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: 0,
 };
 
 const listStyle: React.CSSProperties = {

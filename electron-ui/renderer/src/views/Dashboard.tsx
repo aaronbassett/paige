@@ -37,13 +37,35 @@ const scrollContainerStyle: React.CSSProperties = {
   height: '100%',
   overflowY: 'auto',
   scrollBehavior: 'smooth',
-  padding: 'var(--space-lg)',
+  padding: 'var(--space-md) var(--space-lg)',
+  display: 'flex',
+  flexDirection: 'column',
 };
 
 const gridRowStyle: React.CSSProperties = {
   display: 'grid',
   gap: 'var(--space-lg)',
-  marginBottom: 'var(--space-lg)',
+  marginBottom: 'var(--space-md)',
+};
+
+const emptyInProgressStyle: React.CSSProperties = {
+  background: 'var(--bg-surface)',
+  padding: 'var(--space-md)',
+  borderRadius: '8px',
+  display: 'flex',
+  flexDirection: 'column',
+};
+
+const emptyInProgressTextStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-family)',
+  fontSize: 'var(--font-body-size)',
+  color: 'var(--text-muted)',
+  margin: 0,
+  textAlign: 'center',
+  flex: 1,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
 };
 
 export function Dashboard({ onNavigate }: DashboardProps) {
@@ -129,20 +151,25 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <StatsBento stats={stats} onPeriodChange={handleStatsPeriodChange} />
       </div>
 
-      {/* Row 2 (hidden when empty): In-Progress Tasks (62%) + Practice Challenges (38%) */}
-      {(hasInProgressTasks || challenges !== null) && (
-        <div style={{ ...gridRowStyle, gridTemplateColumns: '62fr 38fr' }}>
-          {hasInProgressTasks ? (
-            <InProgressTasks tasks={inProgressTasks} onResume={handleResumeTask} />
-          ) : (
-            <div />
-          )}
-          <PracticeChallenges challenges={challenges} onChallengeClick={handlePlaceholderNav} />
-        </div>
-      )}
+      {/* Row 2: In-Progress Tasks (62%) + Practice Challenges (38%) */}
+      <div style={{ ...gridRowStyle, gridTemplateColumns: '62fr 38fr' }}>
+        {hasInProgressTasks ? (
+          <InProgressTasks tasks={inProgressTasks} onResume={handleResumeTask} />
+        ) : (
+          <section style={emptyInProgressStyle} aria-label="In-progress tasks">
+            <pre className="figlet-header" style={{ fontSize: '18px' }}>
+              IN PROGRESS
+            </pre>
+            <p style={emptyInProgressTextStyle}>
+              No issues in progress. Select an issue below to get started.
+            </p>
+          </section>
+        )}
+        <PracticeChallenges challenges={challenges} onChallengeClick={handlePlaceholderNav} />
+      </div>
 
       {/* Row 3: GitHub Issues (62%) + Learning Materials (38%) */}
-      <div style={{ ...gridRowStyle, gridTemplateColumns: '62fr 38fr' }}>
+      <div style={{ ...gridRowStyle, gridTemplateColumns: '62fr 38fr', flex: 1, marginBottom: 0 }}>
         <GitHubIssues onNavigate={onNavigate} />
         <LearningMaterials materials={materials} onMaterialClick={handlePlaceholderNav} />
       </div>

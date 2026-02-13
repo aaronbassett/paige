@@ -37,6 +37,9 @@ const containerStyle: React.CSSProperties = {
   background: 'var(--bg-surface)',
   padding: 'var(--space-md)',
   borderRadius: '8px',
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: 0,
 };
 
 const headerRowStyle: React.CSSProperties = {
@@ -49,24 +52,25 @@ const headerRowStyle: React.CSSProperties = {
 const fullGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-  gap: 'var(--space-sm)',
-  maxHeight: '400px',
+  gridAutoRows: '180px',
+  gap: 'var(--space-md)',
+  flex: 1,
   overflowY: 'auto',
 };
 
 const condensedGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-  gap: 'var(--space-xs)',
-  maxHeight: '400px',
+  gridAutoRows: 'min-content',
+  gap: 'var(--space-sm)',
+  flex: 1,
   overflowY: 'auto',
 };
 
 const listContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 'var(--space-xs)',
-  maxHeight: '400px',
+  flex: 1,
   overflowY: 'auto',
 };
 
@@ -180,19 +184,18 @@ export function GitHubIssues({ onNavigate }: GitHubIssuesProps) {
       )}
 
       {/* Empty state (loading complete, no issues) */}
-      {!loading && issues.length === 0 && (
-        <p style={emptyStyle}>No issues found</p>
-      )}
+      {!loading && issues.length === 0 && <p style={emptyStyle}>No issues found</p>}
 
       {/* Populated state with progressive rendering */}
       {issues.length > 0 && (
         <div style={getListStyle(layout)}>
           <AnimatePresence mode="popLayout">
-            {issues.map((issue) => (
+            {issues.map((issue, i) => (
               <IssueCard
                 key={issue.number}
                 issue={issue}
                 layout={layout}
+                index={i}
                 onClick={() => handleIssueClick(issue)}
               />
             ))}
@@ -201,11 +204,7 @@ export function GitHubIssues({ onNavigate }: GitHubIssuesProps) {
       )}
 
       {/* Issue detail modal */}
-      <IssueModal
-        issue={selectedIssue}
-        onClose={handleCloseModal}
-        onNavigate={onNavigate}
-      />
+      <IssueModal issue={selectedIssue} onClose={handleCloseModal} onNavigate={onNavigate} />
     </section>
   );
 }

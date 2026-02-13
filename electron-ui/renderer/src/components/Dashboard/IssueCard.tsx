@@ -2,14 +2,15 @@
  * IssueCard -- Renders a single GitHub issue in one of three layout modes.
  *
  * Layout modes:
- *   - full:      Title, summary, difficulty mountain+text, labels (max 3 + overflow),
- *                updated time, author avatar+name, assignees (stacked), comment count.
+ *   - full:      Single-line title, typewriter summary (first render only),
+ *                label pills, mountain background, author + relative time footer.
  *   - condensed: Title, difficulty icon+text, 1 label + overflow, updated time.
  *   - list:      Single row -- title, difficulty text, labels (max 3 + overflow), updated time.
  *
  * Uses Framer Motion `layoutId` keyed by issue number for smooth layout transitions.
  */
 
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import type { ScoredIssue, IssueDifficulty } from '@shared/types/entities';
 import { DifficultyIcon } from './DifficultyIcon';
@@ -21,7 +22,14 @@ interface IssueCardProps {
   issue: ScoredIssue;
   layout: IssueLayoutMode;
   onClick: () => void;
+  index?: number;
 }
+
+// ---------------------------------------------------------------------------
+// Module-level typewriter tracking — survives remounts
+// ---------------------------------------------------------------------------
+
+const animatedSummaries = new Set<number>();
 
 // ---------------------------------------------------------------------------
 // Difficulty label map
@@ -54,9 +62,9 @@ function getContrastColor(hexColor: string): string {
 
 const cardBaseStyle: React.CSSProperties = {
   borderRadius: '8px',
-  border: '1px solid var(--border-subtle)',
+  border: '1px solid transparent',
   cursor: 'pointer',
-  transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+  transition: 'border-color 0.15s ease',
   background: 'var(--bg-elevated)',
   overflow: 'hidden',
 };
@@ -67,6 +75,8 @@ const fullCardStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 'var(--space-sm)',
+  height: '100%',
+  position: 'relative',
 };
 
 const condensedCardStyle: React.CSSProperties = {
@@ -77,14 +87,18 @@ const condensedCardStyle: React.CSSProperties = {
   gap: 'var(--space-xs)',
 };
 
-const listCardStyle: React.CSSProperties = {
-  ...cardBaseStyle,
+const listCardStyle = (index: number): React.CSSProperties => ({
+  borderRadius: '4px',
+  cursor: 'pointer',
+  transition: 'background 0.15s ease',
+  overflow: 'hidden',
   padding: 'var(--space-xs) var(--space-md)',
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
   gap: 'var(--space-md)',
-};
+  background: index % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)',
+});
 
 const titleStyle: React.CSSProperties = {
   color: 'var(--text-primary)',
@@ -98,6 +112,20 @@ const titleStyle: React.CSSProperties = {
   WebkitBoxOrient: 'vertical',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
+};
+
+const fullTitleStyle: React.CSSProperties = {
+  color: 'var(--text-primary)',
+  fontFamily: 'var(--font-family)',
+  fontSize: 'var(--font-body-size)',
+  fontWeight: 600,
+  lineHeight: 1.4,
+  margin: 0,
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  flex: 1,
+  minWidth: 0,
 };
 
 const listTitleStyle: React.CSSProperties = {
@@ -120,11 +148,9 @@ const summaryStyle: React.CSSProperties = {
   textOverflow: 'ellipsis',
 };
 
-const metaRowStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--space-sm)',
-  flexWrap: 'wrap',
+const summaryWrapperStyle: React.CSSProperties = {
+  height: '36px',
+  overflow: 'hidden',
 };
 
 const difficultyBadgeStyle: React.CSSProperties = {
@@ -139,7 +165,7 @@ const difficultyBadgeStyle: React.CSSProperties = {
 const labelPillStyle = (color: string): React.CSSProperties => ({
   display: 'inline-flex',
   alignItems: 'center',
-  borderRadius: '10px',
+  borderRadius: '4px',
   padding: '2px 8px',
   fontSize: 'var(--font-small-size)',
   fontFamily: 'var(--font-family)',
@@ -152,7 +178,7 @@ const labelPillStyle = (color: string): React.CSSProperties => ({
 const overflowPillStyle: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  borderRadius: '10px',
+  borderRadius: '4px',
   padding: '2px 8px',
   fontSize: 'var(--font-small-size)',
   fontFamily: 'var(--font-family)',
@@ -169,12 +195,11 @@ const timeStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-const authorRowStyle: React.CSSProperties = {
+const footerRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  gap: 'var(--space-sm)',
-  marginTop: 'var(--space-xs)',
+  marginTop: 'auto',
 };
 
 const authorStyle: React.CSSProperties = {
@@ -193,58 +218,125 @@ const avatarStyle: React.CSSProperties = {
   objectFit: 'cover',
 };
 
-const stackedAvatarStyle = (index: number): React.CSSProperties => ({
-  ...avatarStyle,
-  width: '18px',
-  height: '18px',
-  border: '2px solid var(--bg-elevated)',
-  marginLeft: index > 0 ? '-6px' : '0',
-  position: 'relative',
-  zIndex: 10 - index,
-});
+const mountainBackgroundStyle: React.CSSProperties = {
+  position: 'absolute',
+  bottom: '8px',
+  right: '8px',
+  opacity: 0.15,
+  pointerEvents: 'none',
+  zIndex: 0,
+};
 
-const commentCountStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '3px',
-  color: 'var(--text-muted)',
-  fontSize: 'var(--font-small-size)',
-  fontFamily: 'var(--font-family)',
+const cardContentStyle: React.CSSProperties = {
+  position: 'relative',
+  zIndex: 1,
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 'var(--space-sm)',
 };
 
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function LabelPills({
-  labels,
-  maxVisible,
-}: {
-  labels: ScoredIssue['labels'];
-  maxVisible: number;
-}) {
+function LabelPills({ labels, maxVisible }: { labels: ScoredIssue['labels']; maxVisible: number }) {
   const visible = labels.slice(0, maxVisible);
   const overflowCount = labels.length - maxVisible;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', flexWrap: 'wrap' }}>
+    <div
+      style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', flexWrap: 'wrap' }}
+    >
       {visible.map((label) => (
         <span key={label.name} style={labelPillStyle(label.color)}>
           {label.name}
         </span>
       ))}
-      {overflowCount > 0 && (
-        <span style={overflowPillStyle}>+{overflowCount}</span>
-      )}
+      {overflowCount > 0 && <span style={overflowPillStyle}>+{overflowCount}</span>}
     </div>
   );
 }
 
-function CommentIcon() {
+// ---------------------------------------------------------------------------
+// Typewriter text for summary
+// ---------------------------------------------------------------------------
+
+const summaryPlaceholderStyle: React.CSSProperties = {
+  ...summaryStyle,
+  minHeight: '2.8em', // Reserve ~2 lines to prevent layout shift
+};
+
+function TypewriterText({
+  text,
+  delay = 400,
+  skipAnimation,
+  onComplete,
+}: {
+  text: string;
+  delay?: number;
+  skipAnimation?: boolean;
+  onComplete?: () => void;
+}) {
+  const [displayedLength, setDisplayedLength] = useState(skipAnimation ? text.length : 0);
+  const [started, setStarted] = useState(skipAnimation ? true : false);
+  const rafRef = useRef<number>(0);
+  const startTimeRef = useRef<number>(0);
+  const completedRef = useRef(skipAnimation ? true : false);
+
+  // Delay before starting the typewriter
+  useEffect(() => {
+    if (skipAnimation) return;
+    const timer = setTimeout(() => setStarted(true), delay);
+    return () => clearTimeout(timer);
+  }, [delay, skipAnimation]);
+
+  // Animate characters using rAF for smooth performance
+  useEffect(() => {
+    if (!started || !text || skipAnimation) return;
+
+    const totalChars = text.length;
+    // ~30 chars per second
+    const duration = totalChars * 33;
+    startTimeRef.current = performance.now();
+
+    const tick = (now: number) => {
+      const elapsed = now - startTimeRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      const chars = Math.floor(progress * totalChars);
+      setDisplayedLength(chars);
+
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else if (!completedRef.current) {
+        completedRef.current = true;
+        onComplete?.();
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [started, text, skipAnimation, onComplete]);
+
+  if (!text) return null;
+
   return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-      <path d="M2.5 1C1.67 1 1 1.67 1 2.5v8C1 11.33 1.67 12 2.5 12H5l3 3 3-3h2.5c.83 0 1.5-.67 1.5-1.5v-8C15 1.67 14.33 1 13.5 1h-11z" />
-    </svg>
+    <p style={summaryPlaceholderStyle}>
+      {text.slice(0, displayedLength)}
+      {displayedLength < text.length && (
+        <span
+          style={{
+            display: 'inline-block',
+            width: '2px',
+            height: '1em',
+            background: 'var(--accent-primary)',
+            marginLeft: '1px',
+            verticalAlign: 'text-bottom',
+            animation: 'breathe 1s ease-in-out infinite',
+          }}
+        />
+      )}
+    </p>
   );
 }
 
@@ -261,7 +353,7 @@ const cardVariants = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function IssueCard({ issue, layout, onClick }: IssueCardProps) {
+export function IssueCard({ issue, layout, onClick, index = 0 }: IssueCardProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -271,12 +363,10 @@ export function IssueCard({ issue, layout, onClick }: IssueCardProps) {
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
     e.currentTarget.style.borderColor = 'var(--accent-primary)';
-    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
   };
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.borderColor = '';
-    e.currentTarget.style.boxShadow = '';
+    e.currentTarget.style.borderColor = 'transparent';
   };
 
   if (layout === 'list') {
@@ -287,11 +377,16 @@ export function IssueCard({ issue, layout, onClick }: IssueCardProps) {
         initial="initial"
         animate="animate"
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        style={listCardStyle}
+        style={listCardStyle(index)}
         onClick={onClick}
         onKeyDown={handleKeyDown}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background =
+            index % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)';
+        }}
         role="button"
         tabIndex={0}
         aria-label={`Issue #${issue.number}: ${issue.title}`}
@@ -302,9 +397,7 @@ export function IssueCard({ issue, layout, onClick }: IssueCardProps) {
           <DifficultyIcon level={issue.difficulty} size={16} />
           {DIFFICULTY_LABELS[issue.difficulty]}
         </span>
-        {issue.labels.length > 0 && (
-          <LabelPills labels={issue.labels} maxVisible={3} />
-        )}
+        {issue.labels.length > 0 && <LabelPills labels={issue.labels} maxVisible={3} />}
         <span style={timeStyle}>{formatRelativeTime(issue.updatedAt)}</span>
       </motion.div>
     );
@@ -329,17 +422,18 @@ export function IssueCard({ issue, layout, onClick }: IssueCardProps) {
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-xs)' }}>
           <span style={issueNumberCardStyle}>#{issue.number}</span>
-          <p style={titleStyle}>{issue.title}</p>
+          <p style={fullTitleStyle}>{issue.title}</p>
         </div>
-        <div style={metaRowStyle}>
-          <span style={difficultyBadgeStyle}>
-            <DifficultyIcon level={issue.difficulty} size={16} />
-            {DIFFICULTY_LABELS[issue.difficulty]}
-          </span>
-          {issue.labels.length > 0 && (
-            <LabelPills labels={issue.labels} maxVisible={1} />
-          )}
-          <span style={timeStyle}>{formatRelativeTime(issue.updatedAt)}</span>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 'var(--space-sm)',
+          }}
+        >
+          {issue.labels.length > 0 ? <LabelPills labels={issue.labels} maxVisible={1} /> : <div />}
+          <span style={difficultyBadgeStyle}>{DIFFICULTY_LABELS[issue.difficulty]}</span>
         </div>
       </motion.div>
     );
@@ -362,63 +456,41 @@ export function IssueCard({ issue, layout, onClick }: IssueCardProps) {
       tabIndex={0}
       aria-label={`Issue #${issue.number}: ${issue.title}`}
     >
-      {/* Title row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-xs)' }}>
-        <span style={issueNumberCardStyle}>#{issue.number}</span>
-        <p style={titleStyle}>{issue.title}</p>
+      {/* Mountain background watermark */}
+      <div style={mountainBackgroundStyle}>
+        <DifficultyIcon level={issue.difficulty} size={120} />
       </div>
 
-      {/* Summary */}
-      {issue.summary && (
-        <p style={summaryStyle}>{issue.summary}</p>
-      )}
-
-      {/* Metadata row: difficulty + labels + time */}
-      <div style={metaRowStyle}>
-        <span style={difficultyBadgeStyle}>
-          <DifficultyIcon level={issue.difficulty} size={18} />
-          {DIFFICULTY_LABELS[issue.difficulty]}
-        </span>
-        {issue.labels.length > 0 && (
-          <LabelPills labels={issue.labels} maxVisible={3} />
-        )}
-        <span style={timeStyle}>{formatRelativeTime(issue.updatedAt)}</span>
-      </div>
-
-      {/* Author row: avatar+name, assignees, comment count */}
-      <div style={authorRowStyle}>
-        <div style={authorStyle}>
-          <img
-            src={issue.author.avatarUrl}
-            alt={issue.author.login}
-            style={avatarStyle}
-          />
-          <span>{issue.author.login}</span>
+      {/* Card content layered above mountain */}
+      <div style={cardContentStyle}>
+        {/* Title row — single line */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-xs)' }}>
+          <span style={issueNumberCardStyle}>#{issue.number}</span>
+          <p style={fullTitleStyle}>{issue.title}</p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-          {/* Stacked assignee avatars */}
-          {issue.assignees.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {issue.assignees.map((assignee, i) => (
-                <img
-                  key={assignee.login}
-                  src={assignee.avatarUrl}
-                  alt={assignee.login}
-                  title={assignee.login}
-                  style={stackedAvatarStyle(i)}
-                />
-              ))}
-            </div>
-          )}
+        {/* Summary with typewriter animation (first render only) */}
+        <div style={summaryWrapperStyle}>
+          {issue.summary ? (
+            <TypewriterText
+              text={issue.summary}
+              delay={500}
+              skipAnimation={animatedSummaries.has(issue.number)}
+              onComplete={() => animatedSummaries.add(issue.number)}
+            />
+          ) : null}
+        </div>
 
-          {/* Comment count */}
-          {issue.commentCount > 0 && (
-            <span style={commentCountStyle}>
-              <CommentIcon />
-              {issue.commentCount}
-            </span>
-          )}
+        {/* Labels only */}
+        {issue.labels.length > 0 && <LabelPills labels={issue.labels} maxVisible={3} />}
+
+        {/* Footer: author left, time right */}
+        <div style={footerRowStyle}>
+          <div style={authorStyle}>
+            <img src={issue.author.avatarUrl} alt={issue.author.login} style={avatarStyle} />
+            <span>{issue.author.login}</span>
+          </div>
+          <span style={timeStyle}>{formatRelativeTime(issue.updatedAt)}</span>
         </div>
       </div>
     </motion.div>
