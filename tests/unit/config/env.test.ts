@@ -128,4 +128,56 @@ describe('loadEnv', () => {
 
     expect(() => loadEnv()).toThrow('Check your .env file');
   });
+
+  it('captures ELEVENLABS_API_KEY when provided', () => {
+    setMinimalEnv();
+    process.env['ELEVENLABS_API_KEY'] = 'sk_test_key';
+
+    const config = loadEnv();
+
+    expect(config.elevenlabsApiKey).toBe('sk_test_key');
+  });
+
+  it('captures ELEVENLABS_VOICE_ID when provided', () => {
+    setMinimalEnv();
+    process.env['ELEVENLABS_VOICE_ID'] = 'voice_abc123';
+
+    const config = loadEnv();
+
+    expect(config.elevenlabsVoiceId).toBe('voice_abc123');
+  });
+
+  it('uses fallback voice ID from ELEVENLABS_FALLBACK_VOICE_ID', () => {
+    setMinimalEnv();
+    process.env['ELEVENLABS_FALLBACK_VOICE_ID'] = 'fallback_voice';
+
+    const config = loadEnv();
+
+    expect(config.elevenlabsFallbackVoiceId).toBe('fallback_voice');
+  });
+
+  it('defaults ELEVENLABS_FALLBACK_VOICE_ID to Rachel voice', () => {
+    setMinimalEnv();
+
+    const config = loadEnv();
+
+    expect(config.elevenlabsFallbackVoiceId).toBe('21m00Tcm4TlvDq8ikWAM');
+  });
+
+  it('defaults TTS_ENABLED to true', () => {
+    setMinimalEnv();
+
+    const config = loadEnv();
+
+    expect(config.ttsEnabled).toBe(true);
+  });
+
+  it('parses TTS_ENABLED=false', () => {
+    setMinimalEnv();
+    process.env['TTS_ENABLED'] = 'false';
+
+    const config = loadEnv();
+
+    expect(config.ttsEnabled).toBe(false);
+  });
 });

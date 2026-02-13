@@ -9,6 +9,10 @@ export interface EnvConfig {
   dataDir: string;
   anthropicApiKey: string | undefined;
   chromadbUrl: string;
+  elevenlabsApiKey: string | undefined;
+  elevenlabsVoiceId: string | undefined;
+  elevenlabsFallbackVoiceId: string;
+  ttsEnabled: boolean;
 }
 
 /**
@@ -60,6 +64,19 @@ export function loadEnv(): EnvConfig {
   // CHROMADB_URL: optional, default http://localhost:8000
   const chromadbUrl = process.env['CHROMADB_URL'] ?? 'http://localhost:8000';
 
+  // ELEVENLABS_API_KEY: optional
+  const elevenlabsApiKey = process.env['ELEVENLABS_API_KEY'];
+
+  // ELEVENLABS_VOICE_ID: optional (custom cloned voice)
+  const elevenlabsVoiceId = process.env['ELEVENLABS_VOICE_ID'];
+
+  // ELEVENLABS_FALLBACK_VOICE_ID: optional, default Rachel
+  const elevenlabsFallbackVoiceId =
+    process.env['ELEVENLABS_FALLBACK_VOICE_ID'] ?? '21m00Tcm4TlvDq8ikWAM';
+
+  // TTS_ENABLED: optional, default true
+  const ttsEnabled = process.env['TTS_ENABLED'] !== 'false';
+
   if (errors.length > 0) {
     const message = [
       'Environment validation failed:',
@@ -77,6 +94,10 @@ export function loadEnv(): EnvConfig {
     dataDir,
     anthropicApiKey,
     chromadbUrl,
+    elevenlabsApiKey,
+    elevenlabsVoiceId,
+    elevenlabsFallbackVoiceId,
+    ttsEnabled,
   };
 }
 
