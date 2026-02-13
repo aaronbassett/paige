@@ -11,6 +11,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { editorState } from '../../services/editor-state';
 import type { TabState } from '@shared/types/entities';
+import { AudioControls } from '../AudioControls';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,6 +34,16 @@ export interface StatusBarProps {
   onReviewPrevious?: () => void;
   /** Exit review mode. */
   onReviewExit?: () => void;
+  /** Audio playback state. */
+  audioState?: {
+    isMuted: boolean;
+    isPlaying: boolean;
+    hasLastAudio: boolean;
+    onMute: () => void;
+    onUnmute: () => void;
+    onSkip: () => void;
+    onReplay: () => void;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -387,6 +398,7 @@ export function StatusBar({
   onReviewNext,
   onReviewPrevious,
   onReviewExit,
+  audioState,
 }: StatusBarProps) {
   const [activeTab, setActiveTab] = useState<TabState | undefined>(() =>
     editorState.getActiveTab()
@@ -421,6 +433,18 @@ export function StatusBar({
           <span style={readyStyle}>Ready</span>
         )}
       </div>
+
+      {audioState && (
+        <AudioControls
+          isMuted={audioState.isMuted}
+          isPlaying={audioState.isPlaying}
+          hasLastAudio={audioState.hasLastAudio}
+          onMute={audioState.onMute}
+          onUnmute={audioState.onUnmute}
+          onSkip={audioState.onSkip}
+          onReplay={audioState.onReplay}
+        />
+      )}
 
       {reviewActive ? (
         <ReviewNavigation

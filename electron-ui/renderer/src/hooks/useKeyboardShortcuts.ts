@@ -1,11 +1,19 @@
 /**
- * useKeyboardShortcuts -- Centralized hint-level keyboard shortcut handling.
+ * useKeyboardShortcuts -- Centralized keyboard shortcut handling.
  *
- * Registers a single `keydown` listener on `window` for hint-level shortcuts:
+ * Registers a single `keydown` listener on `window` for:
  *
+ * **Hint-level shortcuts** (Cmd+Shift required):
  *  - **Cmd+Shift+H** — Cycle hint level (nudge -> guide -> solution -> nudge)
  *  - **Cmd+Shift+[** — Decrease hint level
  *  - **Cmd+Shift+]** — Increase hint level
+ *
+ * **TTS shortcuts** (Cmd, no Shift):
+ *  - **Cmd+M** — Toggle TTS mute
+ *  - **Cmd+.** — Skip current TTS playback
+ *
+ * **TTS shortcuts** (Cmd+Shift):
+ *  - **Cmd+Shift+.** — Replay last TTS message
  *
  * Uses `useRef` for handler references to avoid re-registering the event
  * listener when callbacks change. The listener checks `metaKey` (Mac) or
@@ -27,6 +35,12 @@ export interface KeyboardShortcutHandlers {
   onDecreaseHintLevel?: () => void;
   /** Increase hint level by one step. */
   onIncreaseHintLevel?: () => void;
+  /** Toggle TTS mute. */
+  onToggleMute?: () => void;
+  /** Skip current TTS playback. */
+  onSkipAudio?: () => void;
+  /** Replay last TTS message. */
+  onReplayAudio?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -52,11 +66,39 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers): void {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMod = e.metaKey || e.ctrlKey;
 
-      if (!isMod || !e.shiftKey) {
+      if (!isMod) {
         return;
       }
 
       const key = e.key.toLowerCase();
+
+      // --- TTS shortcuts (Cmd, no Shift) ---
+
+      // Cmd+M — Toggle TTS mute
+      if (!e.shiftKey && key === 'm') {
+        e.preventDefault();
+        handlersRef.current.onToggleMute?.();
+        return;
+      }
+
+      // Cmd+. — Skip TTS playback
+      if (!e.shiftKey && key === '.') {
+        e.preventDefault();
+        handlersRef.current.onSkipAudio?.();
+        return;
+      }
+
+      // --- TTS + Hint shortcuts (Cmd+Shift) ---
+
+      if (!e.shiftKey) return; // Remaining shortcuts all require Shift
+
+      // Cmd+Shift+. — Replay last TTS message
+      // When Shift is held, `.` may report as `>` on some keyboards.
+      if (key === '.' || key === '>') {
+        e.preventDefault();
+        handlersRef.current.onReplayAudio?.();
+        return;
+      }
 
       // Cmd+Shift+H — Cycle hint level
       if (key === 'h') {
