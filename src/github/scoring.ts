@@ -74,7 +74,10 @@ export function scoreIssue(issue: ScorableIssue, currentUserLogin: string): numb
   // Recency scoring
   const updatedAt = new Date(issue.updated_at);
   const now = new Date();
-  const daysSinceUpdate = Math.max(0, (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24));
+  const daysSinceUpdate = Math.max(
+    0,
+    (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
   if (daysSinceUpdate <= 5) {
     score += 3;
