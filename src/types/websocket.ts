@@ -67,6 +67,62 @@ export type StatsPeriod = '7d' | '30d' | 'all';
 /** Issue suitability assessment. */
 export type IssueSuitability = 'excellent' | 'good' | 'fair' | 'poor';
 
+/** Issue difficulty assessment for scored issues. */
+export type IssueDifficulty = 'low' | 'medium' | 'high' | 'very_high' | 'extreme';
+
+// ── Dashboard / Landing Page Sub-Types ──────────────────────────────────────
+
+/** Repository info returned by the repos:list flow. */
+export interface RepoInfo {
+  readonly fullName: string;
+  readonly name: string;
+  readonly owner: string;
+  readonly description: string;
+  readonly language: string;
+  readonly stars: number;
+  readonly forks: number;
+  readonly openIssues: number;
+  readonly openPRs: number;
+  readonly license: string;
+  readonly updatedAt: string;
+  readonly pushedAt: string;
+}
+
+/** Single activity entry for a repository. */
+export interface RepoActivityEntry {
+  readonly timestamp: string;
+  readonly activityType: string;
+}
+
+/** Issue label with name and color. */
+export interface ScoredIssueLabel {
+  readonly name: string;
+  readonly color: string;
+}
+
+/** Issue author information. */
+export interface ScoredIssueAuthor {
+  readonly login: string;
+  readonly avatarUrl: string;
+}
+
+/** Fully scored issue payload for the dashboard. */
+export interface ScoredIssuePayload {
+  readonly number: number;
+  readonly title: string;
+  readonly body: string;
+  readonly summary: string;
+  readonly difficulty: IssueDifficulty;
+  readonly labels: readonly ScoredIssueLabel[];
+  readonly author: ScoredIssueAuthor;
+  readonly assignees: readonly ScoredIssueAuthor[];
+  readonly commentCount: number;
+  readonly updatedAt: string;
+  readonly createdAt: string;
+  readonly htmlUrl: string;
+  readonly score: number;
+}
+
 // ── Client -> Server Message Data ───────────────────────────────────────────
 
 export interface ConnectionHelloData {
@@ -175,6 +231,22 @@ export interface TreeCollapseData {
 
 export interface ReviewRequestData {
   readonly phaseId: number;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ReposListRequestData {}
+
+export interface ReposActivityRequestData {
+  readonly repos: readonly string[];
+}
+
+export interface SessionStartRepoData {
+  readonly owner: string;
+  readonly repo: string;
+}
+
+export interface SessionSelectIssueWsData {
+  readonly issueNumber: number;
 }
 
 // ── Server -> Client Message Data ───────────────────────────────────────────
@@ -414,6 +486,32 @@ export interface SessionCompletedData {
   readonly assessments_updated: number;
 }
 
+export interface ReposListResponseData {
+  readonly repos: readonly RepoInfo[];
+}
+
+export interface RepoActivityResponseData {
+  readonly repo: string;
+  readonly activities: readonly RepoActivityEntry[];
+}
+
+export interface SessionRepoStartedData {
+  readonly owner: string;
+  readonly repo: string;
+}
+
+export interface SessionIssueSelectedResponseData {
+  readonly sessionId: number;
+  readonly issueNumber: number;
+}
+
+export interface DashboardSingleIssueData {
+  readonly issue: ScoredIssuePayload;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface DashboardIssuesCompleteData {}
+
 // ── Client -> Server Messages (Discriminated Union) ─────────────────────────
 
 export interface ConnectionHelloMessage {
@@ -531,7 +629,27 @@ export interface ReviewRequestMessage {
   readonly data: ReviewRequestData;
 }
 
-/** Union of all 23 client-to-server message types. */
+export interface ReposListRequestMessage {
+  readonly type: 'repos:list';
+  readonly data: ReposListRequestData;
+}
+
+export interface ReposActivityRequestMessage {
+  readonly type: 'repos:activity';
+  readonly data: ReposActivityRequestData;
+}
+
+export interface SessionStartRepoMessage {
+  readonly type: 'session:start_repo';
+  readonly data: SessionStartRepoData;
+}
+
+export interface SessionSelectIssueWsMessage {
+  readonly type: 'session:select_issue';
+  readonly data: SessionSelectIssueWsData;
+}
+
+/** Union of all 27 client-to-server message types. */
 export type ClientToServerMessage =
   | ConnectionHelloMessage
   | FileOpenMessage
@@ -555,7 +673,11 @@ export type ClientToServerMessage =
   | TerminalCommandMessage
   | TreeExpandMessage
   | TreeCollapseMessage
-  | ReviewRequestMessage;
+  | ReviewRequestMessage
+  | ReposListRequestMessage
+  | ReposActivityRequestMessage
+  | SessionStartRepoMessage
+  | SessionSelectIssueWsMessage;
 
 // ── Server -> Client Messages (Discriminated Union) ─────────────────────────
 
@@ -709,7 +831,37 @@ export interface SessionCompletedMessage {
   readonly data: SessionCompletedData;
 }
 
-/** Union of all 32 server-to-client message types. */
+export interface ReposListResponseMessage {
+  readonly type: 'repos:list_response';
+  readonly data: ReposListResponseData;
+}
+
+export interface RepoActivityResponseMessage {
+  readonly type: 'repo:activity';
+  readonly data: RepoActivityResponseData;
+}
+
+export interface SessionRepoStartedMessage {
+  readonly type: 'session:repo_started';
+  readonly data: SessionRepoStartedData;
+}
+
+export interface SessionIssueSelectedResponseMessage {
+  readonly type: 'session:issue_selected';
+  readonly data: SessionIssueSelectedResponseData;
+}
+
+export interface DashboardSingleIssueMessage {
+  readonly type: 'dashboard:issue';
+  readonly data: DashboardSingleIssueData;
+}
+
+export interface DashboardIssuesCompleteMessage {
+  readonly type: 'dashboard:issues_complete';
+  readonly data: DashboardIssuesCompleteData;
+}
+
+/** Union of all 38 server-to-client message types. */
 export type ServerToClientMessage =
   | ConnectionInitMessage
   | ConnectionErrorMessage
@@ -740,7 +892,13 @@ export type ServerToClientMessage =
   | DashboardLearningMaterialsMessage
   | DashboardIssuesErrorMessage
   | SessionStartedMessage
-  | SessionCompletedMessage;
+  | SessionCompletedMessage
+  | ReposListResponseMessage
+  | RepoActivityResponseMessage
+  | SessionRepoStartedMessage
+  | SessionIssueSelectedResponseMessage
+  | DashboardSingleIssueMessage
+  | DashboardIssuesCompleteMessage;
 
 // ── Combined Type ───────────────────────────────────────────────────────────
 

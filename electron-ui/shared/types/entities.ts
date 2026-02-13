@@ -115,7 +115,7 @@ export interface TabState {
 export type HintLevel = 0 | 1 | 2 | 3;
 
 // App view type
-export type AppView = 'dashboard' | 'ide' | 'placeholder';
+export type AppView = 'dashboard' | 'ide' | 'placeholder' | 'landing';
 
 // Global session state
 export interface SessionState {
@@ -135,4 +135,58 @@ export interface ReviewComment {
   range: CodeRange;
   message: string;
   type: CoachingMessageType;
+}
+
+// Issue difficulty levels
+export type IssueDifficulty = 'low' | 'medium' | 'high' | 'very_high' | 'extreme';
+
+// Repository info for the landing page repo picker
+export interface RepoInfo {
+  fullName: string;
+  name: string;
+  owner: string;
+  description: string;
+  language: string;
+  stars: number;
+  forks: number;
+  openIssues: number;
+  openPRs: number;
+  license: string;
+  updatedAt: string;
+  pushedAt: string;
+}
+
+// Single activity entry for a repository
+export interface RepoActivityEntry {
+  timestamp: string;
+  activityType: string;
+}
+
+// Scored issue label
+export interface ScoredIssueLabel {
+  name: string;
+  color: string;
+}
+
+// Scored issue author
+export interface ScoredIssueAuthor {
+  login: string;
+  avatarUrl: string;
+}
+
+// Fully scored issue for the dashboard
+export interface ScoredIssue {
+  number: number;
+  title: string;
+  body: string;
+  summary: string;
+  difficulty: IssueDifficulty;
+  labels: ScoredIssueLabel[];
+  author: ScoredIssueAuthor;
+  assignees: ScoredIssueAuthor[];
+  commentCount: number;
+  updatedAt: string;
+  createdAt: string;
+  htmlUrl: string;
+  score: number;
 }
