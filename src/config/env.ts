@@ -8,6 +8,7 @@ export interface EnvConfig {
   projectDir: string;
   dataDir: string;
   anthropicApiKey: string | undefined;
+  githubToken: string | undefined;
   chromadbUrl: string;
 }
 
@@ -57,6 +58,9 @@ export function loadEnv(): EnvConfig {
   // ANTHROPIC_API_KEY: optional
   const anthropicApiKey = process.env['ANTHROPIC_API_KEY'];
 
+  // GITHUB_TOKEN: optional, for GitHub API access (issue fetching, repo listing)
+  const githubToken = process.env['GITHUB_TOKEN'];
+
   // CHROMADB_URL: optional, default http://localhost:8000
   const chromadbUrl = process.env['CHROMADB_URL'] ?? 'http://localhost:8000';
 
@@ -76,6 +80,7 @@ export function loadEnv(): EnvConfig {
     projectDir,
     dataDir,
     anthropicApiKey,
+    githubToken,
     chromadbUrl,
   };
 }
