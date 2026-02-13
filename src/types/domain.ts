@@ -196,7 +196,8 @@ export type ApiCallType =
   | 'triage_model'
   | 'explain_this'
   | 'practice_review'
-  | 'issue_suitability';
+  | 'issue_suitability'
+  | 'issue_summary';
 
 export interface ApiCallLogEntry {
   id: number;

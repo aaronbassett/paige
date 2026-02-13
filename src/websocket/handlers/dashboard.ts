@@ -2,20 +2,30 @@
 
 import type { WebSocket as WsWebSocket } from 'ws';
 import { handleDashboardRequest, handleDashboardRefreshIssues } from '../../dashboard/handler.js';
+import { getActiveRepo } from '../../mcp/session.js';
 import type { DashboardRequestData } from '../../types/websocket.js';
 
 /**
  * Handles `dashboard:request` messages from Electron clients.
  * Triggers the 4 progressive dashboard flows (state, issues, challenges, learning).
+ *
+ * The connectionId is passed through so Flow 2 (issues) can stream
+ * individual issues to the requesting client rather than broadcasting.
  */
 export function handleDashboardRequestWs(
   _ws: WsWebSocket,
   data: unknown,
-  _connectionId: string,
+  connectionId: string,
 ): void {
   const { statsPeriod } = data as DashboardRequestData;
+  const repo = getActiveRepo();
 
-  void handleDashboardRequest(statsPeriod).catch((err: unknown) => {
+  // Default to empty strings if no repo is selected yet — the issues flow
+  // will gracefully handle this by checking for a valid Octokit client.
+  const owner = repo?.owner ?? '';
+  const repoName = repo?.repo ?? '';
+
+  void handleDashboardRequest(statsPeriod, connectionId, owner, repoName).catch((err: unknown) => {
     // eslint-disable-next-line no-console
     console.error('[ws-handler:dashboard] Dashboard request failed:', err);
   });
@@ -23,14 +33,18 @@ export function handleDashboardRequestWs(
 
 /**
  * Handles `dashboard:refresh_issues` messages from Electron clients.
- * Re-runs the issues flow only (Flow 2).
+ * Re-runs the issues flow only (Flow 2), streaming to the requesting client.
  */
 export function handleDashboardRefreshIssuesWs(
   _ws: WsWebSocket,
   _data: unknown,
-  _connectionId: string,
+  connectionId: string,
 ): void {
-  void handleDashboardRefreshIssues().catch((err: unknown) => {
+  const repo = getActiveRepo();
+  const owner = repo?.owner ?? '';
+  const repoName = repo?.repo ?? '';
+
+  void handleDashboardRefreshIssues(connectionId, owner, repoName).catch((err: unknown) => {
     // eslint-disable-next-line no-console
     console.error('[ws-handler:dashboard] Dashboard refresh issues failed:', err);
   });
