@@ -14,6 +14,7 @@ import { getOctokit, getAuthenticatedUser } from '../../github/client.js';
 import { scoreIssue, sortAndTakeTop, type ScorableIssue } from '../../github/scoring.js';
 import { summarizeIssue } from '../../github/summarize.js';
 import { getDatabase } from '../../database/db.js';
+import { getActiveSessionId } from '../../mcp/session.js';
 import { getAllDreyfus } from '../../database/queries/dreyfus.js';
 import { sendToClient } from '../../websocket/server.js';
 import type {
@@ -79,9 +80,7 @@ export async function assembleAndStreamIssues(
   });
 
   // Filter out pull requests (GitHub's issues endpoint includes PRs)
-  const issues = (rawIssues as OctokitIssue[]).filter(
-    (issue) => issue.pull_request === undefined,
-  );
+  const issues = (rawIssues as OctokitIssue[]).filter((issue) => issue.pull_request === undefined);
 
   if (issues.length === 0) {
     sendToClient(connectionId, {
@@ -128,8 +127,8 @@ export async function assembleAndStreamIssues(
   }
 
   // Step 6 & 7: Summarise each issue and stream to client
-  // Use a session ID of 0 since this is a dashboard flow (no active coaching session)
-  const sessionId = 0;
+  // Dashboard may run without an active coaching session
+  const sessionId = getActiveSessionId();
 
   for (const issue of topIssues) {
     try {

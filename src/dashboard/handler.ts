@@ -40,7 +40,7 @@ export async function handleDashboardRequest(
   owner: string,
   repo: string,
 ): Promise<DashboardResult> {
-  const sessionId = getActiveSessionId() ?? 0;
+  const sessionId = getActiveSessionId();
   const flowStatus = {
     state: false,
     issues: false,
@@ -61,7 +61,8 @@ export async function handleDashboardRequest(
     broadcast({ type: 'dashboard:dreyfus', data: { axes: dreyfusAxes } });
 
     // Map stats to the format frontend expects: { period, stats: [{ label, value, change }] }
-    const periodLabel = statsPeriod === '7d' ? 'this_week' : statsPeriod === '30d' ? 'this_month' : 'today';
+    const periodLabel =
+      statsPeriod === '7d' ? 'this_week' : statsPeriod === '30d' ? 'this_month' : 'today';
     broadcast({
       type: 'dashboard:stats',
       data: {
@@ -121,9 +122,9 @@ export async function handleDashboardRequest(
 
   await Promise.all(flowPromises);
 
-  // Log dashboard_loaded action with flow statuses
+  // Log dashboard_loaded action with flow statuses (only if a session is active)
   const db = getDatabase();
-  if (db !== null) {
+  if (db !== null && sessionId !== null) {
     await logAction(db as never, sessionId, 'dashboard_loaded', { ...flowStatus });
   }
 
