@@ -2,19 +2,49 @@
 // Responds with connection:init containing session ID, capabilities, and feature flags.
 
 import { randomUUID } from 'node:crypto';
+import { execSync } from 'node:child_process';
 import { WebSocket as WsWebSocket } from 'ws';
 
 import type { ConnectionInitData } from '../../types/websocket.js';
+import { getCollection } from '../../memory/chromadb.js';
+import { loadEnv } from '../../config/env.js';
+import { getProjectTree } from '../../file-system/tree.js';
+import { handleDashboardRequest } from '../../dashboard/handler.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
+ * Check if ChromaDB is available by trying to get the collection.
+ */
+function isChromaDBAvailable(): boolean {
+  try {
+    const collection = getCollection();
+    return collection !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if GitHub CLI is available and authenticated.
+ */
+function isGitHubCLIAvailable(): boolean {
+  try {
+    execSync('gh auth status', { stdio: 'ignore', timeout: 2000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Sends a typed JSON message to the client.
  * No-ops if the socket is not in the OPEN state.
+ * Sends in the format expected by Electron UI: { type, payload, timestamp }
  */
-function send(ws: WsWebSocket, type: string, data: unknown): void {
+function send(ws: WsWebSocket, type: string, payload: unknown): void {
   if (ws.readyState === WsWebSocket.OPEN) {
-    ws.send(JSON.stringify({ type, data }));
+    ws.send(JSON.stringify({ type, payload, timestamp: Date.now() }));
   }
 }
 
@@ -23,18 +53,22 @@ function send(ws: WsWebSocket, type: string, data: unknown): void {
 /**
  * Handles `connection:hello` messages from Electron clients.
  * Responds with `connection:init` containing a fresh session UUID,
- * capability flags, and feature flags.
+ * capability flags, and feature flags. Then sends the initial file tree
+ * so the file explorer populates immediately.
  */
-export function handleConnectionHello(
+export async function handleConnectionHello(
   ws: WsWebSocket,
   _data: unknown,
   _connectionId: string,
-): void {
+): Promise<void> {
+  const env = loadEnv();
+
   const initData: ConnectionInitData = {
     sessionId: randomUUID(),
+    projectDir: env.projectDir,
     capabilities: {
-      chromadb_available: false,
-      gh_cli_available: false,
+      chromadb_available: isChromaDBAvailable(),
+      gh_cli_available: isGitHubCLIAvailable(),
     },
     featureFlags: {
       observer_enabled: false,
@@ -43,4 +77,20 @@ export function handleConnectionHello(
   };
 
   send(ws, 'connection:init', initData);
+
+  // Send initial file tree so the explorer populates on startup
+  try {
+    const tree = await getProjectTree(env.projectDir);
+    send(ws, 'fs:tree', { root: tree });
+  } catch (err: unknown) {
+    // eslint-disable-next-line no-console
+    console.error('[ws-handler:connection] Failed to send initial file tree:', err);
+  }
+
+  // Trigger dashboard data load so the dashboard populates on startup
+  // This runs async — individual flows broadcast as they complete
+  handleDashboardRequest('7d').catch((err: unknown) => {
+    // eslint-disable-next-line no-console
+    console.error('[ws-handler:connection] Failed to load initial dashboard data:', err);
+  });
 }

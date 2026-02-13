@@ -3,6 +3,7 @@ import { ptyManager } from './pty-manager.js';
 
 /** IPC channel constants for terminal communication. */
 const CHANNELS = {
+  SPAWN: 'terminal:spawn',
   WRITE: 'terminal:write',
   RESIZE: 'terminal:resize',
   DATA: 'terminal:data',
@@ -19,21 +20,34 @@ const CHANNELS = {
  * @returns A cleanup function that kills the PTY and removes IPC handlers.
  */
 export function setupPtyIpc(mainWindow: BrowserWindow): () => void {
-  // Spawn the PTY shell
-  ptyManager.spawn();
-
-  // Forward PTY output to renderer
-  ptyManager.onData((data) => {
-    if (!mainWindow.isDestroyed()) {
-      mainWindow.webContents.send(CHANNELS.DATA, data);
+  // Handle PTY spawn request from renderer (includes projectDir from backend)
+  const handleSpawn = (_event: Electron.IpcMainEvent, cwd?: string): void => {
+    if (ptyManager.isAlive) {
+      console.warn('[PTY] PTY already spawned, ignoring spawn request');
+      return;
     }
-  });
 
-  ptyManager.onExit((code, signal) => {
-    if (!mainWindow.isDestroyed()) {
-      mainWindow.webContents.send(CHANNELS.EXIT, { code, signal });
+    try {
+      ptyManager.spawn(cwd);
+
+      // Forward PTY output to renderer
+      ptyManager.onData((data) => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send(CHANNELS.DATA, data);
+        }
+      });
+
+      ptyManager.onExit((code, signal) => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send(CHANNELS.EXIT, { code, signal });
+        }
+      });
+    } catch (error) {
+      console.error('[PTY] Failed to spawn terminal:', error);
+      console.error('[PTY] Terminal will not be available. This may be due to node-pty native module issues.');
+      console.error('[PTY] Try rebuilding: cd electron-ui && npm rebuild node-pty');
     }
-  });
+  };
 
   // Handle renderer-to-PTY write
   const handleWrite = (_event: Electron.IpcMainEvent, data: string): void => {
@@ -48,11 +62,13 @@ export function setupPtyIpc(mainWindow: BrowserWindow): () => void {
     ptyManager.resize(size.cols, size.rows);
   };
 
+  ipcMain.on(CHANNELS.SPAWN, handleSpawn);
   ipcMain.on(CHANNELS.WRITE, handleWrite);
   ipcMain.on(CHANNELS.RESIZE, handleResize);
 
   // Return cleanup function
   return () => {
+    ipcMain.removeListener(CHANNELS.SPAWN, handleSpawn);
     ipcMain.removeListener(CHANNELS.WRITE, handleWrite);
     ipcMain.removeListener(CHANNELS.RESIZE, handleResize);
     ptyManager.kill();

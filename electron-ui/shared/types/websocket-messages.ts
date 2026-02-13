@@ -146,7 +146,16 @@ export interface ConnectionHelloMessage extends BaseMessage {
 export interface ConnectionInitMessage extends BaseMessage {
   type: 'connection:init';
   payload: {
-    workspacePath: string;
+    sessionId: string;
+    projectDir: string;
+    capabilities: {
+      chromadb_available: boolean;
+      gh_cli_available: boolean;
+    };
+    featureFlags: {
+      observer_enabled: boolean;
+      practice_mode_enabled: boolean;
+    };
   };
 }
 

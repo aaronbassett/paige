@@ -181,6 +181,7 @@ export interface ReviewRequestData {
 
 export interface ConnectionInitData {
   readonly sessionId: string;
+  readonly projectDir: string;
   readonly capabilities: {
     readonly chromadb_available: boolean;
     readonly gh_cli_available: boolean;
