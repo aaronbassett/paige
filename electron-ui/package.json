@@ -40,6 +40,13 @@
   "author": "Aaron Bassett",
   "license": "MIT",
   "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "node-pty",
+      "esbuild"
+    ]
+  },
   "dependencies": {
     "@chroma-core/default-embed": "^0.1.9",
     "@floating-ui/react": "^0.27.17",
