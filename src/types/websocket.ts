@@ -249,6 +249,9 @@ export interface SessionSelectIssueWsData {
   readonly issueNumber: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface FsRequestTreeData {}
+
 // ── Server -> Client Message Data ───────────────────────────────────────────
 
 export interface ConnectionInitData {
@@ -690,6 +693,11 @@ export interface SessionSelectIssueWsMessage {
   readonly data: SessionSelectIssueWsData;
 }
 
+export interface FsRequestTreeMessage {
+  readonly type: 'fs:request_tree';
+  readonly data: FsRequestTreeData;
+}
+
 /** Union of all 27 client-to-server message types. */
 export type ClientToServerMessage =
   | ConnectionHelloMessage
@@ -718,7 +726,8 @@ export type ClientToServerMessage =
   | ReposListRequestMessage
   | ReposActivityRequestMessage
   | SessionStartRepoMessage
-  | SessionSelectIssueWsMessage;
+  | SessionSelectIssueWsMessage
+  | FsRequestTreeMessage;
 
 // ── Server -> Client Messages (Discriminated Union) ─────────────────────────
 

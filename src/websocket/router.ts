@@ -19,6 +19,7 @@ import {
 } from './handlers/dashboard.js';
 import { handleReposList, handleReposActivity } from './handlers/repos.js';
 import { handleSessionStartRepo, handleSessionSelectIssue } from './handlers/session-start.js';
+import { handleFsRequestTree } from './handlers/file-tree.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -96,12 +97,13 @@ const handlers = new Map<string, MessageHandler>([
   ['tree:expand', notImplementedHandler('tree:expand')],
   ['tree:collapse', notImplementedHandler('tree:collapse')],
   ['review:request', notImplementedHandler('review:request')],
+  ['fs:request_tree', handleFsRequestTree],
 ]);
 
 // ── Session Resolution Categories ────────────────────────────────────────────
 
 /** Messages exempt from session resolution (initial handshake). */
-const SESSION_EXEMPT: ReadonlySet<string> = new Set(['connection:hello']);
+const SESSION_EXEMPT: ReadonlySet<string> = new Set(['connection:hello', 'fs:request_tree']);
 
 /** High-frequency messages that only need a lightweight touch. */
 const SESSION_TOUCH: ReadonlySet<string> = new Set([
