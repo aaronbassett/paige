@@ -10,6 +10,7 @@ import { getCollection } from '../../memory/chromadb.js';
 import { loadEnv } from '../../config/env.js';
 import { getProjectTree } from '../../file-system/tree.js';
 import { handleDashboardRequest } from '../../dashboard/handler.js';
+import { getActiveRepo } from '../../mcp/session.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -59,7 +60,7 @@ function send(ws: WsWebSocket, type: string, payload: unknown): void {
 export async function handleConnectionHello(
   ws: WsWebSocket,
   _data: unknown,
-  _connectionId: string,
+  connectionId: string,
 ): Promise<void> {
   const env = loadEnv();
 
@@ -88,9 +89,12 @@ export async function handleConnectionHello(
   }
 
   // Trigger dashboard data load so the dashboard populates on startup
-  // This runs async — individual flows broadcast as they complete
-  handleDashboardRequest('7d').catch((err: unknown) => {
-    // eslint-disable-next-line no-console
-    console.error('[ws-handler:connection] Failed to load initial dashboard data:', err);
-  });
+  // This runs async — individual flows broadcast/stream as they complete
+  const repo = getActiveRepo();
+  handleDashboardRequest('7d', connectionId, repo?.owner ?? '', repo?.repo ?? '').catch(
+    (err: unknown) => {
+      // eslint-disable-next-line no-console
+      console.error('[ws-handler:connection] Failed to load initial dashboard data:', err);
+    },
+  );
 }

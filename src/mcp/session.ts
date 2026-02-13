@@ -31,10 +31,11 @@ export function getMcpSessionCount(): number {
   return sessions.size;
 }
 
-/** Clear all MCP sessions (for testing). Also clears the active session ID. */
+/** Clear all MCP sessions (for testing). Also clears the active session ID and repo. */
 export function clearMcpSessions(): void {
   sessions.clear();
   activeSessionId = null;
+  activeRepo = null;
 }
 
 // ── Active Session Tracking ────────────────────────────────────────────────
@@ -59,4 +60,24 @@ export function setActiveSessionId(id: number): void {
 /** Clears the active session ID. */
 export function clearActiveSessionId(): void {
   activeSessionId = null;
+}
+
+// ── Active Repository Tracking ──────────────────────────────────────────────
+
+/** Currently selected repository context (set by session:start_repo). */
+let activeRepo: { owner: string; repo: string } | null = null;
+
+/** Returns the currently active repository, or null if none is selected. */
+export function getActiveRepo(): { owner: string; repo: string } | null {
+  return activeRepo;
+}
+
+/** Sets the active repository context. */
+export function setActiveRepo(owner: string, repo: string): void {
+  activeRepo = { owner, repo };
+}
+
+/** Clears the active repository context. */
+export function clearActiveRepo(): void {
+  activeRepo = null;
 }
