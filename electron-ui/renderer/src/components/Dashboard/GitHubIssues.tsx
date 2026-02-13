@@ -186,8 +186,8 @@ export function GitHubIssues({ onNavigate }: GitHubIssuesProps) {
 
       {/* Populated state with progressive rendering */}
       {issues.length > 0 && (
-        <AnimatePresence mode="popLayout">
-          <div style={getListStyle(layout)}>
+        <div style={getListStyle(layout)}>
+          <AnimatePresence mode="popLayout">
             {issues.map((issue) => (
               <IssueCard
                 key={issue.number}
@@ -196,8 +196,8 @@ export function GitHubIssues({ onNavigate }: GitHubIssuesProps) {
                 onClick={() => handleIssueClick(issue)}
               />
             ))}
-          </div>
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
       )}
 
       {/* Issue detail modal */}
