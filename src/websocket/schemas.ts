@@ -131,6 +131,21 @@ const reviewRequestDataSchema = z.object({
   phaseId: z.number(),
 });
 
+const reposListRequestDataSchema = z.object({});
+
+const reposActivityRequestDataSchema = z.object({
+  repos: z.array(z.string()),
+});
+
+const sessionStartRepoDataSchema = z.object({
+  owner: z.string(),
+  repo: z.string(),
+});
+
+const sessionSelectIssueWsDataSchema = z.object({
+  issueNumber: z.number(),
+});
+
 // ── Message Envelope Schema ─────────────────────────────────────────────────
 
 /**
@@ -173,6 +188,10 @@ export const messageDataSchemas = {
   'tree:expand': treeExpandDataSchema,
   'tree:collapse': treeCollapseDataSchema,
   'review:request': reviewRequestDataSchema,
+  'repos:list': reposListRequestDataSchema,
+  'repos:activity': reposActivityRequestDataSchema,
+  'session:start_repo': sessionStartRepoDataSchema,
+  'session:select_issue': sessionSelectIssueWsDataSchema,
 } as const;
 
 /**
