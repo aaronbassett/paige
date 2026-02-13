@@ -14,6 +14,7 @@ export interface Session {
   started_at: string; // ISO 8601
   ended_at: string | null; // ISO 8601, null if active
   last_activity_at: string; // ISO 8601
+  total_duration_ms: number | null; // Pre-computed total session duration
 }
 
 // ── Plan ─────────────────────────────────────────────────────────────────────
@@ -229,6 +230,25 @@ export interface SessionWrapUpError {
 
 export type NudgeSuppressionReason = 'cooldown' | 'low_confidence' | 'flow_state' | 'muted';
 
+// ── Hint Level Span ─────────────────────────────────────────────────────
+
+export interface HintLevelSpan {
+  id: number;
+  session_id: number;
+  level: number; // hint level (0=off, 1=low, 2=medium, 3=high)
+  started_at: string; // ISO 8601
+  ended_at: string | null; // ISO 8601, null if still active
+}
+
+// ── Issue Label ─────────────────────────────────────────────────────────
+
+export interface IssueLabel {
+  id: number;
+  issue_number: number;
+  label_name: string;
+  label_color: string | null; // hex color without #
+}
+
 // ── Database Table Types (for Kysely) ────────────────────────────────────────
 
 export interface DatabaseTables {
@@ -243,4 +263,6 @@ export interface DatabaseTables {
   action_log: ActionLogEntry;
   api_call_log: ApiCallLogEntry;
   session_wrap_up_errors: SessionWrapUpError;
+  hint_level_spans: HintLevelSpan;
+  issue_labels: IssueLabel;
 }

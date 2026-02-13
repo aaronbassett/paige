@@ -5,6 +5,7 @@ import { Kysely, Migrator, SqliteDialect, type Migration, type MigrationProvider
 import type { DatabaseTables } from '../types/domain.js';
 import * as migration001 from './migrations/001-initial.js';
 import * as migration002 from './migrations/002-session-auto-timeout.js';
+import * as migration003 from './migrations/003-stats-expansion.js';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,7 @@ class InlineMigrationProvider implements MigrationProvider {
     return Promise.resolve({
       '001-initial': migration001,
       '002-session-auto-timeout': migration002,
+      '003-stats-expansion': migration003,
     });
   }
 }
