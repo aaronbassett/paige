@@ -118,6 +118,12 @@ export function useFileTree(): UseFileTreeReturn {
     return unsub;
   }, [on]);
 
+  // Request tree on mount — ensures it loads even if the initial
+  // fs:tree from connection:hello was missed (IDE wasn't mounted yet)
+  useEffect(() => {
+    void send('fs:request_tree', {});
+  }, [send]);
+
   // Subscribe to fs:tree_update (incremental changes)
   useEffect(() => {
     const unsub = on('fs:tree_update', (msg: WebSocketMessage) => {

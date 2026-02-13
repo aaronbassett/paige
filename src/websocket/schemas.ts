@@ -150,6 +150,8 @@ const sessionSelectIssueWsDataSchema = z.object({
   issueNumber: z.number(),
 });
 
+const fsRequestTreeDataSchema = z.object({});
+
 // ── Message Envelope Schema ─────────────────────────────────────────────────
 
 /**
@@ -197,6 +199,7 @@ export const messageDataSchemas = {
   'repos:activity': reposActivityRequestDataSchema,
   'session:start_repo': sessionStartRepoDataSchema,
   'session:select_issue': sessionSelectIssueWsDataSchema,
+  'fs:request_tree': fsRequestTreeDataSchema,
 } as const;
 
 /**
