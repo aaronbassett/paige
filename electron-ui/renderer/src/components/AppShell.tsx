@@ -9,11 +9,13 @@ import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AppView } from '@shared/types/entities';
 import type { SessionRepoStartedMessage, WebSocketMessage } from '@shared/types/websocket-messages';
+import type { PlanningCompletePayload } from '@shared/types/websocket-messages';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { Landing } from '../views/Landing';
 import { Dashboard } from '../views/Dashboard';
 import { IDE } from '../views/IDE';
 import { Placeholder } from '../views/Placeholder';
+import { PlanningLoader } from '../views/PlanningLoader';
 
 /** Spring preset: lively, bouncy motion */
 const SPRING_EXPRESSIVE = { stiffness: 260, damping: 20 };
@@ -75,6 +77,7 @@ export function AppShell() {
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [, setNavContext] = useState<NavigationContext>({});
   const [, setCurrentRepo] = useState<{ owner: string; repo: string } | null>(null);
+  const [, setPlanningResult] = useState<PlanningCompletePayload | null>(null);
 
   const { send, on } = useWebSocket();
 
@@ -89,6 +92,7 @@ export function AppShell() {
     switch (currentView) {
       case 'ide':
       case 'placeholder':
+      case 'planning':
         setCurrentView('dashboard');
         break;
       case 'dashboard':
@@ -130,6 +134,15 @@ export function AppShell() {
         return <IDE onNavigate={handleNavigate} />;
       case 'placeholder':
         return <Placeholder onNavigate={handleNavigate} />;
+      case 'planning':
+        return (
+          <PlanningLoader
+            onComplete={(result) => {
+              setPlanningResult(result);
+              setCurrentView('ide');
+            }}
+          />
+        );
     }
   };
 
