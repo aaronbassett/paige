@@ -120,6 +120,7 @@ export function createFileWatcher(projectDir: string): FileWatcher {
       if (nodeErr.code === 'UNKNOWN' && nodeErr.path?.includes('.overmind')) return;
       // Ignore EMFILE errors (too many open files) - polling fallback will handle it
       if (nodeErr.code === 'EMFILE') {
+        // eslint-disable-next-line no-console
         console.warn('[watcher] Too many open files - using polling mode');
         return;
       }

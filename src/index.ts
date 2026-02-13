@@ -2,10 +2,9 @@
 // HTTP server with health endpoint, MCP transport, and WebSocket support
 
 import http, { type Server } from 'node:http';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { loadEnv } from './config/env.js';
 import { createDatabase, closeDatabase } from './database/db.js';
-import { basename } from 'node:path';
 import { createFileWatcher, type FileChangeEvent } from './file-system/watcher.js';
 import { initializeMemory, closeMemory } from './memory/chromadb.js';
 import { createMcpServer } from './mcp/server.js';
@@ -247,6 +246,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(0);
   };
 
-  process.on('SIGINT', () => shutdown('SIGINT'));
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => void shutdown('SIGINT'));
+  process.on('SIGTERM', () => void shutdown('SIGTERM'));
 }

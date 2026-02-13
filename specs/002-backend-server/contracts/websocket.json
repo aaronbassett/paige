@@ -220,7 +220,7 @@
           "type": "object",
           "properties": {
             "chromadb_available": { "type": "boolean" },
-            "gh_cli_available": { "type": "boolean" }
+            "github_api_available": { "type": "boolean" }
           }
         },
         "featureFlags": {
