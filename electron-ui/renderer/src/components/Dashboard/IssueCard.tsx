@@ -283,6 +283,8 @@ function TypewriterText({
   const rafRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
   const completedRef = useRef(skipAnimation ? true : false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   // Delay before starting the typewriter
   useEffect(() => {
@@ -310,13 +312,13 @@ function TypewriterText({
         rafRef.current = requestAnimationFrame(tick);
       } else if (!completedRef.current) {
         completedRef.current = true;
-        onComplete?.();
+        onCompleteRef.current?.();
       }
     };
 
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [started, text, skipAnimation, onComplete]);
+  }, [started, text, skipAnimation]);
 
   if (!text) return null;
 
