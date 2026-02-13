@@ -3,6 +3,7 @@
 
 import { createHash } from 'node:crypto';
 import Anthropic from '@anthropic-ai/sdk';
+import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { ZodSchema } from 'zod';
 import { getDatabase } from '../database/db.js';
 import { logApiCall } from '../logger/api-log.js';
@@ -36,7 +37,7 @@ export interface CallApiOptions<T> {
   systemPrompt: string;
   userMessage: string;
   responseSchema: ZodSchema<T>;
-  sessionId: number;
+  sessionId: number | null;
   maxTokens?: number;
   tools?: Array<{ type: string; name: string }>;
 }
@@ -87,12 +88,13 @@ export async function callApi<T>(options: CallApiOptions<T>): Promise<T> {
   const startTime = Date.now();
 
   try {
-    // Call Anthropic SDK (FR-083, FR-084, FR-092)
+    // Call Anthropic SDK with structured output (FR-083, FR-084, FR-092)
     const response = await anthropic.messages.create({
       model: modelId,
       max_tokens: options.maxTokens ?? 4096,
       system: options.systemPrompt,
       messages: [{ role: 'user', content: options.userMessage }],
+      output_config: { format: zodOutputFormat(options.responseSchema) },
       ...(options.tools ? { tools: options.tools as never } : {}),
     });
 
@@ -115,7 +117,7 @@ export async function callApi<T>(options: CallApiOptions<T>): Promise<T> {
       throw new Error(`Unexpected response content type from Claude API`);
     }
 
-    // Parse JSON and validate with Zod schema
+    // Parse and validate — structured output guarantees valid JSON
     const parsed: unknown = JSON.parse(textBlock.text);
     const result = options.responseSchema.parse(parsed);
 
@@ -126,8 +128,8 @@ export async function callApi<T>(options: CallApiOptions<T>): Promise<T> {
         response.usage.output_tokens * pricing.outputPerMillion) /
       1_000_000;
 
-    // Log successful API call (FR-086)
-    if (db !== null) {
+    // Log successful API call (FR-086) — skip when no active session
+    if (db !== null && options.sessionId !== null) {
       await logApiCall(db, {
         sessionId: options.sessionId,
         callType: options.callType as ApiCallType,
@@ -166,7 +168,7 @@ async function logFailure(
   modelId: string,
   inputHash: string,
 ): Promise<void> {
-  if (db !== null) {
+  if (db !== null && options.sessionId !== null) {
     await logApiCall(db, {
       sessionId: options.sessionId,
       callType: options.callType as ApiCallType,
