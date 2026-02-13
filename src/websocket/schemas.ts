@@ -148,6 +148,10 @@ const sessionStartRepoDataSchema = z.object({
 
 const sessionSelectIssueWsDataSchema = z.object({
   issueNumber: z.number(),
+  issueTitle: z.string().optional(),
+  issueBody: z.string().optional(),
+  issueLabels: z.array(z.string()).optional(),
+  issueUrl: z.string().optional(),
 });
 
 const fsRequestTreeDataSchema = z.object({});

@@ -36,10 +36,10 @@ import type {
 /** Data payload sent by the Electron UI when the user picks an issue. */
 interface PlanningStartData {
   readonly issueNumber: number;
-  readonly issueTitle: string;
-  readonly issueBody: string;
-  readonly issueLabels: readonly string[];
-  readonly issueUrl: string;
+  readonly issueTitle?: string;
+  readonly issueBody?: string;
+  readonly issueLabels?: readonly string[];
+  readonly issueUrl?: string;
 }
 
 // ── Handler ──────────────────────────────────────────────────────────────────
@@ -54,11 +54,7 @@ interface PlanningStartData {
  * The function intentionally does NOT await the async work so the WebSocket
  * router can continue processing other messages.
  */
-export function handlePlanningStart(
-  _ws: WsWebSocket,
-  data: unknown,
-  connectionId: string,
-): void {
+export function handlePlanningStart(_ws: WsWebSocket, data: unknown, connectionId: string): void {
   const input = data as PlanningStartData;
 
   // Send immediate acknowledgment
@@ -66,7 +62,7 @@ export function handlePlanningStart(
     type: 'planning:started',
     data: {
       sessionId: connectionId,
-      issueTitle: input.issueTitle,
+      issueTitle: input.issueTitle ?? '',
     },
   };
   sendToClient(connectionId, startedMessage as ServerToClientMessage);
@@ -81,11 +77,11 @@ export function handlePlanningStart(
 
   // Build the issue input for the planning agent
   const issue: IssueInput = {
-    title: input.issueTitle,
-    body: input.issueBody,
+    title: input.issueTitle ?? '',
+    body: input.issueBody ?? '',
     number: input.issueNumber,
-    labels: [...input.issueLabels],
-    url: input.issueUrl,
+    labels: [...(input.issueLabels ?? [])],
+    url: input.issueUrl ?? '',
   };
 
   // Fire-and-forget: run the planning pipeline in the background
@@ -184,7 +180,7 @@ async function handlePlanComplete(
   input: PlanningStartData,
 ): Promise<void> {
   // Attempt to persist to the database (graceful degradation if unavailable)
-  let sessionIdStr = connectionId;
+  const sessionIdStr = connectionId;
   try {
     await persistPlanToDb(plan, repoPath, input);
   } catch (err) {
@@ -278,7 +274,7 @@ async function persistPlanToDb(
     status: 'active',
     started_at: new Date().toISOString(),
     issue_number: input.issueNumber,
-    issue_title: input.issueTitle,
+    issue_title: input.issueTitle ?? null,
   });
 
   setActiveSessionId(session.id);
