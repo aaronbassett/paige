@@ -7,7 +7,7 @@ import { logAction } from '../logger/action-log.js';
 import { getActiveSessionId } from '../mcp/session.js';
 import { broadcast } from '../websocket/server.js';
 import { assembleState } from './flows/state.js';
-import { assembleIssues } from './flows/issues.js';
+import { assembleAndStreamIssues } from './flows/issues.js';
 import { assembleChallenges } from './flows/challenges.js';
 import { assembleLearningMaterials } from './flows/learning.js';
 
@@ -26,10 +26,20 @@ export interface DashboardResult {
  * 3 async flows (issues, challenges, learning materials).
  *
  * Flow 1 (state) runs synchronously and broadcasts immediately.
- * Flows 2-4 run concurrently; each broadcasts independently on completion.
+ * Flows 2-4 run concurrently; each broadcasts/streams independently on completion.
  * Failures in individual flows do not block other flows.
+ *
+ * @param statsPeriod - Time period for stats aggregation
+ * @param connectionId - WebSocket connection ID for per-client issue streaming
+ * @param owner - Repository owner (for issue fetching)
+ * @param repo - Repository name (for issue fetching)
  */
-export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<DashboardResult> {
+export async function handleDashboardRequest(
+  statsPeriod: StatsPeriod,
+  connectionId: string,
+  owner: string,
+  repo: string,
+): Promise<DashboardResult> {
   const sessionId = getActiveSessionId() ?? 0;
   const flowStatus = {
     state: false,
@@ -71,25 +81,15 @@ export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<
     console.error('[dashboard] Flow 1 (state) failed:', err);
   }
 
-  // Flows 2-4: Run concurrently, each broadcasts independently
+  // Flows 2-4: Run concurrently, each broadcasts/streams independently
   const flowPromises = [
-    // Flow 2: GitHub issues with suitability
-    // Transform to match frontend format: { issues: [{ number, title, labels: [{name, color}], url }] }
-    assembleIssues(sessionId)
-      .then((data) => {
-        const transformedIssues = data.issues.map((issue) => ({
-          number: issue.number,
-          title: issue.title,
-          labels: issue.labels.map((name) => ({ name, color: '666666' })),
-          url: `#issue-${String(issue.number)}`,
-        }));
-        broadcast({ type: 'dashboard:issues', data: { issues: transformedIssues } });
+    // Flow 2: GitHub issues — streamed per-issue to the requesting client
+    assembleAndStreamIssues(owner, repo, connectionId)
+      .then(() => {
         flowStatus.issues = true;
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : 'Issues flow failed';
-        // Send empty issues on error so frontend exits skeleton state
-        broadcast({ type: 'dashboard:issues', data: { issues: [] } });
         // eslint-disable-next-line no-console
         console.error('[dashboard] Flow 2 (issues) failed:', message);
       }),
@@ -132,23 +132,21 @@ export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<
 
 /**
  * Handles a dashboard:refresh_issues request (re-runs Flow 2 only).
- * Broadcasts dashboard:issues on success or dashboard:issues_error on failure.
+ * Streams individual issues to the requesting client, then sends completion.
+ *
+ * @param connectionId - WebSocket connection ID for per-client issue streaming
+ * @param owner - Repository owner
+ * @param repo - Repository name
  */
-export async function handleDashboardRefreshIssues(): Promise<void> {
-  const sessionId = getActiveSessionId() ?? 0;
-
+export async function handleDashboardRefreshIssues(
+  connectionId: string,
+  owner: string,
+  repo: string,
+): Promise<void> {
   try {
-    const data = await assembleIssues(sessionId);
-    const transformedIssues = data.issues.map((issue) => ({
-      number: issue.number,
-      title: issue.title,
-      labels: issue.labels.map((name) => ({ name, color: '666666' })),
-      url: `#issue-${String(issue.number)}`,
-    }));
-    broadcast({ type: 'dashboard:issues', data: { issues: transformedIssues } });
+    await assembleAndStreamIssues(owner, repo, connectionId);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Issues refresh failed';
-    broadcast({ type: 'dashboard:issues', data: { issues: [] } });
     // eslint-disable-next-line no-console
     console.error('[dashboard] Issues refresh failed:', message);
   }

@@ -44,7 +44,7 @@ vi.mock('../../src/logger/action-log.js', () => ({
 }));
 
 vi.mock('../../src/dashboard/flows/issues.js', () => ({
-  assembleIssues: vi.fn(),
+  assembleAndStreamIssues: vi.fn(),
 }));
 
 vi.mock('../../src/dashboard/flows/challenges.js', () => ({
@@ -70,7 +70,7 @@ import {
 import { getApiCallCountByPeriod, getApiCostByPeriod } from '../../src/logger/api-log.js';
 import { broadcast } from '../../src/websocket/server.js';
 import { logAction } from '../../src/logger/action-log.js';
-import { assembleIssues } from '../../src/dashboard/flows/issues.js';
+import { assembleAndStreamIssues } from '../../src/dashboard/flows/issues.js';
 import { assembleChallenges } from '../../src/dashboard/flows/challenges.js';
 import { assembleLearningMaterials } from '../../src/dashboard/flows/learning.js';
 import { getActiveSessionId } from '../../src/mcp/session.js';
@@ -87,7 +87,7 @@ const mockGetApiCallCountByPeriod = vi.mocked(getApiCallCountByPeriod);
 const mockGetApiCostByPeriod = vi.mocked(getApiCostByPeriod);
 const mockBroadcast = vi.mocked(broadcast);
 const mockLogAction = vi.mocked(logAction);
-const mockAssembleIssues = vi.mocked(assembleIssues);
+const mockAssembleAndStreamIssues = vi.mocked(assembleAndStreamIssues);
 const mockAssembleChallenges = vi.mocked(assembleChallenges);
 const mockAssembleLearningMaterials = vi.mocked(assembleLearningMaterials);
 const mockGetActiveSessionId = vi.mocked(getActiveSessionId);
@@ -295,7 +295,7 @@ describe('handleDashboardRequest (integration)', () => {
     mockGetApiCostByPeriod.mockResolvedValue(1.45);
     mockLogAction.mockResolvedValue(undefined);
     mockGetActiveSessionId.mockReturnValue(42);
-    mockAssembleIssues.mockResolvedValue({ issues: [] });
+    mockAssembleAndStreamIssues.mockResolvedValue(undefined);
     mockAssembleChallenges.mockResolvedValue({ challenges: [] });
     mockAssembleLearningMaterials.mockResolvedValue({ materials: [] });
   });
@@ -310,34 +310,37 @@ describe('handleDashboardRequest (integration)', () => {
     mockBroadcast.mockReset();
     mockLogAction.mockReset();
     mockGetActiveSessionId.mockReset();
-    mockAssembleIssues.mockReset();
+    mockAssembleAndStreamIssues.mockReset();
     mockAssembleChallenges.mockReset();
     mockAssembleLearningMaterials.mockReset();
   });
 
-  // ── Test 9: Broadcasts dashboard:state immediately ─────────────────────────
+  // ── Test 9: Broadcasts dashboard:dreyfus and dashboard:stats immediately ────
 
-  it('broadcasts dashboard:state immediately', async () => {
-    await handleDashboardRequest('7d');
+  it('broadcasts dashboard:dreyfus and dashboard:stats immediately', async () => {
+    await handleDashboardRequest('7d', 'test-conn-id', 'owner', 'repo');
 
-    // First broadcast should be dashboard:state (Flow 1 runs before Flows 2-4)
+    // Flow 1 broadcasts dreyfus + stats before Flows 2-4 start
     expect(mockBroadcast).toHaveBeenCalled();
     const firstCall = mockBroadcast.mock.calls[0]![0] as {
       type: string;
-      data: { dreyfus: unknown[]; stats: Record<string, number> };
+      data: { axes: unknown[] };
     };
-    expect(firstCall.type).toBe('dashboard:state');
-    expect(Array.isArray(firstCall.data.dreyfus)).toBe(true);
-    expect(typeof firstCall.data.stats['total_sessions']).toBe('number');
-    expect(typeof firstCall.data.stats['total_actions']).toBe('number');
-    expect(typeof firstCall.data.stats['total_api_calls']).toBe('number');
-    expect(typeof firstCall.data.stats['total_cost']).toBe('number');
+    expect(firstCall.type).toBe('dashboard:dreyfus');
+    expect(Array.isArray(firstCall.data.axes)).toBe(true);
+
+    const secondCall = mockBroadcast.mock.calls[1]![0] as {
+      type: string;
+      data: { period: string; stats: unknown[] };
+    };
+    expect(secondCall.type).toBe('dashboard:stats');
+    expect(Array.isArray(secondCall.data.stats)).toBe(true);
   });
 
   // ── Test 10: Returns flowsCompleted with per-flow status booleans ──────────
 
   it('returns flowsCompleted with per-flow status booleans', async () => {
-    const result = await handleDashboardRequest('all');
+    const result = await handleDashboardRequest('all', 'test-conn-id', 'owner', 'repo');
 
     expect(result.flowsCompleted).toBeDefined();
     expect(typeof result.flowsCompleted.state).toBe('boolean');
@@ -349,7 +352,7 @@ describe('handleDashboardRequest (integration)', () => {
   // ── Test 11: Calls assembleState with the provided statsPeriod ──────────────
 
   it('calls assembleState with the provided statsPeriod', async () => {
-    await handleDashboardRequest('30d');
+    await handleDashboardRequest('30d', 'test-conn-id', 'owner', 'repo');
 
     // assembleState queries stats by period — verify the period was forwarded
     expect(mockGetSessionCountByPeriod).toHaveBeenCalledWith(fakeDb, '30d');
@@ -361,7 +364,7 @@ describe('handleDashboardRequest (integration)', () => {
   // ── Test 12: Logs dashboard_loaded action with flow statuses ──────────────
 
   it('logs dashboard_loaded action with flow statuses', async () => {
-    await handleDashboardRequest('7d');
+    await handleDashboardRequest('7d', 'test-conn-id', 'owner', 'repo');
 
     expect(mockLogAction).toHaveBeenCalledTimes(1);
     const logArgs = mockLogAction.mock.calls[0]!;
