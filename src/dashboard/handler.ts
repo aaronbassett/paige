@@ -60,20 +60,10 @@ export async function handleDashboardRequest(
     }));
     broadcast({ type: 'dashboard:dreyfus', data: { axes: dreyfusAxes } });
 
-    // Map stats to the format frontend expects: { period, stats: [{ label, value, change }] }
-    const periodLabel =
-      statsPeriod === '7d' ? 'this_week' : statsPeriod === '30d' ? 'this_month' : 'today';
+    // Broadcast stats in the rich StatPayload format
     broadcast({
       type: 'dashboard:stats',
-      data: {
-        period: periodLabel,
-        stats: [
-          { label: 'Sessions', value: stateData.stats.total_sessions, change: 0 },
-          { label: 'Actions', value: stateData.stats.total_actions, change: 0 },
-          { label: 'API Calls', value: stateData.stats.total_api_calls, change: 0 },
-          { label: 'Cost', value: stateData.stats.total_cost, change: 0 },
-        ],
-      },
+      data: stateData.stats,
     });
 
     flowStatus.state = true;
