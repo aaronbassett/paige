@@ -4,15 +4,15 @@
 import type { StatsPeriod, DashboardStateData } from '../../types/websocket.js';
 import { getDatabase } from '../../database/db.js';
 import { getAllDreyfus } from '../../database/queries/dreyfus.js';
-import { getSessionCountByPeriod, getActionCountByPeriod } from '../../database/queries/actions.js';
-import { getApiCallCountByPeriod, getApiCostByPeriod } from '../../logger/api-log.js';
+import { generateDummyStats } from '../../database/queries/stats.js';
 
 /**
  * Assembles immediate dashboard state: Dreyfus stages + stats filtered by period.
  *
  * Loads all Dreyfus assessments and maps them to the entry format (stripping id,
- * evidence, assessed_at). Queries aggregated stats (session count, action count,
- * API call count, total cost) filtered by the given time period.
+ * evidence, assessed_at). Generates dummy stats for all 25 stat types scaled by
+ * the given time period (will be replaced with real queries once data flows are
+ * complete).
  *
  * Returns empty placeholder arrays for issues, challenges, and learning_materials
  * (these are populated by their respective async flows).
@@ -31,24 +31,14 @@ export async function assembleState(statsPeriod: StatsPeriod): Promise<Dashboard
     confidence: a.confidence,
   }));
 
-  // Query stats filtered by period
-  const [totalSessions, totalActions, totalApiCalls, totalCost] = await Promise.all([
-    getSessionCountByPeriod(db, statsPeriod),
-    getActionCountByPeriod(db, statsPeriod),
-    getApiCallCountByPeriod(db, statsPeriod),
-    getApiCostByPeriod(db, statsPeriod),
-  ]);
+  // Generate dummy stats for all 25 stat types
+  const stats = generateDummyStats(statsPeriod);
 
   return {
     dreyfus,
     stats: {
       period: statsPeriod,
-      stats: {
-        sessions: { value: totalSessions, change: 0, unit: 'count' },
-        actions: { value: totalActions, change: 0, unit: 'count' },
-        api_calls: { value: totalApiCalls, change: 0, unit: 'count' },
-        total_cost: { value: totalCost, change: 0, unit: 'currency' },
-      },
+      stats,
     },
     issues: [],
     challenges: [],
