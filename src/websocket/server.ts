@@ -39,7 +39,7 @@ function sendError(
   const errorMsg = {
     type: 'connection:error',
     payload: { code, message, context },
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
   if (ws.readyState === WsWebSocket.OPEN) {
     ws.send(JSON.stringify(errorMsg));
@@ -122,7 +122,13 @@ export function createWebSocketServer(server: Server): WebSocketServerHandle {
       }
 
       // Route to the appropriate handler (validated message is safe to cast)
-      routeMessage(ws, validatedMessage as ClientToServerMessage, connectionId);
+      // routeMessage is async — fire-and-forget with error logging
+      routeMessage(ws, validatedMessage as ClientToServerMessage, connectionId).catch(
+        (err: unknown) => {
+          // eslint-disable-next-line no-console
+          console.error('[ws-server] Unhandled route error:', err);
+        },
+      );
     });
 
     ws.on('close', () => {
