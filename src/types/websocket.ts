@@ -1,15 +1,16 @@
 /**
  * WebSocket protocol type definitions for Backend <-> Electron communication.
  *
- * 55 message types total:
- *   - 23 Client->Server (Electron to Backend)
- *   - 32 Server->Client (Backend to Electron)
+ * 58 message types total:
+ *   - 24 Client->Server (Electron to Backend)
+ *   - 34 Server->Client (Backend to Electron)
  *
  * All messages follow the { type, data } discriminated union pattern.
  * Derived from specs/002-backend-server/contracts/websocket.json
  */
 
 import type { HintLevel, PhaseStatus } from './domain.js';
+import type { AudioChunkData, AudioCompleteData, AudioControlData } from '../tts/tts-types.js';
 
 // ── Shared Sub-Types ────────────────────────────────────────────────────────
 
@@ -530,7 +531,12 @@ export interface ReviewRequestMessage {
   readonly data: ReviewRequestData;
 }
 
-/** Union of all 23 client-to-server message types. */
+export interface AudioControlMessage {
+  readonly type: 'audio:control';
+  readonly data: AudioControlData;
+}
+
+/** Union of all 24 client-to-server message types. */
 export type ClientToServerMessage =
   | ConnectionHelloMessage
   | FileOpenMessage
@@ -554,7 +560,8 @@ export type ClientToServerMessage =
   | TerminalCommandMessage
   | TreeExpandMessage
   | TreeCollapseMessage
-  | ReviewRequestMessage;
+  | ReviewRequestMessage
+  | AudioControlMessage;
 
 // ── Server -> Client Messages (Discriminated Union) ─────────────────────────
 
@@ -708,7 +715,17 @@ export interface SessionCompletedMessage {
   readonly data: SessionCompletedData;
 }
 
-/** Union of all 32 server-to-client message types. */
+export interface AudioChunkMessage {
+  readonly type: 'audio:chunk';
+  readonly data: AudioChunkData;
+}
+
+export interface AudioCompleteMessage {
+  readonly type: 'audio:complete';
+  readonly data: AudioCompleteData;
+}
+
+/** Union of all 34 server-to-client message types. */
 export type ServerToClientMessage =
   | ConnectionInitMessage
   | ConnectionErrorMessage
@@ -739,7 +756,9 @@ export type ServerToClientMessage =
   | DashboardLearningMaterialsMessage
   | DashboardIssuesErrorMessage
   | SessionStartedMessage
-  | SessionCompletedMessage;
+  | SessionCompletedMessage
+  | AudioChunkMessage
+  | AudioCompleteMessage;
 
 // ── Combined Type ───────────────────────────────────────────────────────────
 
@@ -807,3 +826,7 @@ export type ClientMessageHandlers = {
 export type PartialClientMessageHandlers = {
   readonly [T in ClientToServerMessageType]?: (data: MessageDataFor<T>) => void | Promise<void>;
 };
+
+// ── TTS Type Re-Exports ────────────────────────────────────────────────────
+
+export type { AudioChunkData, AudioCompleteData, AudioControlData } from '../tts/tts-types.js';
