@@ -13,6 +13,7 @@ export interface Session {
   status: SessionStatus;
   started_at: string; // ISO 8601
   ended_at: string | null; // ISO 8601, null if active
+  last_activity_at: string; // ISO 8601
 }
 
 // ── Plan ─────────────────────────────────────────────────────────────────────

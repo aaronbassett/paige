@@ -28,9 +28,10 @@ const EXPECTED_TABLES = [
   'session_wrap_up_errors',
 ] as const;
 
-/** All 15 indexes created by the initial migration. */
+/** All 16 indexes created by migrations 001 + 002. */
 const EXPECTED_INDEXES = [
   'idx_sessions_status',
+  'idx_sessions_status_last_activity',
   'idx_plans_session_id',
   'idx_plans_is_active',
   'idx_phases_plan_id',
@@ -113,7 +114,7 @@ describe('Database initialization', () => {
     expect(result.rows[0]?.foreign_keys).toBe(1);
   });
 
-  it('creates all 15 indexes', async () => {
+  it('creates all 16 indexes', async () => {
     const db = await createDatabase(dbPath);
 
     const rows = await sql<SqliteMasterRow>`
@@ -126,7 +127,7 @@ describe('Database initialization', () => {
     const expectedSorted = [...EXPECTED_INDEXES].sort();
 
     expect(indexNames).toEqual(expectedSorted);
-    expect(indexNames).toHaveLength(15);
+    expect(indexNames).toHaveLength(16);
   });
 
   it('returns the same instance on idempotent creation', async () => {

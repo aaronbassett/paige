@@ -4,6 +4,7 @@ import Database from 'better-sqlite3';
 import { Kysely, Migrator, SqliteDialect, type Migration, type MigrationProvider } from 'kysely';
 import type { DatabaseTables } from '../types/domain.js';
 import * as migration001 from './migrations/001-initial.js';
+import * as migration002 from './migrations/002-session-auto-timeout.js';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,7 @@ class InlineMigrationProvider implements MigrationProvider {
   getMigrations(): Promise<Record<string, Migration>> {
     return Promise.resolve({
       '001-initial': migration001,
+      '002-session-auto-timeout': migration002,
     });
   }
 }
