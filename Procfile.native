@@ -1,0 +1,18 @@
+# Paige E2E Demo - Native ChromaDB (No Docker Required)
+# Start all services: overmind start -f Procfile.native
+
+# Backend Server (Required)
+# Runs on port 3001 with MCP endpoint (/mcp) and WebSocket (/ws)
+backend: cd $PROJECT_ROOT && pnpm dev
+
+# ChromaDB (Optional - graceful degradation)
+# Native Python installation (no Docker)
+chromadb: chroma run --host localhost --port 8000
+
+# Vite Dev Server (Required for Electron UI)
+# Hot module replacement for renderer process
+vite: cd $PROJECT_ROOT/electron-ui && npm run dev
+
+# Electron App (Required for UI)
+# Wait 3 seconds for Vite to start, then launch Electron
+electron: sleep 3 && cd $PROJECT_ROOT/electron-ui && npm run dev:electron

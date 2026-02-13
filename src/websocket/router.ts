@@ -33,7 +33,11 @@ function sendError(
   message: string,
   context?: Record<string, unknown>,
 ): void {
-  const errorMsg = { type: 'connection:error', data: { code, message, context } };
+  const errorMsg = {
+    type: 'connection:error',
+    payload: { code, message, context },
+    timestamp: Date.now()
+  };
   if (ws.readyState === WsWebSocket.OPEN) {
     ws.send(JSON.stringify(errorMsg));
   }

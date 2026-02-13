@@ -64,8 +64,17 @@ export function createMcpServer(_httpServer: Server): McpServerHandle {
     }
 
     // New session: create transport + server, register tools, connect
+    // Allow specific origins for local development (MCP Inspector, Claude Code, etc.)
+    // The MCP Inspector typically runs on http://127.0.0.1:6274 or similar
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
+      allowedOrigins: [
+        'http://127.0.0.1:6274',
+        'http://localhost:6274',
+        'http://127.0.0.1:5173',
+        'http://localhost:5173',
+        null as unknown as string, // Allow requests without an Origin header (CLI tools)
+      ],
     });
 
     const mcpServer = new McpServer(

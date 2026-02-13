@@ -18,32 +18,50 @@ export class PtyManager {
   /**
    * Spawn a new shell PTY process.
    * Uses the user's default shell on Unix, cmd.exe on Windows.
+   * @param cwd - Working directory for the terminal (defaults to user's home)
    * @throws If a PTY is already running (call kill() first).
    */
-  spawn(): void {
+  spawn(cwd?: string): void {
     if (this.process) {
       throw new Error('PTY already running. Call kill() before spawning a new one.');
     }
 
     const isWindows = process.platform === 'win32';
-    const shell = isWindows ? 'cmd.exe' : (process.env.SHELL ?? '/bin/bash');
+    // On macOS, always use /bin/zsh (absolute path, no $SHELL lookup)
+    const shell = isWindows ? 'cmd.exe' : '/bin/zsh';
 
+    // Use provided cwd or fallback to home directory
+    const home = process.env.HOME || process.env.USERPROFILE || process.cwd();
+    const workingDir = cwd || home;
+
+    // Build minimal, clean environment
     const env: Record<string, string> = {
-      ...Object.fromEntries(
-        Object.entries(process.env).filter(
-          (entry): entry is [string, string] => entry[1] !== undefined
-        )
-      ),
       TERM: 'xterm-256color',
+      HOME: home,
+      USER: process.env.USER || 'user',
+      SHELL: shell,
+      PATH: process.env.PATH || '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+      LANG: process.env.LANG || 'en_US.UTF-8',
     };
 
-    this.process = pty.spawn(shell, [], {
-      name: 'xterm-256color',
-      cols: 80,
-      rows: 24,
-      cwd: process.env.HOME ?? process.cwd(),
-      env,
-    });
+    console.log(`[PTY] Spawning shell: ${shell}`);
+    console.log(`[PTY] CWD: ${workingDir}`);
+    console.log(`[PTY] PATH: ${env.PATH}`);
+
+    try {
+      this.process = pty.spawn(shell, [], {
+        name: 'xterm-256color',
+        cols: 80,
+        rows: 24,
+        cwd: workingDir,
+        env,
+      });
+      console.log('[PTY] Shell spawned successfully');
+    } catch (error) {
+      console.error(`[PTY] Failed to spawn shell: ${shell}`, error);
+      console.error(`[PTY] Attempted with CWD=${workingDir}, PATH=${env.PATH}`);
+      throw error;
+    }
   }
 
   /**

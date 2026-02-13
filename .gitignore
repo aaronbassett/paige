@@ -76,3 +76,6 @@ coverage/
 *.pid.lock
 .cache/
 .turbo/
+
+# Overmind
+.overmind.sock

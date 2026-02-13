@@ -38,10 +38,33 @@ export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<
     learning_materials: false,
   };
 
-  // Flow 1: Immediate state (Dreyfus + stats) — broadcast synchronously
+  // Flow 1: Immediate state — broadcast as separate messages matching frontend types
+  // Frontend expects dashboard:dreyfus and dashboard:stats as separate messages
   try {
     const stateData = await assembleState(statsPeriod);
-    broadcast({ type: 'dashboard:state', data: stateData });
+
+    // Map Dreyfus data to the format frontend expects: { axes: [{ skill, level }] }
+    const dreyfusAxes = stateData.dreyfus.map((d) => ({
+      skill: d.skill_area,
+      level: Math.min(5, Math.max(1, Math.round(d.confidence * 5))) as 1 | 2 | 3 | 4 | 5,
+    }));
+    broadcast({ type: 'dashboard:dreyfus', data: { axes: dreyfusAxes } });
+
+    // Map stats to the format frontend expects: { period, stats: [{ label, value, change }] }
+    const periodLabel = statsPeriod === '7d' ? 'this_week' : statsPeriod === '30d' ? 'this_month' : 'today';
+    broadcast({
+      type: 'dashboard:stats',
+      data: {
+        period: periodLabel,
+        stats: [
+          { label: 'Sessions', value: stateData.stats.total_sessions, change: 0 },
+          { label: 'Actions', value: stateData.stats.total_actions, change: 0 },
+          { label: 'API Calls', value: stateData.stats.total_api_calls, change: 0 },
+          { label: 'Cost', value: stateData.stats.total_cost, change: 0 },
+        ],
+      },
+    });
+
     flowStatus.state = true;
   } catch (err) {
     // eslint-disable-next-line no-console
@@ -51,14 +74,24 @@ export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<
   // Flows 2-4: Run concurrently, each broadcasts independently
   const flowPromises = [
     // Flow 2: GitHub issues with suitability
+    // Transform to match frontend format: { issues: [{ number, title, labels: [{name, color}], url }] }
     assembleIssues(sessionId)
       .then((data) => {
-        broadcast({ type: 'dashboard:issues', data });
+        const transformedIssues = data.issues.map((issue) => ({
+          number: issue.number,
+          title: issue.title,
+          labels: issue.labels.map((name) => ({ name, color: '666666' })),
+          url: `#issue-${String(issue.number)}`,
+        }));
+        broadcast({ type: 'dashboard:issues', data: { issues: transformedIssues } });
         flowStatus.issues = true;
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : 'Issues flow failed';
-        broadcast({ type: 'dashboard:issues_error', data: { error: message } });
+        // Send empty issues on error so frontend exits skeleton state
+        broadcast({ type: 'dashboard:issues', data: { issues: [] } });
+        // eslint-disable-next-line no-console
+        console.error('[dashboard] Flow 2 (issues) failed:', message);
       }),
 
     // Flow 3: Active challenges
@@ -72,11 +105,11 @@ export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<
         console.error('[dashboard] Flow 3 (challenges) failed:', err);
       }),
 
-    // Flow 4: Learning materials
+    // Flow 4: Learning materials (frontend expects 'dashboard:materials')
     assembleLearningMaterials()
       .then((data) => {
         if (data !== null) {
-          broadcast({ type: 'dashboard:learning_materials', data });
+          broadcast({ type: 'dashboard:materials', data });
         }
         flowStatus.learning_materials = true;
       })
@@ -106,9 +139,17 @@ export async function handleDashboardRefreshIssues(): Promise<void> {
 
   try {
     const data = await assembleIssues(sessionId);
-    broadcast({ type: 'dashboard:issues', data });
+    const transformedIssues = data.issues.map((issue) => ({
+      number: issue.number,
+      title: issue.title,
+      labels: issue.labels.map((name) => ({ name, color: '666666' })),
+      url: `#issue-${String(issue.number)}`,
+    }));
+    broadcast({ type: 'dashboard:issues', data: { issues: transformedIssues } });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Issues refresh failed';
-    broadcast({ type: 'dashboard:issues_error', data: { error: message } });
+    broadcast({ type: 'dashboard:issues', data: { issues: [] } });
+    // eslint-disable-next-line no-console
+    console.error('[dashboard] Issues refresh failed:', message);
   }
 }
