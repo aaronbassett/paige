@@ -76,3 +76,8 @@ coverage/
 *.pid.lock
 .cache/
 .turbo/
+
+# Overmind
+.overmind.sock
+.overmind.env
+!.overmind.env.example

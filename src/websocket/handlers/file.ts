@@ -7,6 +7,7 @@ import { loadEnv } from '../../config/env.js';
 import { getDatabase } from '../../database/db.js';
 import { readFile, writeFile } from '../../file-system/file-ops.js';
 import { logAction } from '../../logger/action-log.js';
+import { getActiveSessionId } from '../../mcp/session.js';
 import type { ActionType } from '../../types/domain.js';
 import type { FileOpenData, FileSaveData } from '../../types/websocket.js';
 
@@ -15,10 +16,11 @@ import type { FileOpenData, FileSaveData } from '../../types/websocket.js';
 /**
  * Sends a typed JSON message to the client.
  * No-ops if the socket is not in the OPEN state.
+ * Sends in the format expected by Electron UI: { type, payload, timestamp }
  */
-function send(ws: WsWebSocket, type: string, data: unknown): void {
+function send(ws: WsWebSocket, type: string, payload: unknown): void {
   if (ws.readyState === WsWebSocket.OPEN) {
-    ws.send(JSON.stringify({ type, data }));
+    ws.send(JSON.stringify({ type, payload, timestamp: Date.now() }));
   }
 }
 
@@ -40,8 +42,9 @@ function sendError(
  */
 function safeLogAction(actionType: ActionType, data?: Record<string, unknown>): void {
   const db = getDatabase();
-  if (db) {
-    logAction(db, 0, actionType, data).catch((err: unknown) => {
+  const sessionId = getActiveSessionId();
+  if (db !== null && sessionId !== null) {
+    logAction(db, sessionId, actionType, data).catch((err: unknown) => {
       // eslint-disable-next-line no-console
       console.error(`[ws-handler:file] Failed to log action "${actionType}":`, err);
     });
@@ -69,7 +72,8 @@ export async function handleFileOpen(
 
     safeLogAction('file_open', { path });
 
-    send(ws, 'fs:content', { path, content, language, lineCount });
+    // Frontend expects 'buffer:content' (not 'fs:content')
+    send(ws, 'buffer:content', { path, content, language, lineCount });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error reading file';
     sendError(ws, 'INTERNAL_ERROR', message, { path });
@@ -94,9 +98,11 @@ export async function handleFileSave(
 
     safeLogAction('file_save', { path });
 
-    send(ws, 'fs:save_ack', { path, success: true, timestamp: new Date().toISOString() });
+    // Frontend expects 'save:ack' (not 'fs:save_ack')
+    send(ws, 'save:ack', { path, success: true, timestamp: new Date().toISOString() });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error saving file';
-    send(ws, 'fs:save_error', { path, error: errorMessage });
+    // Frontend expects 'save:ack' with success: false (not 'fs:save_error')
+    send(ws, 'save:ack', { path, success: false, error: errorMessage });
   }
 }

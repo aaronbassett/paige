@@ -52,14 +52,16 @@ function makeDreyfusAxes() {
 function makeStats() {
   return {
     period: 'this_week' as const,
-    stats: [
-      { label: 'Lines Written', value: 1234, change: 12 },
-      { label: 'Files Edited', value: 42, change: -3 },
-      { label: 'Commits', value: 15, change: 5 },
-      { label: 'Tests Passed', value: 89, change: 0 },
-      { label: 'Issues Closed', value: 3, change: 50 },
-      { label: 'Reviews Done', value: 7, change: 10 },
-    ],
+    stats: {
+      lines_changed: { value: 1234, change: 12, unit: 'count' as const },
+      files_touched: { value: 42, change: -3, unit: 'count' as const },
+      sessions: { value: 15, change: 5, unit: 'count' as const },
+      actions: { value: 89, change: 0, unit: 'count' as const },
+      issues_started: { value: 3, change: 50, unit: 'count' as const },
+      reviews_requested: { value: 7, change: 10, unit: 'count' as const },
+      dreyfus_progression: { value: 'Novice', change: 0, unit: 'text' as const },
+      self_sufficiency: { value: 72, change: 3.2, unit: 'percentage' as const },
+    },
   };
 }
 
@@ -207,9 +209,12 @@ describe('Dashboard integration', () => {
     expect(screen.getByText('TypeScript')).toBeInTheDocument();
     expect(screen.getByText('React')).toBeInTheDocument();
 
-    // Stats bento: should show stat labels and values
-    expect(screen.getByText('Lines Written')).toBeInTheDocument();
-    expect(screen.getByText('1,234')).toBeInTheDocument();
+    // Dreyfus radar: stage pill and self-sufficiency (from stats)
+    expect(screen.getByTestId('stage-pill')).toHaveTextContent('Novice');
+    expect(screen.getByTestId('self-sufficiency-value')).toHaveTextContent('72%');
+
+    // Stats bento: should show stat labels from catalog
+    expect(screen.getByText('Sessions')).toBeInTheDocument();
 
     // In-progress tasks (Row 2)
     expect(screen.getByText('IN PROGRESS')).toBeInTheDocument();

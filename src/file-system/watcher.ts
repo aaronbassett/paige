@@ -24,8 +24,9 @@ export interface FileWatcher extends EventEmitter {
 }
 
 /**
- * Glob patterns excluded from file watching.
+ * Glob patterns and matcher function for excluding files from watching.
  * Mirrors the NOISE_DIRS set in tree.ts to keep filtering consistent.
+ * Aggressive patterns to avoid EMFILE (too many open files) on macOS.
  */
 const IGNORED_PATTERNS = [
   '**/node_modules/**',
@@ -35,6 +36,28 @@ const IGNORED_PATTERNS = [
   '**/coverage/**',
   '**/.next/**',
   '**/.cache/**',
+  '**/.turbo/**',
+  '**/.pnp/**',
+  '**/.yarn/**',
+  '**/tmp/**',
+  '**/temp/**',
+  '**/.DS_Store',
+  '**/*.log',
+  '**/.worktrees/**',
+  // Electron UI has its own dev server, no need to watch
+  '**/electron-ui/**',
+  // Function matcher for Unix sockets, PID files, and Overmind files
+  (path: string) => {
+    return (
+      path.endsWith('.sock') ||
+      path.endsWith('.pid') ||
+      path.endsWith('.db') ||
+      path.endsWith('.db-wal') ||
+      path.endsWith('.db-shm') ||
+      path.includes('.overmind.sock') ||
+      path.includes('.overmind.')
+    );
+  },
 ];
 
 /**
@@ -64,7 +87,12 @@ export function createFileWatcher(projectDir: string): FileWatcher {
       ignored: IGNORED_PATTERNS,
       persistent: true,
       ignoreInitial: true,
+      ignorePermissionErrors: true,
       awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 },
+      // Use polling on macOS to avoid EMFILE errors
+      usePolling: process.platform === 'darwin',
+      interval: 1000, // Poll every 1 second
+      binaryInterval: 3000, // Poll binary files every 3 seconds
     });
 
     const handleEvent = (type: FileChangeType, absolutePath: string): void => {
@@ -82,10 +110,20 @@ export function createFileWatcher(projectDir: string): FileWatcher {
       handleEvent('unlink', path);
     });
 
-    // Swallow EACCES errors on inaccessible subdirectories (e.g. /tmp/systemd-*)
+    // Swallow errors for inaccessible files, Unix sockets, and file limit issues
     watcher.on('error', (error: unknown) => {
       const nodeErr = error as NodeJS.ErrnoException;
+      // Ignore permission errors
       if (nodeErr.code === 'EACCES') return;
+      // Ignore socket/special file errors
+      if (nodeErr.code === 'UNKNOWN' && nodeErr.path?.endsWith('.sock')) return;
+      if (nodeErr.code === 'UNKNOWN' && nodeErr.path?.includes('.overmind')) return;
+      // Ignore EMFILE errors (too many open files) - polling fallback will handle it
+      if (nodeErr.code === 'EMFILE') {
+        // eslint-disable-next-line no-console
+        console.warn('[watcher] Too many open files - using polling mode');
+        return;
+      }
       emitter.emit('error', error);
     });
 

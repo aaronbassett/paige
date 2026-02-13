@@ -6,6 +6,8 @@ interface PaigeAPI {
   readonly platform: NodeJS.Platform;
   /** Terminal IPC bridge for xterm.js integration */
   terminal: {
+    /** Spawn a new PTY with the given working directory. */
+    spawn: (cwd?: string) => void;
     /** Write data to the PTY stdin (user keystrokes). */
     write: (data: string) => void;
     /** Resize the PTY to match terminal dimensions. */
@@ -20,6 +22,9 @@ interface PaigeAPI {
 const api: PaigeAPI = {
   platform: process.platform,
   terminal: {
+    spawn: (cwd?: string) => {
+      ipcRenderer.send('terminal:spawn', cwd);
+    },
     write: (data: string) => {
       ipcRenderer.send('terminal:write', data);
     },

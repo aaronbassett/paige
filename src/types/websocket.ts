@@ -62,10 +62,66 @@ export type NudgeSignal =
   | 'repeated_errors';
 
 /** Dashboard stats time period. */
-export type StatsPeriod = '7d' | '30d' | 'all';
+export type StatsPeriod = 'today' | 'last_week' | 'last_month' | 'all_time';
 
 /** Issue suitability assessment. */
 export type IssueSuitability = 'excellent' | 'good' | 'fair' | 'poor';
+
+/** Issue difficulty assessment for scored issues. */
+export type IssueDifficulty = 'low' | 'medium' | 'high' | 'very_high' | 'extreme';
+
+// ── Dashboard / Landing Page Sub-Types ──────────────────────────────────────
+
+/** Repository info returned by the repos:list flow. */
+export interface RepoInfo {
+  readonly fullName: string;
+  readonly name: string;
+  readonly owner: string;
+  readonly description: string;
+  readonly language: string;
+  readonly stars: number;
+  readonly forks: number;
+  readonly openIssues: number;
+  readonly openPRs: number;
+  readonly license: string;
+  readonly updatedAt: string;
+  readonly pushedAt: string;
+}
+
+/** Single activity entry for a repository. */
+export interface RepoActivityEntry {
+  readonly timestamp: string;
+  readonly activityType: string;
+}
+
+/** Issue label with name and color. */
+export interface ScoredIssueLabel {
+  readonly name: string;
+  readonly color: string;
+}
+
+/** Issue author information. */
+export interface ScoredIssueAuthor {
+  readonly login: string;
+  readonly avatarUrl: string;
+}
+
+/** Fully scored issue payload for the dashboard. */
+export interface ScoredIssuePayload {
+  readonly number: number;
+  readonly title: string;
+  readonly body: string;
+  readonly summary: string;
+  readonly difficulty: IssueDifficulty;
+  readonly labels: readonly ScoredIssueLabel[];
+  readonly author: ScoredIssueAuthor;
+  readonly assignees: readonly ScoredIssueAuthor[];
+  readonly commentCount: number;
+  readonly updatedAt: string;
+  readonly createdAt: string;
+  readonly htmlUrl: string;
+  readonly score: number;
+}
 
 // ── Client -> Server Message Data ───────────────────────────────────────────
 
@@ -177,13 +233,30 @@ export interface ReviewRequestData {
   readonly phaseId: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ReposListRequestData {}
+
+export interface ReposActivityRequestData {
+  readonly repos: readonly string[];
+}
+
+export interface SessionStartRepoData {
+  readonly owner: string;
+  readonly repo: string;
+}
+
+export interface SessionSelectIssueWsData {
+  readonly issueNumber: number;
+}
+
 // ── Server -> Client Message Data ───────────────────────────────────────────
 
 export interface ConnectionInitData {
   readonly sessionId: string;
+  readonly projectDir: string;
   readonly capabilities: {
     readonly chromadb_available: boolean;
-    readonly gh_cli_available: boolean;
+    readonly github_api_available: boolean;
   };
   readonly featureFlags: {
     readonly observer_enabled: boolean;
@@ -341,16 +414,57 @@ export interface DreyfusAssessmentEntry {
   readonly confidence: number;
 }
 
-export interface DashboardStats {
-  readonly total_sessions: number;
-  readonly total_actions: number;
-  readonly total_api_calls: number;
-  readonly total_cost: number;
+/** All 25 stat identifiers for the dashboard bento grid. */
+export type StatId =
+  | 'sessions'
+  | 'total_time'
+  | 'total_cost'
+  | 'api_calls'
+  | 'actions'
+  | 'coaching_messages'
+  | 'hint_level_breakdown'
+  | 'issues_worked_on'
+  | 'dreyfus_progression'
+  | 'self_sufficiency'
+  | 'questions_asked'
+  | 'reviews_requested'
+  | 'files_touched'
+  | 'lines_changed'
+  | 'issues_started'
+  | 'avg_session_duration'
+  | 'cost_per_session'
+  | 'streak'
+  | 'materials_viewed'
+  | 'most_active_language'
+  | 'token_efficiency'
+  | 'kata_completion'
+  | 'oldest_issue_closed'
+  | 'youngest_issue_closed'
+  | 'knowledge_gaps_closed';
+
+/** Rich payload for a single stat in the dashboard. */
+export interface StatPayload {
+  readonly value: number | string;
+  readonly change: number;
+  readonly unit: 'count' | 'duration' | 'currency' | 'percentage' | 'text';
+  readonly sparkline?: ReadonlyArray<{ x: string; y: number }>;
+  readonly breakdown?: ReadonlyArray<{ label: string; value: number; color?: string }>;
+  readonly pills?: ReadonlyArray<{ label: string; color: string; count: number }>;
+  readonly progression?: ReadonlyArray<{ skill: string; level: string }>;
+}
+
+/** Map of stat IDs to their payloads. Partial because not all stats may be available. */
+export type StatsData = Partial<Record<StatId, StatPayload>>;
+
+/** Dashboard stats data with period context. */
+export interface DashboardStatsData {
+  readonly period: StatsPeriod;
+  readonly stats: StatsData;
 }
 
 export interface DashboardStateData {
   readonly dreyfus: readonly DreyfusAssessmentEntry[];
-  readonly stats: DashboardStats;
+  readonly stats: DashboardStatsData;
   readonly issues: readonly unknown[];
   readonly challenges: readonly unknown[];
   readonly learning_materials: readonly unknown[];
@@ -412,6 +526,32 @@ export interface SessionCompletedData {
   readonly katas_generated: number;
   readonly assessments_updated: number;
 }
+
+export interface ReposListResponseData {
+  readonly repos: readonly RepoInfo[];
+}
+
+export interface RepoActivityResponseData {
+  readonly repo: string;
+  readonly activities: readonly RepoActivityEntry[];
+}
+
+export interface SessionRepoStartedData {
+  readonly owner: string;
+  readonly repo: string;
+}
+
+export interface SessionIssueSelectedResponseData {
+  readonly sessionId: number;
+  readonly issueNumber: number;
+}
+
+export interface DashboardSingleIssueData {
+  readonly issue: ScoredIssuePayload;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface DashboardIssuesCompleteData {}
 
 // ── Client -> Server Messages (Discriminated Union) ─────────────────────────
 
@@ -530,7 +670,27 @@ export interface ReviewRequestMessage {
   readonly data: ReviewRequestData;
 }
 
-/** Union of all 23 client-to-server message types. */
+export interface ReposListRequestMessage {
+  readonly type: 'repos:list';
+  readonly data: ReposListRequestData;
+}
+
+export interface ReposActivityRequestMessage {
+  readonly type: 'repos:activity';
+  readonly data: ReposActivityRequestData;
+}
+
+export interface SessionStartRepoMessage {
+  readonly type: 'session:start_repo';
+  readonly data: SessionStartRepoData;
+}
+
+export interface SessionSelectIssueWsMessage {
+  readonly type: 'session:select_issue';
+  readonly data: SessionSelectIssueWsData;
+}
+
+/** Union of all 27 client-to-server message types. */
 export type ClientToServerMessage =
   | ConnectionHelloMessage
   | FileOpenMessage
@@ -554,7 +714,11 @@ export type ClientToServerMessage =
   | TerminalCommandMessage
   | TreeExpandMessage
   | TreeCollapseMessage
-  | ReviewRequestMessage;
+  | ReviewRequestMessage
+  | ReposListRequestMessage
+  | ReposActivityRequestMessage
+  | SessionStartRepoMessage
+  | SessionSelectIssueWsMessage;
 
 // ── Server -> Client Messages (Discriminated Union) ─────────────────────────
 
@@ -708,7 +872,37 @@ export interface SessionCompletedMessage {
   readonly data: SessionCompletedData;
 }
 
-/** Union of all 32 server-to-client message types. */
+export interface ReposListResponseMessage {
+  readonly type: 'repos:list_response';
+  readonly data: ReposListResponseData;
+}
+
+export interface RepoActivityResponseMessage {
+  readonly type: 'repo:activity';
+  readonly data: RepoActivityResponseData;
+}
+
+export interface SessionRepoStartedMessage {
+  readonly type: 'session:repo_started';
+  readonly data: SessionRepoStartedData;
+}
+
+export interface SessionIssueSelectedResponseMessage {
+  readonly type: 'session:issue_selected';
+  readonly data: SessionIssueSelectedResponseData;
+}
+
+export interface DashboardSingleIssueMessage {
+  readonly type: 'dashboard:issue';
+  readonly data: DashboardSingleIssueData;
+}
+
+export interface DashboardIssuesCompleteMessage {
+  readonly type: 'dashboard:issues_complete';
+  readonly data: DashboardIssuesCompleteData;
+}
+
+/** Union of all 38 server-to-client message types. */
 export type ServerToClientMessage =
   | ConnectionInitMessage
   | ConnectionErrorMessage
@@ -739,7 +933,13 @@ export type ServerToClientMessage =
   | DashboardLearningMaterialsMessage
   | DashboardIssuesErrorMessage
   | SessionStartedMessage
-  | SessionCompletedMessage;
+  | SessionCompletedMessage
+  | ReposListResponseMessage
+  | RepoActivityResponseMessage
+  | SessionRepoStartedMessage
+  | SessionIssueSelectedResponseMessage
+  | DashboardSingleIssueMessage
+  | DashboardIssuesCompleteMessage;
 
 // ── Combined Type ───────────────────────────────────────────────────────────
 

@@ -232,7 +232,7 @@ describe('websocket protocol contract', () => {
 
       expect(response.data.capabilities).toBeDefined();
       expect(typeof response.data.capabilities.chromadb_available).toBe('boolean');
-      expect(typeof response.data.capabilities.gh_cli_available).toBe('boolean');
+      expect(typeof response.data.capabilities.github_api_available).toBe('boolean');
     });
 
     it('connection:init data contains featureFlags object', async () => {

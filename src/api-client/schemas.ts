@@ -142,6 +142,15 @@ export const practiceReviewSchema = z.object({
 });
 export type PracticeReviewResponse = z.infer<typeof practiceReviewSchema>;
 
+// ── Issue Summary (Haiku) ─────────────────────────────────────────────────
+// Per-issue summary with difficulty assessment, personalised to Dreyfus level.
+
+export const issueSummarySchema = z.object({
+  summary: z.string(),
+  difficulty: z.enum(['low', 'medium', 'high', 'very_high', 'extreme']),
+});
+export type IssueSummaryResponse = z.infer<typeof issueSummarySchema>;
+
 // ── Issue Suitability (Haiku) ──────────────────────────────────────────────
 // Assesses GitHub issue suitability based on developer's Dreyfus skill levels.
 

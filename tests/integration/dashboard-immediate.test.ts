@@ -44,7 +44,7 @@ vi.mock('../../src/logger/action-log.js', () => ({
 }));
 
 vi.mock('../../src/dashboard/flows/issues.js', () => ({
-  assembleIssues: vi.fn(),
+  assembleAndStreamIssues: vi.fn(),
 }));
 
 vi.mock('../../src/dashboard/flows/challenges.js', () => ({
@@ -70,7 +70,7 @@ import {
 import { getApiCallCountByPeriod, getApiCostByPeriod } from '../../src/logger/api-log.js';
 import { broadcast } from '../../src/websocket/server.js';
 import { logAction } from '../../src/logger/action-log.js';
-import { assembleIssues } from '../../src/dashboard/flows/issues.js';
+import { assembleAndStreamIssues } from '../../src/dashboard/flows/issues.js';
 import { assembleChallenges } from '../../src/dashboard/flows/challenges.js';
 import { assembleLearningMaterials } from '../../src/dashboard/flows/learning.js';
 import { getActiveSessionId } from '../../src/mcp/session.js';
@@ -87,7 +87,7 @@ const mockGetApiCallCountByPeriod = vi.mocked(getApiCallCountByPeriod);
 const mockGetApiCostByPeriod = vi.mocked(getApiCostByPeriod);
 const mockBroadcast = vi.mocked(broadcast);
 const mockLogAction = vi.mocked(logAction);
-const mockAssembleIssues = vi.mocked(assembleIssues);
+const mockAssembleAndStreamIssues = vi.mocked(assembleAndStreamIssues);
 const mockAssembleChallenges = vi.mocked(assembleChallenges);
 const mockAssembleLearningMaterials = vi.mocked(assembleLearningMaterials);
 const mockGetActiveSessionId = vi.mocked(getActiveSessionId);
@@ -147,9 +147,10 @@ describe('assembleState (Dashboard Flow 1)', () => {
   // ── Test 1: Dreyfus assessments mapped to DreyfusAssessmentEntry format ─────
 
   it('returns Dreyfus assessments mapped to DreyfusAssessmentEntry format', async () => {
-    const result = await assembleState('all');
+    const result = await assembleState('all_time');
 
-    expect(result.dreyfus).toHaveLength(2);
+    // 2 real assessments + 4 defaults (React, Git, State Management, Error Handling)
+    expect(result.dreyfus).toHaveLength(6);
     expect(result.dreyfus[0]).toEqual({
       skill_area: 'TypeScript',
       stage: 'Competent',
@@ -160,112 +161,127 @@ describe('assembleState (Dashboard Flow 1)', () => {
       stage: 'Advanced Beginner',
       confidence: 0.6,
     });
+    // Remaining 4 are defaults at Novice
+    const defaults = result.dreyfus.slice(2);
+    expect(defaults.every((d) => d.stage === 'Novice' && d.confidence === 0.2)).toBe(true);
+    expect(defaults.map((d) => d.skill_area)).toEqual([
+      'React',
+      'Git',
+      'State Management',
+      'Error Handling',
+    ]);
   });
 
-  // ── Test 2: Returns stats with totals ──────────────────────────────────────────
+  // ── Test 2: Returns stats in DashboardStatsData format ──────────────────────
 
-  it('returns stats with total_sessions, total_actions, total_api_calls, total_cost', async () => {
-    const result = await assembleState('all');
+  it('returns stats in DashboardStatsData format with period and stat payloads', async () => {
+    const result = await assembleState('all_time');
 
-    expect(result.stats).toEqual({
-      total_sessions: 5,
-      total_actions: 120,
-      total_api_calls: 30,
-      total_cost: 1.45,
-    });
+    expect(result.stats.period).toBe('all_time');
+    expect(result.stats.stats.sessions).toEqual({ value: 5, change: 0, unit: 'count' });
+    expect(result.stats.stats.actions).toEqual({ value: 120, change: 0, unit: 'count' });
+    expect(result.stats.stats.api_calls).toEqual({ value: 30, change: 0, unit: 'count' });
+    expect(result.stats.stats.total_cost).toEqual({ value: 1.45, change: 0, unit: 'currency' });
   });
 
   // ── Test 3: Placeholder empty arrays for issues, challenges, learning_materials ─
 
   it('returns empty arrays for issues, challenges, and learning_materials', async () => {
-    const result = await assembleState('all');
+    const result = await assembleState('all_time');
 
     expect(result.issues).toEqual([]);
     expect(result.challenges).toEqual([]);
     expect(result.learning_materials).toEqual([]);
   });
 
-  // ── Test 4: Filters stats by "7d" period ─────────────────────────────────────
+  // ── Test 4: Filters stats by "last_week" period ─────────────────────────────
 
-  it('filters stats by "7d" period', async () => {
+  it('filters stats by "last_week" period', async () => {
     mockGetSessionCountByPeriod.mockResolvedValue(2);
     mockGetActionCountByPeriod.mockResolvedValue(40);
     mockGetApiCallCountByPeriod.mockResolvedValue(10);
     mockGetApiCostByPeriod.mockResolvedValue(0.5);
 
-    const result = await assembleState('7d');
+    const result = await assembleState('last_week');
 
-    expect(result.stats).toEqual({
-      total_sessions: 2,
-      total_actions: 40,
-      total_api_calls: 10,
-      total_cost: 0.5,
-    });
+    expect(result.stats.period).toBe('last_week');
+    expect(result.stats.stats.sessions).toEqual({ value: 2, change: 0, unit: 'count' });
+    expect(result.stats.stats.actions).toEqual({ value: 40, change: 0, unit: 'count' });
+    expect(result.stats.stats.api_calls).toEqual({ value: 10, change: 0, unit: 'count' });
+    expect(result.stats.stats.total_cost).toEqual({ value: 0.5, change: 0, unit: 'currency' });
 
     // Verify period was passed through to query functions
-    expect(mockGetSessionCountByPeriod).toHaveBeenCalledWith(fakeDb, '7d');
-    expect(mockGetActionCountByPeriod).toHaveBeenCalledWith(fakeDb, '7d');
-    expect(mockGetApiCallCountByPeriod).toHaveBeenCalledWith(fakeDb, '7d');
-    expect(mockGetApiCostByPeriod).toHaveBeenCalledWith(fakeDb, '7d');
+    expect(mockGetSessionCountByPeriod).toHaveBeenCalledWith(fakeDb, 'last_week');
+    expect(mockGetActionCountByPeriod).toHaveBeenCalledWith(fakeDb, 'last_week');
+    expect(mockGetApiCallCountByPeriod).toHaveBeenCalledWith(fakeDb, 'last_week');
+    expect(mockGetApiCostByPeriod).toHaveBeenCalledWith(fakeDb, 'last_week');
   });
 
-  // ── Test 5: Filters stats by "30d" period ────────────────────────────────────
+  // ── Test 5: Filters stats by "last_month" period ────────────────────────────
 
-  it('filters stats by "30d" period', async () => {
+  it('filters stats by "last_month" period', async () => {
     mockGetSessionCountByPeriod.mockResolvedValue(4);
     mockGetActionCountByPeriod.mockResolvedValue(95);
     mockGetApiCallCountByPeriod.mockResolvedValue(22);
     mockGetApiCostByPeriod.mockResolvedValue(1.1);
 
-    const result = await assembleState('30d');
+    const result = await assembleState('last_month');
 
-    expect(result.stats).toEqual({
-      total_sessions: 4,
-      total_actions: 95,
-      total_api_calls: 22,
-      total_cost: 1.1,
-    });
+    expect(result.stats.period).toBe('last_month');
+    expect(result.stats.stats.sessions).toEqual({ value: 4, change: 0, unit: 'count' });
+    expect(result.stats.stats.actions).toEqual({ value: 95, change: 0, unit: 'count' });
+    expect(result.stats.stats.api_calls).toEqual({ value: 22, change: 0, unit: 'count' });
+    expect(result.stats.stats.total_cost).toEqual({ value: 1.1, change: 0, unit: 'currency' });
 
-    expect(mockGetSessionCountByPeriod).toHaveBeenCalledWith(fakeDb, '30d');
-    expect(mockGetActionCountByPeriod).toHaveBeenCalledWith(fakeDb, '30d');
-    expect(mockGetApiCallCountByPeriod).toHaveBeenCalledWith(fakeDb, '30d');
-    expect(mockGetApiCostByPeriod).toHaveBeenCalledWith(fakeDb, '30d');
+    expect(mockGetSessionCountByPeriod).toHaveBeenCalledWith(fakeDb, 'last_month');
+    expect(mockGetActionCountByPeriod).toHaveBeenCalledWith(fakeDb, 'last_month');
+    expect(mockGetApiCallCountByPeriod).toHaveBeenCalledWith(fakeDb, 'last_month');
+    expect(mockGetApiCostByPeriod).toHaveBeenCalledWith(fakeDb, 'last_month');
   });
 
-  // ── Test 6: "all" period includes everything ────────────────────────────────
+  // ── Test 6: "all_time" period includes everything ────────────────────────────
 
-  it('"all" period includes everything', async () => {
-    const result = await assembleState('all');
+  it('"all_time" period includes everything', async () => {
+    const result = await assembleState('all_time');
 
-    expect(result.stats.total_sessions).toBe(5);
-    expect(result.stats.total_actions).toBe(120);
-    expect(result.stats.total_api_calls).toBe(30);
-    expect(result.stats.total_cost).toBe(1.45);
+    expect(result.stats.stats.sessions?.value).toBe(5);
+    expect(result.stats.stats.actions?.value).toBe(120);
+    expect(result.stats.stats.api_calls?.value).toBe(30);
+    expect(result.stats.stats.total_cost?.value).toBe(1.45);
 
-    expect(mockGetSessionCountByPeriod).toHaveBeenCalledWith(fakeDb, 'all');
-    expect(mockGetActionCountByPeriod).toHaveBeenCalledWith(fakeDb, 'all');
-    expect(mockGetApiCallCountByPeriod).toHaveBeenCalledWith(fakeDb, 'all');
-    expect(mockGetApiCostByPeriod).toHaveBeenCalledWith(fakeDb, 'all');
+    expect(mockGetSessionCountByPeriod).toHaveBeenCalledWith(fakeDb, 'all_time');
+    expect(mockGetActionCountByPeriod).toHaveBeenCalledWith(fakeDb, 'all_time');
+    expect(mockGetApiCallCountByPeriod).toHaveBeenCalledWith(fakeDb, 'all_time');
+    expect(mockGetApiCostByPeriod).toHaveBeenCalledWith(fakeDb, 'all_time');
   });
 
   // ── Test 7: Fresh install with no data ──────────────────────────────────────
 
-  it('fresh install with no data returns zeros and empty arrays', async () => {
+  it('fresh install with no data returns default Dreyfus axes and zeros', async () => {
     mockGetAllDreyfus.mockResolvedValue([]);
     mockGetSessionCountByPeriod.mockResolvedValue(0);
     mockGetActionCountByPeriod.mockResolvedValue(0);
     mockGetApiCallCountByPeriod.mockResolvedValue(0);
     mockGetApiCostByPeriod.mockResolvedValue(0);
 
-    const result = await assembleState('all');
+    const result = await assembleState('all_time');
 
-    expect(result.dreyfus).toEqual([]);
-    expect(result.stats).toEqual({
-      total_sessions: 0,
-      total_actions: 0,
-      total_api_calls: 0,
-      total_cost: 0,
-    });
+    // When no assessments exist, assembleState returns default skill areas at Novice
+    expect(result.dreyfus).toHaveLength(6);
+    expect(result.dreyfus.every((d) => d.stage === 'Novice' && d.confidence === 0.2)).toBe(true);
+    expect(result.dreyfus.map((d) => d.skill_area)).toEqual([
+      'TypeScript',
+      'React',
+      'Testing',
+      'Git',
+      'State Management',
+      'Error Handling',
+    ]);
+    expect(result.stats.period).toBe('all_time');
+    expect(result.stats.stats.sessions).toEqual({ value: 0, change: 0, unit: 'count' });
+    expect(result.stats.stats.actions).toEqual({ value: 0, change: 0, unit: 'count' });
+    expect(result.stats.stats.api_calls).toEqual({ value: 0, change: 0, unit: 'count' });
+    expect(result.stats.stats.total_cost).toEqual({ value: 0, change: 0, unit: 'currency' });
     expect(result.issues).toEqual([]);
     expect(result.challenges).toEqual([]);
     expect(result.learning_materials).toEqual([]);
@@ -273,13 +289,13 @@ describe('assembleState (Dashboard Flow 1)', () => {
 
   // ── Test 8: All stats are non-negative ────────────────────────────────────────
 
-  it('returns valid data with all stats >= 0', async () => {
-    const result = await assembleState('7d');
+  it('returns valid data with all stat values >= 0', async () => {
+    const result = await assembleState('last_week');
 
-    expect(result.stats.total_sessions).toBeGreaterThanOrEqual(0);
-    expect(result.stats.total_actions).toBeGreaterThanOrEqual(0);
-    expect(result.stats.total_api_calls).toBeGreaterThanOrEqual(0);
-    expect(result.stats.total_cost).toBeGreaterThanOrEqual(0);
+    expect(result.stats.stats.sessions?.value).toBeGreaterThanOrEqual(0);
+    expect(result.stats.stats.actions?.value).toBeGreaterThanOrEqual(0);
+    expect(result.stats.stats.api_calls?.value).toBeGreaterThanOrEqual(0);
+    expect(result.stats.stats.total_cost?.value).toBeGreaterThanOrEqual(0);
   });
 });
 
@@ -295,7 +311,7 @@ describe('handleDashboardRequest (integration)', () => {
     mockGetApiCostByPeriod.mockResolvedValue(1.45);
     mockLogAction.mockResolvedValue(undefined);
     mockGetActiveSessionId.mockReturnValue(42);
-    mockAssembleIssues.mockResolvedValue({ issues: [] });
+    mockAssembleAndStreamIssues.mockResolvedValue(undefined);
     mockAssembleChallenges.mockResolvedValue({ challenges: [] });
     mockAssembleLearningMaterials.mockResolvedValue({ materials: [] });
   });
@@ -310,34 +326,37 @@ describe('handleDashboardRequest (integration)', () => {
     mockBroadcast.mockReset();
     mockLogAction.mockReset();
     mockGetActiveSessionId.mockReset();
-    mockAssembleIssues.mockReset();
+    mockAssembleAndStreamIssues.mockReset();
     mockAssembleChallenges.mockReset();
     mockAssembleLearningMaterials.mockReset();
   });
 
-  // ── Test 9: Broadcasts dashboard:state immediately ─────────────────────────
+  // ── Test 9: Broadcasts dashboard:dreyfus and dashboard:stats immediately ────
 
-  it('broadcasts dashboard:state immediately', async () => {
-    await handleDashboardRequest('7d');
+  it('broadcasts dashboard:dreyfus and dashboard:stats immediately', async () => {
+    await handleDashboardRequest('last_week', 'test-conn-id', 'owner', 'repo');
 
-    // First broadcast should be dashboard:state (Flow 1 runs before Flows 2-4)
+    // Flow 1 broadcasts dreyfus + stats before Flows 2-4 start
     expect(mockBroadcast).toHaveBeenCalled();
     const firstCall = mockBroadcast.mock.calls[0]![0] as {
       type: string;
-      data: { dreyfus: unknown[]; stats: Record<string, number> };
+      data: { axes: unknown[] };
     };
-    expect(firstCall.type).toBe('dashboard:state');
-    expect(Array.isArray(firstCall.data.dreyfus)).toBe(true);
-    expect(typeof firstCall.data.stats['total_sessions']).toBe('number');
-    expect(typeof firstCall.data.stats['total_actions']).toBe('number');
-    expect(typeof firstCall.data.stats['total_api_calls']).toBe('number');
-    expect(typeof firstCall.data.stats['total_cost']).toBe('number');
+    expect(firstCall.type).toBe('dashboard:dreyfus');
+    expect(Array.isArray(firstCall.data.axes)).toBe(true);
+
+    const secondCall = mockBroadcast.mock.calls[1]![0] as {
+      type: string;
+      data: { period: string; stats: Record<string, unknown> };
+    };
+    expect(secondCall.type).toBe('dashboard:stats');
+    expect(typeof secondCall.data.stats).toBe('object');
   });
 
   // ── Test 10: Returns flowsCompleted with per-flow status booleans ──────────
 
   it('returns flowsCompleted with per-flow status booleans', async () => {
-    const result = await handleDashboardRequest('all');
+    const result = await handleDashboardRequest('all_time', 'test-conn-id', 'owner', 'repo');
 
     expect(result.flowsCompleted).toBeDefined();
     expect(typeof result.flowsCompleted.state).toBe('boolean');
@@ -349,19 +368,19 @@ describe('handleDashboardRequest (integration)', () => {
   // ── Test 11: Calls assembleState with the provided statsPeriod ──────────────
 
   it('calls assembleState with the provided statsPeriod', async () => {
-    await handleDashboardRequest('30d');
+    await handleDashboardRequest('last_month', 'test-conn-id', 'owner', 'repo');
 
     // assembleState queries stats by period — verify the period was forwarded
-    expect(mockGetSessionCountByPeriod).toHaveBeenCalledWith(fakeDb, '30d');
-    expect(mockGetActionCountByPeriod).toHaveBeenCalledWith(fakeDb, '30d');
-    expect(mockGetApiCallCountByPeriod).toHaveBeenCalledWith(fakeDb, '30d');
-    expect(mockGetApiCostByPeriod).toHaveBeenCalledWith(fakeDb, '30d');
+    expect(mockGetSessionCountByPeriod).toHaveBeenCalledWith(fakeDb, 'last_month');
+    expect(mockGetActionCountByPeriod).toHaveBeenCalledWith(fakeDb, 'last_month');
+    expect(mockGetApiCallCountByPeriod).toHaveBeenCalledWith(fakeDb, 'last_month');
+    expect(mockGetApiCostByPeriod).toHaveBeenCalledWith(fakeDb, 'last_month');
   });
 
   // ── Test 12: Logs dashboard_loaded action with flow statuses ──────────────
 
   it('logs dashboard_loaded action with flow statuses', async () => {
-    await handleDashboardRequest('7d');
+    await handleDashboardRequest('last_week', 'test-conn-id', 'owner', 'repo');
 
     expect(mockLogAction).toHaveBeenCalledTimes(1);
     const logArgs = mockLogAction.mock.calls[0]!;

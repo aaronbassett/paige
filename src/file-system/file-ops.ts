@@ -13,12 +13,18 @@ export interface FileReadResult {
   language: string;
 }
 
-/** Extension-to-language mapping for detectLanguage. */
+/**
+ * Extension-to-language mapping for detectLanguage.
+ * Uses standalone Monaco editor language IDs (not VS Code IDs).
+ * Monaco uses 'typescript' for both .ts/.tsx and 'javascript' for .js/.jsx.
+ */
 const EXTENSION_MAP: Record<string, string> = {
   '.ts': 'typescript',
-  '.tsx': 'typescriptreact',
+  '.tsx': 'typescript',
   '.js': 'javascript',
-  '.jsx': 'javascriptreact',
+  '.jsx': 'javascript',
+  '.mjs': 'javascript',
+  '.cjs': 'javascript',
   '.py': 'python',
   '.rb': 'ruby',
   '.rs': 'rust',
@@ -27,13 +33,26 @@ const EXTENSION_MAP: Record<string, string> = {
   '.c': 'c',
   '.cpp': 'cpp',
   '.css': 'css',
+  '.scss': 'scss',
+  '.less': 'less',
   '.html': 'html',
+  '.htm': 'html',
   '.json': 'json',
   '.md': 'markdown',
+  '.mdx': 'markdown',
   '.yaml': 'yaml',
   '.yml': 'yaml',
-  '.sh': 'shellscript',
+  '.xml': 'xml',
+  '.sh': 'shell',
+  '.bash': 'shell',
+  '.zsh': 'shell',
   '.sql': 'sql',
+  '.graphql': 'graphql',
+  '.gql': 'graphql',
+  '.dockerfile': 'dockerfile',
+  '.toml': 'ini',
+  '.ini': 'ini',
+  '.env': 'ini',
 };
 
 /**
@@ -153,5 +172,19 @@ export async function getDiff(filePath: string, projectDir: string): Promise<str
  */
 export function detectLanguage(filePath: string): string {
   const ext = extname(filePath).toLowerCase();
-  return EXTENSION_MAP[ext] ?? 'plaintext';
+  if (ext) {
+    return EXTENSION_MAP[ext] ?? 'plaintext';
+  }
+
+  // Handle extensionless files by filename
+  const filename = filePath.split('/').pop()?.toLowerCase() ?? '';
+  const FILENAME_MAP: Record<string, string> = {
+    dockerfile: 'dockerfile',
+    makefile: 'shell',
+    '.gitignore': 'ini',
+    '.env': 'ini',
+    '.env.local': 'ini',
+    '.env.example': 'ini',
+  };
+  return FILENAME_MAP[filename] ?? 'plaintext';
 }

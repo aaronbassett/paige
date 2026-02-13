@@ -3,6 +3,7 @@
 
 import { WebSocket as WsWebSocket } from 'ws';
 import type { ClientToServerMessage, ConnectionErrorData } from '../types/websocket.js';
+import { resolveSession, touchSession } from '../session/resolve.js';
 import { handleConnectionHello } from './handlers/connection.js';
 import { handleFileOpen, handleFileSave } from './handlers/file.js';
 import { handleBufferUpdate } from './handlers/buffer.js';
@@ -11,7 +12,13 @@ import { handleHintsLevelChange } from './handlers/hints.js';
 import { handleUserIdleStart, handleUserIdleEnd, handleUserExplain } from './handlers/user.js';
 import { handleObserverMute } from './handlers/observer.js';
 import { handlePracticeSubmitSolution } from './handlers/practice.js';
-import { handleDashboardRequestWs, handleDashboardRefreshIssuesWs } from './handlers/dashboard.js';
+import {
+  handleDashboardRequestWs,
+  handleDashboardRefreshIssuesWs,
+  handleDashboardStatsPeriodWs,
+} from './handlers/dashboard.js';
+import { handleReposList, handleReposActivity } from './handlers/repos.js';
+import { handleSessionStartRepo, handleSessionSelectIssue } from './handlers/session-start.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,7 +40,11 @@ function sendError(
   message: string,
   context?: Record<string, unknown>,
 ): void {
-  const errorMsg = { type: 'connection:error', data: { code, message, context } };
+  const errorMsg = {
+    type: 'connection:error',
+    payload: { code, message, context },
+    timestamp: Date.now(),
+  };
   if (ws.readyState === WsWebSocket.OPEN) {
     ws.send(JSON.stringify(errorMsg));
   }
@@ -76,24 +87,42 @@ const handlers = new Map<string, MessageHandler>([
   ['practice:view_previous_attempts', notImplementedHandler('practice:view_previous_attempts')],
   ['dashboard:request', handleDashboardRequestWs],
   ['dashboard:refresh_issues', handleDashboardRefreshIssuesWs],
+  ['dashboard:stats_period', handleDashboardStatsPeriodWs],
+  ['repos:list', handleReposList],
+  ['repos:activity', handleReposActivity],
+  ['session:start_repo', handleSessionStartRepo],
+  ['session:select_issue', handleSessionSelectIssue],
   ['terminal:command', notImplementedHandler('terminal:command')],
   ['tree:expand', notImplementedHandler('tree:expand')],
   ['tree:collapse', notImplementedHandler('tree:collapse')],
   ['review:request', notImplementedHandler('review:request')],
 ]);
 
+// ── Session Resolution Categories ────────────────────────────────────────────
+
+/** Messages exempt from session resolution (initial handshake). */
+const SESSION_EXEMPT: ReadonlySet<string> = new Set(['connection:hello']);
+
+/** High-frequency messages that only need a lightweight touch. */
+const SESSION_TOUCH: ReadonlySet<string> = new Set([
+  'buffer:update',
+  'editor:tab_switch',
+  'editor:selection',
+]);
+
 // ── Public API ───────────────────────────────────────────────────────────────
 
 /**
  * Routes an incoming client-to-server message to the appropriate handler.
+ * Before dispatching, resolves or touches the active session based on message type.
  * Unknown message types receive a NOT_IMPLEMENTED error.
  * Errors thrown by handlers are caught and sent as INTERNAL_ERROR.
  */
-export function routeMessage(
+export async function routeMessage(
   ws: WsWebSocket,
   message: ClientToServerMessage,
   connectionId: string,
-): void {
+): Promise<void> {
   const handler = handlers.get(message.type);
 
   if (!handler) {
@@ -103,17 +132,28 @@ export function routeMessage(
     return;
   }
 
+  // Pre-dispatch session resolution
+  try {
+    if (!SESSION_EXEMPT.has(message.type)) {
+      if (SESSION_TOUCH.has(message.type)) {
+        await touchSession();
+      } else {
+        await resolveSession();
+      }
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(`[ws-router] Session resolution failed for ${message.type}:`, err);
+    // Continue to handler even if session resolution fails — some handlers
+    // (like repos:list, dashboard:request) can function without a session
+  }
+
   try {
     const result = handler(ws, message.data, connectionId);
 
     // If the handler returns a Promise, catch any async errors
     if (result instanceof Promise) {
-      result.catch((err: unknown) => {
-        const errorMessage = err instanceof Error ? err.message : 'Handler error';
-        // eslint-disable-next-line no-console
-        console.error(`[ws-router] Handler error for ${message.type}:`, errorMessage);
-        sendError(ws, 'INTERNAL_ERROR', errorMessage, { messageType: message.type });
-      });
+      await result;
     }
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Handler error';

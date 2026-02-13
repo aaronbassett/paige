@@ -7,7 +7,7 @@ import { logAction } from '../logger/action-log.js';
 import { getActiveSessionId } from '../mcp/session.js';
 import { broadcast } from '../websocket/server.js';
 import { assembleState } from './flows/state.js';
-import { assembleIssues } from './flows/issues.js';
+import { assembleAndStreamIssues } from './flows/issues.js';
 import { assembleChallenges } from './flows/challenges.js';
 import { assembleLearningMaterials } from './flows/learning.js';
 
@@ -26,11 +26,21 @@ export interface DashboardResult {
  * 3 async flows (issues, challenges, learning materials).
  *
  * Flow 1 (state) runs synchronously and broadcasts immediately.
- * Flows 2-4 run concurrently; each broadcasts independently on completion.
+ * Flows 2-4 run concurrently; each broadcasts/streams independently on completion.
  * Failures in individual flows do not block other flows.
+ *
+ * @param statsPeriod - Time period for stats aggregation
+ * @param connectionId - WebSocket connection ID for per-client issue streaming
+ * @param owner - Repository owner (for issue fetching)
+ * @param repo - Repository name (for issue fetching)
  */
-export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<DashboardResult> {
-  const sessionId = getActiveSessionId() ?? 0;
+export async function handleDashboardRequest(
+  statsPeriod: StatsPeriod,
+  connectionId: string,
+  owner: string,
+  repo: string,
+): Promise<DashboardResult> {
+  const sessionId = getActiveSessionId();
   const flowStatus = {
     state: false,
     issues: false,
@@ -38,27 +48,41 @@ export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<
     learning_materials: false,
   };
 
-  // Flow 1: Immediate state (Dreyfus + stats) — broadcast synchronously
+  // Flow 1: Immediate state — broadcast as separate messages matching frontend types
+  // Frontend expects dashboard:dreyfus and dashboard:stats as separate messages
   try {
     const stateData = await assembleState(statsPeriod);
-    broadcast({ type: 'dashboard:state', data: stateData });
+
+    // Map Dreyfus data to the format frontend expects: { axes: [{ skill, level }] }
+    const dreyfusAxes = stateData.dreyfus.map((d) => ({
+      skill: d.skill_area,
+      level: Math.min(5, Math.max(1, Math.round(d.confidence * 5))) as 1 | 2 | 3 | 4 | 5,
+    }));
+    broadcast({ type: 'dashboard:dreyfus', data: { axes: dreyfusAxes } });
+
+    // Broadcast stats in the rich StatPayload format
+    broadcast({
+      type: 'dashboard:stats',
+      data: stateData.stats,
+    });
+
     flowStatus.state = true;
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[dashboard] Flow 1 (state) failed:', err);
   }
 
-  // Flows 2-4: Run concurrently, each broadcasts independently
+  // Flows 2-4: Run concurrently, each broadcasts/streams independently
   const flowPromises = [
-    // Flow 2: GitHub issues with suitability
-    assembleIssues(sessionId)
-      .then((data) => {
-        broadcast({ type: 'dashboard:issues', data });
+    // Flow 2: GitHub issues — streamed per-issue to the requesting client
+    assembleAndStreamIssues(owner, repo, connectionId)
+      .then(() => {
         flowStatus.issues = true;
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : 'Issues flow failed';
-        broadcast({ type: 'dashboard:issues_error', data: { error: message } });
+        // eslint-disable-next-line no-console
+        console.error('[dashboard] Flow 2 (issues) failed:', message);
       }),
 
     // Flow 3: Active challenges
@@ -72,11 +96,11 @@ export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<
         console.error('[dashboard] Flow 3 (challenges) failed:', err);
       }),
 
-    // Flow 4: Learning materials
+    // Flow 4: Learning materials (frontend expects 'dashboard:materials')
     assembleLearningMaterials()
       .then((data) => {
         if (data !== null) {
-          broadcast({ type: 'dashboard:learning_materials', data });
+          broadcast({ type: 'dashboard:materials', data });
         }
         flowStatus.learning_materials = true;
       })
@@ -88,9 +112,9 @@ export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<
 
   await Promise.all(flowPromises);
 
-  // Log dashboard_loaded action with flow statuses
+  // Log dashboard_loaded action with flow statuses (only if a session is active)
   const db = getDatabase();
-  if (db !== null) {
+  if (db !== null && sessionId !== null) {
     await logAction(db as never, sessionId, 'dashboard_loaded', { ...flowStatus });
   }
 
@@ -99,16 +123,22 @@ export async function handleDashboardRequest(statsPeriod: StatsPeriod): Promise<
 
 /**
  * Handles a dashboard:refresh_issues request (re-runs Flow 2 only).
- * Broadcasts dashboard:issues on success or dashboard:issues_error on failure.
+ * Streams individual issues to the requesting client, then sends completion.
+ *
+ * @param connectionId - WebSocket connection ID for per-client issue streaming
+ * @param owner - Repository owner
+ * @param repo - Repository name
  */
-export async function handleDashboardRefreshIssues(): Promise<void> {
-  const sessionId = getActiveSessionId() ?? 0;
-
+export async function handleDashboardRefreshIssues(
+  connectionId: string,
+  owner: string,
+  repo: string,
+): Promise<void> {
   try {
-    const data = await assembleIssues(sessionId);
-    broadcast({ type: 'dashboard:issues', data });
+    await assembleAndStreamIssues(owner, repo, connectionId);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Issues refresh failed';
-    broadcast({ type: 'dashboard:issues_error', data: { error: message } });
+    // eslint-disable-next-line no-console
+    console.error('[dashboard] Issues refresh failed:', message);
   }
 }

@@ -9,10 +9,10 @@ function createWindow(): BrowserWindow {
   const isMac = process.platform === 'darwin';
 
   const window = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    minWidth: 800,
-    minHeight: 500,
+    width: 1920,
+    height: 1188,
+    minWidth: 1200,
+    minHeight: 742,
     ...(isMac ? { titleBarStyle: 'hiddenInset' as const } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

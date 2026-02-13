@@ -110,7 +110,11 @@ const practiceViewPreviousAttemptsDataSchema = z.object({
 });
 
 const dashboardRequestDataSchema = z.object({
-  statsPeriod: z.enum(['7d', '30d', 'all']),
+  statsPeriod: z.enum(['today', 'last_week', 'last_month', 'all_time']),
+});
+
+const dashboardStatsPeriodDataSchema = z.object({
+  period: z.enum(['today', 'last_week', 'last_month', 'all_time']),
 });
 
 const dashboardRefreshIssuesDataSchema = z.object({});
@@ -129,6 +133,21 @@ const treeCollapseDataSchema = z.object({
 
 const reviewRequestDataSchema = z.object({
   phaseId: z.number(),
+});
+
+const reposListRequestDataSchema = z.object({});
+
+const reposActivityRequestDataSchema = z.object({
+  repos: z.array(z.string()),
+});
+
+const sessionStartRepoDataSchema = z.object({
+  owner: z.string(),
+  repo: z.string(),
+});
+
+const sessionSelectIssueWsDataSchema = z.object({
+  issueNumber: z.number(),
 });
 
 // ── Message Envelope Schema ─────────────────────────────────────────────────
@@ -169,10 +188,15 @@ export const messageDataSchemas = {
   'practice:view_previous_attempts': practiceViewPreviousAttemptsDataSchema,
   'dashboard:request': dashboardRequestDataSchema,
   'dashboard:refresh_issues': dashboardRefreshIssuesDataSchema,
+  'dashboard:stats_period': dashboardStatsPeriodDataSchema,
   'terminal:command': terminalCommandDataSchema,
   'tree:expand': treeExpandDataSchema,
   'tree:collapse': treeCollapseDataSchema,
   'review:request': reviewRequestDataSchema,
+  'repos:list': reposListRequestDataSchema,
+  'repos:activity': reposActivityRequestDataSchema,
+  'session:start_repo': sessionStartRepoDataSchema,
+  'session:select_issue': sessionSelectIssueWsDataSchema,
 } as const;
 
 /**

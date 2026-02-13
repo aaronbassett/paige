@@ -5,10 +5,11 @@ import type { WebSocket as WsWebSocket } from 'ws';
 
 import { getDatabase } from '../../database/db.js';
 import { logAction } from '../../logger/action-log.js';
+import { getActiveSessionId } from '../../mcp/session.js';
 import type { ActionType } from '../../types/domain.js';
 import type { EditorSelectionData, EditorTabSwitchData } from '../../types/websocket.js';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────
 
 /**
  * Logs an action to the database, swallowing any errors to avoid
@@ -16,15 +17,16 @@ import type { EditorSelectionData, EditorTabSwitchData } from '../../types/webso
  */
 function safeLogAction(actionType: ActionType, data?: Record<string, unknown>): void {
   const db = getDatabase();
-  if (db) {
-    logAction(db, 0, actionType, data).catch((err: unknown) => {
+  const sessionId = getActiveSessionId();
+  if (db !== null && sessionId !== null) {
+    logAction(db, sessionId, actionType, data).catch((err: unknown) => {
       // eslint-disable-next-line no-console
       console.error(`[ws-handler:editor] Failed to log action "${actionType}":`, err);
     });
   }
 }
 
-// ── Handlers ─────────────────────────────────────────────────────────────────
+// ── Handlers ─────────────────────────────────────────────────────────────
 
 /**
  * Handles `editor:tab_switch` messages from Electron clients.

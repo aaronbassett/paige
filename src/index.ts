@@ -2,14 +2,13 @@
 // HTTP server with health endpoint, MCP transport, and WebSocket support
 
 import http, { type Server } from 'node:http';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { loadEnv } from './config/env.js';
 import { createDatabase, closeDatabase } from './database/db.js';
 import { createFileWatcher, type FileChangeEvent } from './file-system/watcher.js';
 import { initializeMemory, closeMemory } from './memory/chromadb.js';
 import { createMcpServer } from './mcp/server.js';
 import { createWebSocketServer, broadcast } from './websocket/server.js';
-import type { FsTreeAction } from './types/websocket.js';
 
 export const VERSION = '1.0.0';
 
@@ -71,23 +70,43 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
   const mcpHandle = createMcpServer(null as unknown as Server);
 
   const server = http.createServer((req, res) => {
+    // Add CORS headers for MCP Inspector and other browser-based tools
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400', // 24 hours
+    };
+
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, corsHeaders);
+      res.end();
+      return;
+    }
+
     if (req.method === 'GET' && req.url === '/health') {
       const uptimeMs = Date.now() - startTime;
       const uptimeSeconds = uptimeMs / 1000;
       const body = JSON.stringify({ status: 'ok', uptime: uptimeSeconds });
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
       res.end(body);
       return;
     }
 
     // Route /mcp requests to MCP Streamable HTTP transport
     if (req.url?.startsWith('/mcp')) {
+      // Add CORS headers before delegating to MCP handler
+      Object.entries(corsHeaders).forEach(([key, value]) => {
+        res.setHeader(key, value);
+      });
+
       mcpHandle.handleRequest(req, res).catch((err: unknown) => {
         // eslint-disable-next-line no-console
         console.error('[server] MCP request error:', err);
         if (!res.headersSent) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Internal Server Error' }));
         }
       });
@@ -96,7 +115,7 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
 
     // All other routes/methods: 404
     const body = JSON.stringify({ error: 'Not Found' });
-    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.writeHead(404, { ...corsHeaders, 'Content-Type': 'application/json' });
     res.end(body);
   });
 
@@ -104,14 +123,24 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
   const wsHandle = createWebSocketServer(server);
 
   // Start file watcher for PROJECT_DIR and wire to WebSocket broadcasts
+  // Maps chokidar events (add/change/unlink) to frontend actions (add/remove)
   const fileWatcher = createFileWatcher(env.projectDir);
   fileWatcher.on('change', (event: FileChangeEvent) => {
+    // Skip 'change' events — they don't affect tree structure
+    if (event.type === 'change') return;
+
+    // Map chokidar 'unlink' to frontend 'remove'
+    const action = event.type === 'unlink' ? 'remove' : event.type;
+
+    // Include node data for 'add' so the tree can insert it
+    const node =
+      action === 'add'
+        ? { name: basename(event.path), path: event.path, type: 'file' as const }
+        : undefined;
+
     broadcast({
       type: 'fs:tree_update',
-      data: {
-        action: event.type as FsTreeAction,
-        path: event.path,
-      },
+      data: { action, path: event.path, ...(node ? { node } : {}) },
     });
   });
 
@@ -189,4 +218,35 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
   };
 
   return { server, close };
+}
+
+// Main execution block - start server when run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const port = process.env['PORT'] ? parseInt(process.env['PORT'], 10) : 3001;
+  let serverHandle: ServerHandle | null = null;
+
+  createServer({ port })
+    .then((handle) => {
+      serverHandle = handle;
+      // eslint-disable-next-line no-console
+      console.log('[server] Press Ctrl+C to stop');
+    })
+    .catch((err: unknown) => {
+      // eslint-disable-next-line no-console
+      console.error('[server] Failed to start:', err);
+      process.exit(1);
+    });
+
+  // Graceful shutdown on SIGINT/SIGTERM
+  const shutdown = async (signal: string): Promise<void> => {
+    // eslint-disable-next-line no-console
+    console.log(`\n[server] Received ${signal}, shutting down gracefully...`);
+    if (serverHandle) {
+      await serverHandle.close();
+    }
+    process.exit(0);
+  };
+
+  process.on('SIGINT', () => void shutdown('SIGINT'));
+  process.on('SIGTERM', () => void shutdown('SIGTERM'));
 }
