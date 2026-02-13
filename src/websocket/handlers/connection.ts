@@ -2,7 +2,6 @@
 // Responds with connection:init containing session ID, capabilities, and feature flags.
 
 import { randomUUID } from 'node:crypto';
-import { execSync } from 'node:child_process';
 import { WebSocket as WsWebSocket } from 'ws';
 
 import type { ConnectionInitData } from '../../types/websocket.js';
@@ -21,18 +20,6 @@ function isChromaDBAvailable(): boolean {
   try {
     const collection = getCollection();
     return collection !== null;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Check if GitHub CLI is available and authenticated.
- */
-function isGitHubCLIAvailable(): boolean {
-  try {
-    execSync('gh auth status', { stdio: 'ignore', timeout: 2000 });
-    return true;
   } catch {
     return false;
   }
@@ -69,7 +56,7 @@ export async function handleConnectionHello(
     projectDir: env.projectDir,
     capabilities: {
       chromadb_available: isChromaDBAvailable(),
-      gh_cli_available: isGitHubCLIAvailable(),
+      github_api_available: !!process.env['GITHUB_TOKEN'],
     },
     featureFlags: {
       observer_enabled: false,

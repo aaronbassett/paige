@@ -152,7 +152,7 @@ describe('WebSocket handshake (integration)', () => {
       // Capabilities should be an object with boolean fields
       expect(initData.capabilities).toBeDefined();
       expect(typeof initData.capabilities.chromadb_available).toBe('boolean');
-      expect(typeof initData.capabilities.gh_cli_available).toBe('boolean');
+      expect(typeof initData.capabilities.github_api_available).toBe('boolean');
 
       // Feature flags should be an object with boolean fields
       expect(initData.featureFlags).toBeDefined();
