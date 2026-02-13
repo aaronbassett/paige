@@ -42,10 +42,13 @@ export async function assembleState(statsPeriod: StatsPeriod): Promise<Dashboard
   return {
     dreyfus,
     stats: {
-      total_sessions: totalSessions,
-      total_actions: totalActions,
-      total_api_calls: totalApiCalls,
-      total_cost: totalCost,
+      period: statsPeriod,
+      stats: {
+        sessions: { value: totalSessions, change: 0, unit: 'count' },
+        actions: { value: totalActions, change: 0, unit: 'count' },
+        api_calls: { value: totalApiCalls, change: 0, unit: 'count' },
+        total_cost: { value: totalCost, change: 0, unit: 'currency' },
+      },
     },
     issues: [],
     challenges: [],
