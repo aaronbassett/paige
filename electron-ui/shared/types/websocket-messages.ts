@@ -50,6 +50,12 @@ export type ServerMessageType =
   | 'phase:transition'
   // Observer nudges (1)
   | 'observer:nudge'
+  // Planning flow (5)
+  | 'planning:started'
+  | 'planning:progress'
+  | 'planning:phase_update'
+  | 'planning:complete'
+  | 'planning:error'
   // Errors (3)
   | 'error:file_not_found'
   | 'error:permission_denied'
@@ -452,6 +458,95 @@ export interface ObserverNudgeMessage extends BaseMessage {
   };
 }
 
+// -- Planning flow (5) -------------------------------------------------------
+
+/** The four loading phases shown during planning. */
+export type PlanningPhase = 'fetching' | 'exploring' | 'planning' | 'writing_hints';
+
+/** Planning agent started. */
+export interface PlanningStartedMessage extends BaseMessage {
+  type: 'planning:started';
+  payload: {
+    sessionId: string;
+    issueTitle: string;
+  };
+}
+
+/** Planning agent progress event (tool use). */
+export interface PlanningProgressMessage extends BaseMessage {
+  type: 'planning:progress';
+  payload: {
+    message: string;
+    toolName?: string;
+    filePath?: string;
+  };
+}
+
+/** Planning agent phase transition. */
+export interface PlanningPhaseUpdateMessage extends BaseMessage {
+  type: 'planning:phase_update';
+  payload: {
+    phase: PlanningPhase;
+    progress: number;
+  };
+}
+
+/** A task within a plan phase. */
+export interface PlanTask {
+  title: string;
+  description: string;
+  targetFiles: string[];
+  hints: { low: string; medium: string; high: string };
+}
+
+/** A phase within the completed plan. */
+export interface PlanPhase {
+  number: number;
+  title: string;
+  description: string;
+  hint: string;
+  status: 'pending' | 'active';
+  tasks: PlanTask[];
+}
+
+/** Planning agent completed with full plan payload. */
+export interface PlanningCompleteMessage extends BaseMessage {
+  type: 'planning:complete';
+  payload: PlanningCompletePayload;
+}
+
+/** Payload of the planning:complete message. */
+export interface PlanningCompletePayload {
+  sessionId: string;
+  plan: {
+    title: string;
+    summary: string;
+    phases: PlanPhase[];
+  };
+  fileTree: TreeNode[];
+  fileHints: Array<{
+    path: string;
+    style: 'subtle' | 'obvious' | 'unmissable';
+    phase: number;
+  }>;
+  issueContext: {
+    title: string;
+    number: number;
+    body: string;
+    labels: string[];
+    url: string;
+  };
+}
+
+/** Planning agent error. */
+export interface PlanningErrorMessage extends BaseMessage {
+  type: 'planning:error';
+  payload: {
+    sessionId: string;
+    error: string;
+  };
+}
+
 // -- Errors (3) --------------------------------------------------------------
 
 /** File not found error. */
@@ -819,6 +914,11 @@ export type ServerMessage =
   | CoachingClearMessage
   | PhaseTransitionMessage
   | ObserverNudgeMessage
+  | PlanningStartedMessage
+  | PlanningProgressMessage
+  | PlanningPhaseUpdateMessage
+  | PlanningCompleteMessage
+  | PlanningErrorMessage
   | ErrorFileNotFoundMessage
   | ErrorPermissionDeniedMessage
   | ErrorGeneralMessage
