@@ -91,3 +91,202 @@ body {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
+
+/* ---------------------------------------------------------------------------
+ * Markdown Body — styles for rendered GitHub-flavoured markdown
+ * Applied via className="markdown-body" (e.g. IssueModal body)
+ * ------------------------------------------------------------------------- */
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  line-height: 1.4;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-body h1:first-child,
+.markdown-body h2:first-child,
+.markdown-body h3:first-child {
+  margin-top: 0;
+}
+
+.markdown-body h1 {
+  font-size: 1.3em;
+  font-weight: 600;
+}
+.markdown-body h2 {
+  font-size: 1.15em;
+  font-weight: 600;
+}
+.markdown-body h3 {
+  font-size: 1.05em;
+  font-weight: 600;
+}
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  font-size: 1em;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.markdown-body p {
+  margin-bottom: 0.75em;
+}
+
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.6em;
+  margin-bottom: 0.75em;
+}
+
+.markdown-body li {
+  margin-bottom: 0.3em;
+}
+
+.markdown-body li > ul,
+.markdown-body li > ol {
+  margin-top: 0.3em;
+  margin-bottom: 0;
+}
+
+/* Task list checkboxes (GFM) */
+.markdown-body li.task-list-item {
+  list-style: none;
+  margin-left: -1.6em;
+  padding-left: 1.6em;
+}
+
+.markdown-body input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--text-muted);
+  border-radius: 3px;
+  background: transparent;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  margin-right: 6px;
+  cursor: default;
+}
+
+.markdown-body input[type='checkbox']:checked {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.markdown-body input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0px;
+  width: 5px;
+  height: 8px;
+  border: solid var(--text-primary);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Inline code */
+.markdown-body code {
+  font-family: var(--font-family);
+  font-size: 0.9em;
+  padding: 0.15em 0.4em;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--accent-warm);
+}
+
+/* Code blocks */
+.markdown-body pre {
+  margin-bottom: 0.75em;
+  padding: var(--space-md);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.markdown-body pre code {
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  color: var(--text-primary);
+  font-size: var(--font-code-size);
+  line-height: var(--font-code-line-height);
+}
+
+/* Blockquotes */
+.markdown-body blockquote {
+  margin-bottom: 0.75em;
+  padding: var(--space-xs) var(--space-md);
+  border-left: 3px solid var(--accent-primary);
+  color: var(--text-secondary);
+}
+
+.markdown-body blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Horizontal rules */
+.markdown-body hr {
+  border: none;
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 1.5em 0;
+}
+
+/* Tables */
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.75em;
+  font-size: 0.9em;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-xs) var(--space-sm);
+  text-align: left;
+}
+
+.markdown-body th {
+  background: var(--bg-inset);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.markdown-body tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Links */
+.markdown-body a {
+  color: var(--accent-warm);
+  text-decoration: none;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+
+/* Images */
+.markdown-body img {
+  max-width: 100%;
+  border-radius: 6px;
+}
