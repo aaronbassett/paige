@@ -52,6 +52,7 @@ const SPRING_STANDARD = { stiffness: 300, damping: 28 };
 
 interface IDEProps {
   onNavigate: (view: AppView, context?: { issueNumber?: number }) => void;
+  planningResult?: import('@shared/types/websocket-messages').PlanningCompletePayload | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -132,7 +133,7 @@ function useActiveTabPath(): string | undefined {
 // IDE component
 // ---------------------------------------------------------------------------
 
-export function IDE({ onNavigate: _onNavigate }: IDEProps) {
+export function IDE({ onNavigate: _onNavigate, planningResult: _planningResult }: IDEProps) {
   // Sidebar and terminal visibility state
   const [leftCollapsed, setLeftCollapsed] = useState(() => window.innerWidth < AUTO_COLLAPSE_WIDTH);
   const [rightCollapsed, setRightCollapsed] = useState(

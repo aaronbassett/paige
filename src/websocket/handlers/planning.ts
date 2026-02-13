@@ -219,12 +219,16 @@ async function handlePlanComplete(
     })),
   }));
 
-  // Build file hints from relevant_files
-  const fileHints = plan.relevant_files.map((filePath) => ({
-    path: filePath,
-    style: 'subtle' as const,
-    phase: 1,
-  }));
+  // Build file hints from each phase's task target files
+  const fileHints = plan.phases.flatMap((phase) =>
+    phase.tasks.flatMap((task) =>
+      task.target_files.map((path) => ({
+        path,
+        style: phase.number === 1 ? ('obvious' as const) : ('subtle' as const),
+        phase: phase.number,
+      })),
+    ),
+  );
 
   const completeMessage: PlanningCompleteMessage = {
     type: 'planning:complete',

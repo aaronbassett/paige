@@ -77,7 +77,7 @@ export function AppShell() {
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [, setNavContext] = useState<NavigationContext>({});
   const [, setCurrentRepo] = useState<{ owner: string; repo: string } | null>(null);
-  const [, setPlanningResult] = useState<PlanningCompletePayload | null>(null);
+  const [planningResult, setPlanningResult] = useState<PlanningCompletePayload | null>(null);
 
   const { send, on } = useWebSocket();
 
@@ -131,7 +131,7 @@ export function AppShell() {
       case 'dashboard':
         return <Dashboard onNavigate={handleNavigate} />;
       case 'ide':
-        return <IDE onNavigate={handleNavigate} />;
+        return <IDE onNavigate={handleNavigate} planningResult={planningResult} />;
       case 'placeholder':
         return <Placeholder onNavigate={handleNavigate} />;
       case 'planning':
