@@ -12,7 +12,11 @@ import { handleHintsLevelChange } from './handlers/hints.js';
 import { handleUserIdleStart, handleUserIdleEnd, handleUserExplain } from './handlers/user.js';
 import { handleObserverMute } from './handlers/observer.js';
 import { handlePracticeSubmitSolution } from './handlers/practice.js';
-import { handleDashboardRequestWs, handleDashboardRefreshIssuesWs } from './handlers/dashboard.js';
+import {
+  handleDashboardRequestWs,
+  handleDashboardRefreshIssuesWs,
+  handleDashboardStatsPeriodWs,
+} from './handlers/dashboard.js';
 import { handleReposList, handleReposActivity } from './handlers/repos.js';
 import { handleSessionStartRepo, handleSessionSelectIssue } from './handlers/session-start.js';
 
@@ -83,6 +87,7 @@ const handlers = new Map<string, MessageHandler>([
   ['practice:view_previous_attempts', notImplementedHandler('practice:view_previous_attempts')],
   ['dashboard:request', handleDashboardRequestWs],
   ['dashboard:refresh_issues', handleDashboardRefreshIssuesWs],
+  ['dashboard:stats_period', handleDashboardStatsPeriodWs],
   ['repos:list', handleReposList],
   ['repos:activity', handleReposActivity],
   ['session:start_repo', handleSessionStartRepo],

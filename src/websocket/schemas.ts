@@ -110,7 +110,11 @@ const practiceViewPreviousAttemptsDataSchema = z.object({
 });
 
 const dashboardRequestDataSchema = z.object({
-  statsPeriod: z.enum(['7d', '30d', 'all']),
+  statsPeriod: z.enum(['today', 'last_week', 'last_month', 'all_time']),
+});
+
+const dashboardStatsPeriodDataSchema = z.object({
+  period: z.enum(['today', 'last_week', 'last_month', 'all_time']),
 });
 
 const dashboardRefreshIssuesDataSchema = z.object({});
@@ -184,6 +188,7 @@ export const messageDataSchemas = {
   'practice:view_previous_attempts': practiceViewPreviousAttemptsDataSchema,
   'dashboard:request': dashboardRequestDataSchema,
   'dashboard:refresh_issues': dashboardRefreshIssuesDataSchema,
+  'dashboard:stats_period': dashboardStatsPeriodDataSchema,
   'terminal:command': terminalCommandDataSchema,
   'tree:expand': treeExpandDataSchema,
   'tree:collapse': treeCollapseDataSchema,

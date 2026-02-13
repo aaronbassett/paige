@@ -94,6 +94,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     };
   }, [on]);
 
+  // Request initial stats when Dashboard mounts (the connection:hello
+  // broadcast happens before Dashboard is rendered, so we'd miss it)
+  useEffect(() => {
+    send('dashboard:stats_period', { period: 'last_month' });
+  }, [send]);
+
   const handleStatsPeriodChange = useCallback(
     (period: StatsPeriod) => {
       send('dashboard:stats_period', { period });
