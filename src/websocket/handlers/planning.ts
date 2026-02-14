@@ -248,6 +248,32 @@ async function handlePlanComplete(
   };
 
   sendToClient(connectionId, completeMessage as ServerToClientMessage);
+
+  // Send session:start so CoachingSidebar populates with issue context + phases
+  const sessionStartMessage = {
+    type: 'session:start' as const,
+    data: {
+      sessionId: sessionIdStr,
+      issueContext: {
+        number: issue.number,
+        title: issue.title,
+        url: issue.url,
+        labels: issue.labels.map((label) => ({ name: label, color: '#6b6960' })),
+      },
+      phases: phases.map((phase) => ({
+        number: phase.number as 1 | 2 | 3 | 4 | 5,
+        title: phase.title,
+        status: phase.status === 'active' ? ('active' as const) : ('pending' as const),
+        summary: phase.description,
+        steps: phase.tasks.map((task) => ({
+          title: task.title,
+          description: task.description,
+        })),
+      })),
+      initialHintLevel: 0 as const,
+    },
+  };
+  sendToClient(connectionId, sessionStartMessage as ServerToClientMessage);
 }
 
 // ── Database Persistence ─────────────────────────────────────────────────────

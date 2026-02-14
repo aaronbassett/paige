@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { WebSocket as WsWebSocket } from 'ws';
-import type { PlanningAgentInput } from '../../../../src/planning/agent.js';
 import type { AgentPlanOutput } from '../../../../src/planning/parser.js';
 
 // ── Mock dependencies BEFORE imports ──────────────────────────────────────────
@@ -64,7 +64,7 @@ vi.mock('../../../../src/database/queries/hints.js', () => ({
 
 import { handlePlanningStart } from '../../../../src/websocket/handlers/planning.js';
 import { sendToClient } from '../../../../src/websocket/server.js';
-import { runPlanningAgent } from '../../../../src/planning/agent.js';
+import { runPlanningAgent, type PlanningAgentInput } from '../../../../src/planning/agent.js';
 import { getDatabase } from '../../../../src/database/db.js';
 import { getActiveRepo } from '../../../../src/mcp/session.js';
 import { createSession } from '../../../../src/database/queries/sessions.js';
@@ -201,8 +201,9 @@ describe('handlePlanningStart', () => {
   });
 
   it('sends planning:error when agent calls onError', async () => {
-    vi.mocked(runPlanningAgent).mockImplementation(async ({ callbacks }: PlanningAgentInput) => {
+    vi.mocked(runPlanningAgent).mockImplementation(({ callbacks }: PlanningAgentInput) => {
       callbacks.onError('Agent failed');
+      return Promise.resolve();
     });
 
     handlePlanningStart(FAKE_WS, makeIssueData(), CONNECTION_ID);
@@ -221,8 +222,13 @@ describe('handlePlanningStart', () => {
   });
 
   it('sends planning:progress when agent calls onProgress', async () => {
-    vi.mocked(runPlanningAgent).mockImplementation(async ({ callbacks }: PlanningAgentInput) => {
-      callbacks.onProgress({ message: 'Reading package.json...', toolName: 'Read', filePath: 'package.json' });
+    vi.mocked(runPlanningAgent).mockImplementation(({ callbacks }: PlanningAgentInput) => {
+      callbacks.onProgress({
+        message: 'Reading package.json...',
+        toolName: 'Read',
+        filePath: 'package.json',
+      });
+      return Promise.resolve();
     });
 
     handlePlanningStart(FAKE_WS, makeIssueData(), CONNECTION_ID);
@@ -243,8 +249,9 @@ describe('handlePlanningStart', () => {
   });
 
   it('sends planning:phase_update when agent calls onPhaseUpdate', async () => {
-    vi.mocked(runPlanningAgent).mockImplementation(async ({ callbacks }: PlanningAgentInput) => {
+    vi.mocked(runPlanningAgent).mockImplementation(({ callbacks }: PlanningAgentInput) => {
       callbacks.onPhaseUpdate('exploring', 50);
+      return Promise.resolve();
     });
 
     handlePlanningStart(FAKE_WS, makeIssueData(), CONNECTION_ID);
@@ -265,8 +272,9 @@ describe('handlePlanningStart', () => {
 
   it('sends planning:complete when agent calls onComplete (no DB)', async () => {
     vi.mocked(getDatabase).mockReturnValue(null);
-    vi.mocked(runPlanningAgent).mockImplementation(async ({ callbacks }: PlanningAgentInput) => {
+    vi.mocked(runPlanningAgent).mockImplementation(({ callbacks }: PlanningAgentInput) => {
       callbacks.onComplete(SAMPLE_PLAN_OUTPUT);
+      return Promise.resolve();
     });
 
     handlePlanningStart(FAKE_WS, makeIssueData(), CONNECTION_ID);
@@ -288,15 +296,20 @@ describe('handlePlanningStart', () => {
   });
 
   it('persists plan, phases, and hints to DB when database is available', async () => {
-    const fakeDb = {} as any;
+    const fakeDb = {} as ReturnType<typeof getDatabase>;
     vi.mocked(getDatabase).mockReturnValue(fakeDb);
-    vi.mocked(createSession).mockResolvedValue({ id: 5 } as any);
-    vi.mocked(createPlan).mockResolvedValue({ id: 20 } as any);
-    vi.mocked(createPhase).mockResolvedValue({ id: 200 } as any);
-    vi.mocked(createHint).mockResolvedValue({ id: 2000 } as any);
+    vi.mocked(createSession).mockResolvedValue({ id: 5 } as Awaited<
+      ReturnType<typeof createSession>
+    >);
+    vi.mocked(createPlan).mockResolvedValue({ id: 20 } as Awaited<ReturnType<typeof createPlan>>);
+    vi.mocked(createPhase).mockResolvedValue({ id: 200 } as Awaited<
+      ReturnType<typeof createPhase>
+    >);
+    vi.mocked(createHint).mockResolvedValue({ id: 2000 } as Awaited<ReturnType<typeof createHint>>);
 
-    vi.mocked(runPlanningAgent).mockImplementation(async ({ callbacks }: PlanningAgentInput) => {
+    vi.mocked(runPlanningAgent).mockImplementation(({ callbacks }: PlanningAgentInput) => {
       callbacks.onComplete(SAMPLE_PLAN_OUTPUT);
+      return Promise.resolve();
     });
 
     handlePlanningStart(FAKE_WS, makeIssueData(), CONNECTION_ID);
@@ -338,13 +351,46 @@ describe('handlePlanningStart', () => {
     expect(createHint).toHaveBeenCalled();
   });
 
+  it('sends session:start after planning:complete', async () => {
+    vi.mocked(getDatabase).mockReturnValue(null);
+    vi.mocked(runPlanningAgent).mockImplementation(({ callbacks }: PlanningAgentInput) => {
+      callbacks.onComplete(SAMPLE_PLAN_OUTPUT);
+      return Promise.resolve();
+    });
+
+    handlePlanningStart(FAKE_WS, makeIssueData(), CONNECTION_ID);
+
+    await tick(100);
+
+    const calls = vi.mocked(sendToClient).mock.calls;
+    const sessionStartCall = calls.find(
+      ([, msg]) => (msg as { type: string }).type === 'session:start',
+    );
+
+    expect(sessionStartCall).toBeDefined();
+    const msg = sessionStartCall![1] as { type: string; data: unknown };
+    expect(msg.type).toBe('session:start');
+
+    const data = msg.data as {
+      sessionId: string;
+      issueContext: { number: number; title: string };
+      phases: unknown[];
+      initialHintLevel: number;
+    };
+    expect(data.sessionId).toBe(CONNECTION_ID);
+    expect(data.issueContext.number).toBe(42);
+    expect(data.phases).toHaveLength(1);
+    expect(data.initialHintLevel).toBe(0);
+  });
+
   it('still sends planning:complete even if DB operations fail', async () => {
-    const fakeDb = {} as any;
+    const fakeDb = {} as ReturnType<typeof getDatabase>;
     vi.mocked(getDatabase).mockReturnValue(fakeDb);
     vi.mocked(createSession).mockRejectedValue(new Error('DB write failed'));
 
-    vi.mocked(runPlanningAgent).mockImplementation(async ({ callbacks }: PlanningAgentInput) => {
+    vi.mocked(runPlanningAgent).mockImplementation(({ callbacks }: PlanningAgentInput) => {
       callbacks.onComplete(SAMPLE_PLAN_OUTPUT);
+      return Promise.resolve();
     });
 
     handlePlanningStart(FAKE_WS, makeIssueData(), CONNECTION_ID);
