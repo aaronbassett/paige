@@ -222,6 +222,20 @@ export interface TerminalCommandData {
   readonly command: string;
 }
 
+export interface TerminalReadyData {
+  readonly cols: number;
+  readonly rows: number;
+}
+
+export interface TerminalResizeData {
+  readonly cols: number;
+  readonly rows: number;
+}
+
+export interface TerminalInputData {
+  readonly data: string;
+}
+
 export interface TreeExpandData {
   readonly path: string;
 }
@@ -726,6 +740,21 @@ export interface TerminalCommandMessage {
   readonly data: TerminalCommandData;
 }
 
+export interface TerminalReadyMessage {
+  readonly type: 'terminal:ready';
+  readonly data: TerminalReadyData;
+}
+
+export interface TerminalResizeMessage {
+  readonly type: 'terminal:resize';
+  readonly data: TerminalResizeData;
+}
+
+export interface TerminalInputMessage {
+  readonly type: 'terminal:input';
+  readonly data: TerminalInputData;
+}
+
 export interface TreeExpandMessage {
   readonly type: 'tree:expand';
   readonly data: TreeExpandData;
@@ -788,6 +817,9 @@ export type ClientToServerMessage =
   | DashboardRequestMessage
   | DashboardRefreshIssuesMessage
   | TerminalCommandMessage
+  | TerminalReadyMessage
+  | TerminalResizeMessage
+  | TerminalInputMessage
   | TreeExpandMessage
   | TreeCollapseMessage
   | ReviewRequestMessage
