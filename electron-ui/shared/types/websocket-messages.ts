@@ -544,6 +544,7 @@ export interface PlanningCompleteMessage extends BaseMessage {
 /** Payload of the planning:complete message. */
 export interface PlanningCompletePayload {
   sessionId: string;
+  repoPath: string;
   plan: {
     title: string;
     summary: string;

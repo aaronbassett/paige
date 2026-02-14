@@ -230,6 +230,7 @@ async function handlePlanComplete(
     type: 'planning:complete',
     data: {
       sessionId: sessionIdStr,
+      repoPath,
       plan: {
         title: plan.title,
         summary: plan.summary,

@@ -74,6 +74,10 @@ const TERMINAL_OPTIONS = {
 // Component
 // ---------------------------------------------------------------------------
 
+interface TerminalPanelProps {
+  cwd?: string;
+}
+
 /**
  * Terminal panel that renders an xterm.js instance connected to a PTY
  * running in the Electron main process.
@@ -81,7 +85,7 @@ const TERMINAL_OPTIONS = {
  * Falls back to a styled message when the PTY bridge is not available
  * (e.g. running in a browser context without Electron).
  */
-export function TerminalPanel() {
+export function TerminalPanel({ cwd }: TerminalPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { send, on } = useWebSocket();
   const ptySpawnedRef = useRef(false);
@@ -108,22 +112,6 @@ export function TerminalPanel() {
 
     // Initial fit (must happen after open)
     fitAddon.fit();
-
-    // -----------------------------------------------------------------------
-    // Spawn PTY when connection:init is received with projectDir
-    // -----------------------------------------------------------------------
-
-    const unsubInit = on('connection:init', (msg) => {
-      if (ptySpawnedRef.current) return;
-
-      const payload = msg.payload as { projectDir?: string };
-      const projectDir = payload.projectDir;
-
-      if (projectDir) {
-        ptyBridge.spawn(projectDir);
-        ptySpawnedRef.current = true;
-      }
-    });
 
     // -----------------------------------------------------------------------
     // Bidirectional PTY connection
@@ -190,7 +178,6 @@ export function TerminalPanel() {
     // -----------------------------------------------------------------------
 
     return () => {
-      unsubInit();
       unsubNudge();
       resizeObserver.disconnect();
       resizeDisposable.dispose();
@@ -198,6 +185,14 @@ export function TerminalPanel() {
       term.dispose();
     };
   }, [send, on]);
+
+  // Spawn PTY when cwd prop becomes available (from planning:complete)
+  useEffect(() => {
+    const ptyBridge = window.paige?.terminal;
+    if (!ptyBridge || !cwd || ptySpawnedRef.current) return;
+    ptyBridge.spawn(cwd);
+    ptySpawnedRef.current = true;
+  }, [cwd]);
 
   return (
     <div

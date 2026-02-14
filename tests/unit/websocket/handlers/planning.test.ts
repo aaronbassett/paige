@@ -286,6 +286,7 @@ describe('handlePlanningStart', () => {
       expect.objectContaining({
         type: 'planning:complete',
         data: expect.objectContaining({
+          repoPath: '/tmp/repo',
           plan: expect.objectContaining({
             title: 'Add Authentication',
             summary: 'Implement JWT-based auth with login/logout endpoints',

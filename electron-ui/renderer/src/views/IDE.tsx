@@ -133,7 +133,7 @@ function useActiveTabPath(): string | undefined {
 // IDE component
 // ---------------------------------------------------------------------------
 
-export function IDE({ onNavigate: _onNavigate, planningResult: _planningResult }: IDEProps) {
+export function IDE({ onNavigate: _onNavigate, planningResult }: IDEProps) {
   // Sidebar and terminal visibility state
   const [leftCollapsed, setLeftCollapsed] = useState(() => window.innerWidth < AUTO_COLLAPSE_WIDTH);
   const [rightCollapsed, setRightCollapsed] = useState(
@@ -374,7 +374,7 @@ export function IDE({ onNavigate: _onNavigate, planningResult: _planningResult }
               minHeight: 0,
             }}
           >
-            <TerminalPanel />
+            <TerminalPanel cwd={planningResult?.repoPath} />
           </div>
         )}
       </div>

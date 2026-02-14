@@ -306,6 +306,7 @@ export interface PlanPhase {
 
 export interface PlanningCompleteData {
   readonly sessionId: string;
+  readonly repoPath: string;
   readonly plan: {
     readonly title: string;
     readonly summary: string;
