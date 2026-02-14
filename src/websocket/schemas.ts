@@ -123,6 +123,20 @@ const terminalCommandDataSchema = z.object({
   command: z.string(),
 });
 
+const terminalReadyDataSchema = z.object({
+  cols: z.number(),
+  rows: z.number(),
+});
+
+const terminalResizeDataSchema = z.object({
+  cols: z.number(),
+  rows: z.number(),
+});
+
+const terminalInputDataSchema = z.object({
+  data: z.string(),
+});
+
 const treeExpandDataSchema = z.object({
   path: z.string(),
 });
@@ -196,6 +210,9 @@ export const messageDataSchemas = {
   'dashboard:refresh_issues': dashboardRefreshIssuesDataSchema,
   'dashboard:stats_period': dashboardStatsPeriodDataSchema,
   'terminal:command': terminalCommandDataSchema,
+  'terminal:ready': terminalReadyDataSchema,
+  'terminal:resize': terminalResizeDataSchema,
+  'terminal:input': terminalInputDataSchema,
   'tree:expand': treeExpandDataSchema,
   'tree:collapse': treeCollapseDataSchema,
   'review:request': reviewRequestDataSchema,

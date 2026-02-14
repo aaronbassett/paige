@@ -145,6 +145,46 @@ describe('validateClientMessage', () => {
     });
   });
 
+  describe('terminal message validation', () => {
+    it('should validate terminal:ready with correct schema', () => {
+      const validMessage = {
+        type: 'terminal:ready',
+        data: { cols: 80, rows: 24 },
+      };
+      const result = validateClientMessage(validMessage);
+      expect(result.type).toBe('terminal:ready');
+      expect(result.data).toEqual({ cols: 80, rows: 24 });
+    });
+
+    it('should reject terminal:ready with missing fields', () => {
+      const invalidMessage = {
+        type: 'terminal:ready',
+        data: { cols: 80 },
+      };
+      expect(() => validateClientMessage(invalidMessage)).toThrow(ZodError);
+    });
+
+    it('should validate terminal:resize with correct schema', () => {
+      const validMessage = {
+        type: 'terminal:resize',
+        data: { cols: 120, rows: 40 },
+      };
+      const result = validateClientMessage(validMessage);
+      expect(result.type).toBe('terminal:resize');
+      expect(result.data).toEqual({ cols: 120, rows: 40 });
+    });
+
+    it('should validate terminal:input with correct schema', () => {
+      const validMessage = {
+        type: 'terminal:input',
+        data: { data: 'ls -la\n' },
+      };
+      const result = validateClientMessage(validMessage);
+      expect(result.type).toBe('terminal:input');
+      expect(result.data).toEqual({ data: 'ls -la\n' });
+    });
+  });
+
   describe('unknown message types', () => {
     it('should allow unknown message types to pass through', () => {
       const unknownMessage = {
