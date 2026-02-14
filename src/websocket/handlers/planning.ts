@@ -273,7 +273,7 @@ async function handlePlanComplete(
       initialHintLevel: 0 as const,
     },
   };
-  sendToClient(connectionId, sessionStartMessage as ServerToClientMessage);
+  sendToClient(connectionId, sessionStartMessage as unknown as ServerToClientMessage);
 }
 
 // ── Database Persistence ─────────────────────────────────────────────────────
