@@ -12,7 +12,7 @@ interface PracticeChallengesProps {
     difficulty: 'easy' | 'medium' | 'hard';
     estimatedMinutes: number;
   }> | null;
-  onChallengeClick: () => void;
+  onChallengeClick: (challengeId: string) => void;
 }
 
 const DIFFICULTY_COLORS: Record<'easy' | 'medium' | 'hard', string> = {
@@ -117,11 +117,11 @@ export function PracticeChallenges({ challenges, onChallengeClick }: PracticeCha
             key={challenge.id}
             role="listitem"
             style={cardStyle}
-            onClick={onChallengeClick}
+            onClick={() => onChallengeClick(challenge.id)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                onChallengeClick();
+                onChallengeClick(challenge.id);
               }
             }}
             onMouseEnter={(e) => {

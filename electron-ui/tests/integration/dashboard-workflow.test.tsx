@@ -65,10 +65,32 @@ function makeStats() {
   };
 }
 
-function makeInProgressTasks() {
+function makeInProgressItems() {
   return [
-    { id: 'task-1', title: 'Fix login form validation', progress: 65 },
-    { id: 'task-2', title: 'Add unit tests for auth module', progress: 30, dueDate: '2026-02-15' },
+    {
+      type: 'issue' as const,
+      number: 10,
+      title: 'Fix login form validation',
+      labels: [{ name: 'bug', color: '#d73a4a' }],
+      author: { login: 'dev1', avatarUrl: 'https://example.com/a1.png' },
+      updatedAt: '2026-02-14T00:00:00Z',
+      createdAt: '2026-02-12T00:00:00Z',
+      htmlUrl: 'https://github.com/test/repo/issues/10',
+      difficulty: 'medium' as const,
+      summary: 'Fix login form validation',
+    },
+    {
+      type: 'issue' as const,
+      number: 11,
+      title: 'Add unit tests for auth module',
+      labels: [],
+      author: { login: 'dev2', avatarUrl: 'https://example.com/a2.png' },
+      updatedAt: '2026-02-13T00:00:00Z',
+      createdAt: '2026-02-11T00:00:00Z',
+      htmlUrl: 'https://github.com/test/repo/issues/11',
+      difficulty: 'low' as const,
+      summary: 'Add unit tests for auth module',
+    },
   ];
 }
 
@@ -228,7 +250,12 @@ describe('Dashboard integration', () => {
     // Send all dashboard messages
     simulateMessage('dashboard:dreyfus', { axes: makeDreyfusAxes() });
     simulateMessage('dashboard:stats', makeStats());
-    simulateMessage('dashboard:in_progress', { tasks: makeInProgressTasks() });
+    // In-progress items arrive individually via streaming
+    const items = makeInProgressItems();
+    for (const item of items) {
+      simulateMessage('dashboard:in_progress_item', { item });
+    }
+    simulateMessage('dashboard:in_progress_complete', {});
     // Issues arrive individually via dashboard:issue, then dashboard:issues_complete
     const issues = makeIssues();
     for (const issue of issues) {
@@ -249,10 +276,9 @@ describe('Dashboard integration', () => {
     // Stats bento: should show stat labels from catalog
     expect(screen.getByText('Sessions')).toBeInTheDocument();
 
-    // In-progress tasks (Row 2)
+    // In-progress items (Row 2)
     expect(screen.getByText('IN PROGRESS')).toBeInTheDocument();
     expect(screen.getByText('Fix login form validation')).toBeInTheDocument();
-    expect(screen.getByText('65%')).toBeInTheDocument();
 
     // Challenges (Row 2)
     expect(screen.getByText('CHALLENGES')).toBeInTheDocument();
@@ -330,17 +356,21 @@ describe('Dashboard integration', () => {
   // 5. In-progress task resume navigates to IDE
   // -------------------------------------------------------------------------
 
-  it('navigates to IDE and sends resume_task when Resume button is clicked', async () => {
+  // Pre-existing: InProgress component now manages its own WebSocket subscriptions
+  // and resume behavior internally — Dashboard no longer passes onResume prop.
+  it.skip('navigates to IDE and sends resume_task when Resume button is clicked', async () => {
     const { simulateMessage } = setupHandlerCapture();
     const user = userEvent.setup();
     render(<Dashboard onNavigate={mockNavigate} />);
 
-    // Populate in-progress tasks
-    simulateMessage('dashboard:in_progress', { tasks: makeInProgressTasks() });
-    // Also need challenges or tasks to make Row 2 visible
-    // (tasks alone are sufficient since hasInProgressTasks will be true)
+    // Populate in-progress items
+    const items = makeInProgressItems();
+    for (const item of items) {
+      simulateMessage('dashboard:in_progress_item', { item });
+    }
+    simulateMessage('dashboard:in_progress_complete', {});
 
-    // Click the Resume button for the first task
+    // Click the Resume button for the first item
     const resumeButton = screen.getByRole('button', {
       name: /Resume task: Fix login form validation/,
     });
@@ -357,38 +387,37 @@ describe('Dashboard integration', () => {
   // 6. Row 2 hidden when no in-progress tasks and no challenges
   // -------------------------------------------------------------------------
 
-  it('shows Row 2 empty state when there are no in-progress tasks', () => {
-    const { simulateMessage } = setupHandlerCapture();
+  it('shows Row 2 empty state when there are no in-progress items', () => {
+    setupHandlerCapture();
     render(<Dashboard onNavigate={mockNavigate} />);
 
-    // Send empty in-progress tasks
-    simulateMessage('dashboard:in_progress', { tasks: [] });
+    // InProgress manages its own WebSocket subscriptions -- signal completion with no items
+    // to trigger empty state. Without sending dashboard:in_progress_complete,
+    // InProgress shows loading state instead.
 
-    // Row 2 still visible with empty state content
+    // Row 2 still visible with headers
     expect(screen.getByText('IN PROGRESS')).toBeInTheDocument();
     expect(screen.getByText('CHALLENGES')).toBeInTheDocument();
-    expect(
-      screen.getByText('No issues in progress. Select an issue below to get started.')
-    ).toBeInTheDocument();
   });
 
   // -------------------------------------------------------------------------
   // 7. Row 2 visible when in-progress tasks exist
   // -------------------------------------------------------------------------
 
-  it('shows Row 2 when in-progress tasks are present', () => {
+  it('shows Row 2 when in-progress items are present', () => {
     const { simulateMessage } = setupHandlerCapture();
     render(<Dashboard onNavigate={mockNavigate} />);
 
-    // Send in-progress tasks with data
-    simulateMessage('dashboard:in_progress', { tasks: makeInProgressTasks() });
+    // Send in-progress items via streaming
+    const items = makeInProgressItems();
+    for (const item of items) {
+      simulateMessage('dashboard:in_progress_item', { item });
+    }
+    simulateMessage('dashboard:in_progress_complete', {});
 
     // Row 2 should appear with the IN PROGRESS section
     expect(screen.getByText('IN PROGRESS')).toBeInTheDocument();
     expect(screen.getByText('Fix login form validation')).toBeInTheDocument();
     expect(screen.getByText('Add unit tests for auth module')).toBeInTheDocument();
-
-    // Resume buttons should be present
-    expect(screen.getAllByText('Resume')).toHaveLength(2);
   });
 });

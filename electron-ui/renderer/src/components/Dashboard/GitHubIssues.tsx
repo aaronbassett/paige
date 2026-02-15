@@ -13,7 +13,7 @@
  *   - Click opens IssueModal with full details
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { ScoredIssue, AppView } from '@shared/types/entities';
 import type {
@@ -24,6 +24,7 @@ import { useWebSocket } from '../../hooks/useWebSocket';
 import { IssueCard, type IssueLayoutMode } from './IssueCard';
 import { IssueLayoutToggle } from './IssueLayoutToggle';
 import { IssueModal } from './IssueModal';
+import { SortButton, type SortOption } from './SortButton';
 
 interface GitHubIssuesProps {
   onNavigate: (view: AppView, context?: { issueNumber?: number }) => void;
@@ -92,6 +93,33 @@ const emptyStyle: React.CSSProperties = {
 };
 
 // ---------------------------------------------------------------------------
+// Sort
+// ---------------------------------------------------------------------------
+
+type SortKey = 'updated_desc' | 'updated_asc' | 'title_desc' | 'title_asc';
+
+const SORT_OPTIONS: SortOption<SortKey>[] = [
+  { key: 'updated_desc', label: 'Updated (newest)', direction: 'desc' },
+  { key: 'updated_asc', label: 'Updated (oldest)', direction: 'asc' },
+  { key: 'title_desc', label: 'Title (Z-A)', direction: 'desc' },
+  { key: 'title_asc', label: 'Title (A-Z)', direction: 'asc' },
+];
+
+function sortIssues(issues: ScoredIssue[], sortKey: SortKey): ScoredIssue[] {
+  const sorted = [...issues];
+  switch (sortKey) {
+    case 'updated_desc':
+      return sorted.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    case 'updated_asc':
+      return sorted.sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
+    case 'title_desc':
+      return sorted.sort((a, b) => b.title.localeCompare(a.title));
+    case 'title_asc':
+      return sorted.sort((a, b) => a.title.localeCompare(b.title));
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Layout style selector
 // ---------------------------------------------------------------------------
 
@@ -119,6 +147,9 @@ export function GitHubIssues({ onNavigate }: GitHubIssuesProps) {
 
   // Layout mode state
   const [layout, setLayout] = useState<IssueLayoutMode>('full');
+
+  // Sort state
+  const [sortKey, setSortKey] = useState<SortKey>('updated_desc');
 
   // Modal state
   const [selectedIssue, setSelectedIssue] = useState<ScoredIssue | null>(null);
@@ -152,6 +183,8 @@ export function GitHubIssues({ onNavigate }: GitHubIssuesProps) {
     };
   }, [on]);
 
+  const sortedIssues = useMemo(() => sortIssues(issues, sortKey), [issues, sortKey]);
+
   const handleIssueClick = useCallback((issue: ScoredIssue) => {
     setSelectedIssue(issue);
   }, []);
@@ -162,12 +195,15 @@ export function GitHubIssues({ onNavigate }: GitHubIssuesProps) {
 
   return (
     <section style={containerStyle} aria-label="GitHub issues">
-      {/* Header with title and layout toggle */}
+      {/* Header with title, sort, and layout toggle */}
       <div style={headerRowStyle}>
         <pre className="figlet-header" style={{ fontSize: '18px', margin: 0 }}>
           ISSUES
         </pre>
-        <IssueLayoutToggle current={layout} onChange={setLayout} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+          <SortButton options={SORT_OPTIONS} current={sortKey} onChange={setSortKey} />
+          <IssueLayoutToggle current={layout} onChange={setLayout} />
+        </div>
       </div>
 
       {/* Loading state: skeleton placeholders */}
@@ -187,10 +223,10 @@ export function GitHubIssues({ onNavigate }: GitHubIssuesProps) {
       {!loading && issues.length === 0 && <p style={emptyStyle}>No issues found</p>}
 
       {/* Populated state with progressive rendering */}
-      {issues.length > 0 && (
+      {sortedIssues.length > 0 && (
         <div style={getListStyle(layout)}>
           <AnimatePresence mode="popLayout">
-            {issues.map((issue, i) => (
+            {sortedIssues.map((issue, i) => (
               <IssueCard
                 key={issue.number}
                 issue={issue}

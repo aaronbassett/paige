@@ -16,6 +16,7 @@ import { Dashboard } from '../views/Dashboard';
 import { IDE } from '../views/IDE';
 import { Placeholder } from '../views/Placeholder';
 import { PlanningLoader } from '../views/PlanningLoader';
+import { ChallengeView } from '../views/ChallengeView';
 
 /** Spring preset: lively, bouncy motion */
 const SPRING_EXPRESSIVE = { stiffness: 260, damping: 20 };
@@ -23,6 +24,7 @@ const SPRING_EXPRESSIVE = { stiffness: 260, damping: 20 };
 /** Navigation context passed alongside view changes */
 interface NavigationContext {
   issueNumber?: number;
+  kataId?: number;
 }
 
 const isMacOS = (): boolean => window.paige?.platform === 'darwin';
@@ -75,24 +77,28 @@ const viewVariants = {
 
 export function AppShell() {
   const [currentView, setCurrentView] = useState<AppView>('landing');
-  const [, setNavContext] = useState<NavigationContext>({});
+  const [navContext, setNavContext] = useState<NavigationContext>({});
   const [, setCurrentRepo] = useState<{ owner: string; repo: string } | null>(null);
   const [planningResult, setPlanningResult] = useState<PlanningCompletePayload | null>(null);
 
   const { send, on } = useWebSocket();
 
-  const handleNavigate = useCallback((view: AppView, context?: { issueNumber?: number }) => {
-    setCurrentView(view);
-    if (context) {
-      setNavContext(context);
-    }
-  }, []);
+  const handleNavigate = useCallback(
+    (view: AppView, context?: { issueNumber?: number; kataId?: number }) => {
+      setCurrentView(view);
+      if (context) {
+        setNavContext(context);
+      }
+    },
+    []
+  );
 
   const handleBack = useCallback(() => {
     switch (currentView) {
       case 'ide':
       case 'placeholder':
       case 'planning':
+      case 'challenge':
         setCurrentView('dashboard');
         break;
       case 'dashboard':
@@ -143,6 +149,8 @@ export function AppShell() {
             }}
           />
         );
+      case 'challenge':
+        return <ChallengeView kataId={navContext.kataId!} onBack={handleBack} />;
     }
   };
 
@@ -172,8 +180,7 @@ export function AppShell() {
                 currentView === 'dashboard' ? 'Back to project picker' : 'Back to dashboard'
               }
             >
-              &larr;{' '}
-              {currentView === 'dashboard' ? 'Projects' : 'Dashboard'}
+              &larr; {currentView === 'dashboard' ? 'Projects' : 'Dashboard'}
             </motion.button>
           )}
         </AnimatePresence>

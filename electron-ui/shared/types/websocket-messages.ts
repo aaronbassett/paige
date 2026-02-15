@@ -18,6 +18,7 @@ import type {
   RepoActivityEntry,
   ScoredIssue,
   LearningMaterial,
+  InProgressItem,
 } from './entities';
 
 // ---------------------------------------------------------------------------
@@ -37,7 +38,8 @@ export type ServerMessageType =
   // Dashboard data (6)
   | 'dashboard:dreyfus'
   | 'dashboard:stats'
-  | 'dashboard:in_progress'
+  | 'dashboard:in_progress_item'
+  | 'dashboard:in_progress_complete'
   | 'dashboard:issues'
   | 'dashboard:challenges'
   | 'dashboard:materials'
@@ -80,7 +82,10 @@ export type ServerMessageType =
   // Learning materials (3)
   | 'materials:complete_result'
   | 'materials:updated'
-  | 'materials:open_url';
+  | 'materials:open_url'
+  // Challenge flow (2)
+  | 'challenge:loaded'
+  | 'challenge:load_error';
 
 /** Client-to-server message type literals (23 types). */
 export type ClientMessageType =
@@ -123,7 +128,9 @@ export type ClientMessageType =
   // Learning materials (3)
   | 'materials:view'
   | 'materials:complete'
-  | 'materials:dismiss';
+  | 'materials:dismiss'
+  // Challenge flow (1)
+  | 'challenge:load';
 
 /** All 51 message types (server + client). */
 export type MessageType = ServerMessageType | ClientMessageType;
@@ -291,17 +298,18 @@ export interface DashboardStatsMessage extends BaseMessage {
   };
 }
 
-/** In-progress tasks. */
-export interface DashboardInProgressMessage extends BaseMessage {
-  type: 'dashboard:in_progress';
+/** A single in-progress item streamed from the backend. */
+export interface DashboardInProgressItemMessage extends BaseMessage {
+  type: 'dashboard:in_progress_item';
   payload: {
-    tasks: Array<{
-      id: string;
-      title: string;
-      progress: number;
-      dueDate?: string;
-    }>;
+    item: InProgressItem;
   };
+}
+
+/** Signal that all in-progress items have been streamed. */
+export interface DashboardInProgressCompleteMessage extends BaseMessage {
+  type: 'dashboard:in_progress_complete';
+  payload: Record<string, never>;
 }
 
 /** GitHub issues assigned to user. */
@@ -679,6 +687,28 @@ export interface MaterialsOpenUrlMessage extends BaseMessage {
   payload: { url: string };
 }
 
+// -- Challenge flow (2) ------------------------------------------------------
+
+/** Full kata data loaded for challenge view. */
+export interface ChallengeLoadedMessage extends BaseMessage {
+  type: 'challenge:loaded';
+  payload: {
+    kataId: number;
+    title: string;
+    description: string;
+    scaffoldingCode: string;
+    constraints: Array<{ id: string; description: string }>;
+  };
+}
+
+/** Error loading kata for challenge view. */
+export interface ChallengeLoadErrorMessage extends BaseMessage {
+  type: 'challenge:load_error';
+  payload: {
+    error: string;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Client -> Server message interfaces (27)
 // ---------------------------------------------------------------------------
@@ -954,6 +984,16 @@ export interface MaterialsDismissMessage extends BaseMessage {
   payload: { id: number };
 }
 
+// -- Challenge flow (1) ------------------------------------------------------
+
+/** Request full kata data for challenge view. */
+export interface ChallengeLoadMessage extends BaseMessage {
+  type: 'challenge:load';
+  payload: {
+    kataId: number;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Aggregate union types
 // ---------------------------------------------------------------------------
@@ -968,7 +1008,8 @@ export type ServerMessage =
   | SessionEndMessage
   | DashboardDreyfusMessage
   | DashboardStatsMessage
-  | DashboardInProgressMessage
+  | DashboardInProgressItemMessage
+  | DashboardInProgressCompleteMessage
   | DashboardIssuesMessage
   | DashboardChallengesMessage
   | DashboardMaterialsMessage
@@ -1001,7 +1042,9 @@ export type ServerMessage =
   | DashboardIssuesCompleteMessage
   | MaterialsCompleteResultMessage
   | MaterialsUpdatedMessage
-  | MaterialsOpenUrlMessage;
+  | MaterialsOpenUrlMessage
+  | ChallengeLoadedMessage
+  | ChallengeLoadErrorMessage;
 
 /** Union of all client-to-server messages. */
 export type ClientMessage =
@@ -1034,7 +1077,8 @@ export type ClientMessage =
   | SessionSelectIssueMessage
   | MaterialsViewMessage
   | MaterialsCompleteMessage
-  | MaterialsDismissMessage;
+  | MaterialsDismissMessage
+  | ChallengeLoadMessage;
 
 /** Union of all WebSocket messages. */
 export type WebSocketMessage = ServerMessage | ClientMessage;

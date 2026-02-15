@@ -12,6 +12,7 @@ import { handleHintsLevelChange } from './handlers/hints.js';
 import { handleUserIdleStart, handleUserIdleEnd, handleUserExplain } from './handlers/user.js';
 import { handleObserverMute } from './handlers/observer.js';
 import { handlePracticeSubmitSolution } from './handlers/practice.js';
+import { handleChallengeLoad } from './handlers/challenge.js';
 import {
   handleDashboardRequestWs,
   handleDashboardRefreshIssuesWs,
@@ -98,6 +99,7 @@ const handlers = new Map<string, MessageHandler>([
   ['practice:submit_solution', handlePracticeSubmitSolution],
   ['practice:request_hint', notImplementedHandler('practice:request_hint')],
   ['practice:view_previous_attempts', notImplementedHandler('practice:view_previous_attempts')],
+  ['challenge:load', handleChallengeLoad],
   ['dashboard:request', handleDashboardRequestWs],
   ['dashboard:refresh_issues', handleDashboardRefreshIssuesWs],
   ['dashboard:stats_period', handleDashboardStatsPeriodWs],

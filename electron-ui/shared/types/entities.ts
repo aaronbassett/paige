@@ -115,7 +115,7 @@ export interface TabState {
 export type HintLevel = 0 | 1 | 2 | 3;
 
 // App view type
-export type AppView = 'dashboard' | 'ide' | 'planning' | 'placeholder' | 'landing';
+export type AppView = 'dashboard' | 'ide' | 'planning' | 'placeholder' | 'landing' | 'challenge';
 
 // Global session state
 export interface SessionState {
@@ -172,6 +172,27 @@ export interface ScoredIssueLabel {
 export interface ScoredIssueAuthor {
   login: string;
   avatarUrl: string;
+}
+
+// PR status for the dashboard
+export type PRStatus = 'open' | 'draft';
+
+// Item type discriminator for the in-progress panel
+export type InProgressItemType = 'issue' | 'pr';
+
+// Unified in-progress item for the dashboard
+export interface InProgressItem {
+  type: InProgressItemType;
+  number: number;
+  title: string;
+  labels: ScoredIssueLabel[];
+  author: ScoredIssueAuthor;
+  updatedAt: string;
+  createdAt: string;
+  htmlUrl: string;
+  difficulty?: IssueDifficulty; // issue-specific
+  summary?: string; // issue-specific
+  prStatus?: PRStatus; // PR-specific
 }
 
 // Fully scored issue for the dashboard
