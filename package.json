@@ -37,6 +37,8 @@
     "@anthropic-ai/claude-agent-sdk": "^0.2.41",
     "@anthropic-ai/sdk": "^0.74.0",
     "@chroma-core/default-embed": "^0.1.9",
+    "@logtape/logtape": "^2.0.2",
+    "@logtape/pretty": "^2.0.2",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "better-sqlite3": "^12.6.2",
     "chokidar": "^5.0.0",

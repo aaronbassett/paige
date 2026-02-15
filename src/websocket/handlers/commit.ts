@@ -4,8 +4,11 @@
 import type { WebSocket as WsWebSocket } from 'ws';
 import { z } from 'zod';
 import type { CommitExecuteData } from '../../types/websocket.js';
+import { getLogger } from '../../logger/logtape.js';
 import { getActiveRepo, getActiveSessionId } from '../../mcp/session.js';
 import { getDatabase } from '../../database/db.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'commit']);
 import { loadEnv } from '../../config/env.js';
 import { broadcast } from '../server.js';
 import { callApi } from '../../api-client/claude.js';
@@ -89,8 +92,7 @@ export function handleCommitSuggest(_ws: WsWebSocket, _data: unknown, _connectio
     } as never);
   })().catch((err: unknown) => {
     const message = err instanceof Error ? err.message : 'Commit suggestion failed';
-    // eslint-disable-next-line no-console
-    console.error('[commit] Suggestion failed:', message);
+    logger.error`Suggestion failed: ${message}`;
     broadcast({
       type: 'commit:error',
       data: { error: message },
@@ -169,8 +171,7 @@ export function handleCommitExecute(_ws: WsWebSocket, data: unknown, _connection
     }
   })().catch((err: unknown) => {
     const message = err instanceof Error ? err.message : 'Commit failed';
-    // eslint-disable-next-line no-console
-    console.error('[commit] Commit failed:', message);
+    logger.error`Commit failed: ${message}`;
     broadcast({
       type: 'commit:error',
       data: { error: message },

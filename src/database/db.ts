@@ -2,7 +2,10 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import Database from 'better-sqlite3';
 import { Kysely, Migrator, SqliteDialect, type Migration, type MigrationProvider } from 'kysely';
+import { getLogger } from '../logger/logtape.js';
 import type { DatabaseTables } from '../types/domain.js';
+
+const logger = getLogger(['paige', 'database']);
 import * as migration001 from './migrations/001-initial.js';
 import * as migration002 from './migrations/002-session-auto-timeout.js';
 import * as migration003 from './migrations/003-stats-expansion.js';
@@ -112,11 +115,9 @@ async function runMigrations(database: AppDatabase): Promise<void> {
 
   results?.forEach((result) => {
     if (result.status === 'Success') {
-      // eslint-disable-next-line no-console
-      console.log(`[db] Migration "${result.migrationName}" applied successfully`);
+      logger.info`Migration "${result.migrationName}" applied successfully`;
     } else if (result.status === 'Error') {
-      // eslint-disable-next-line no-console
-      console.error(`[db] Migration "${result.migrationName}" failed`);
+      logger.error`Migration "${result.migrationName}" failed`;
     }
   });
 

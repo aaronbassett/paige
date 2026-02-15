@@ -2,7 +2,10 @@
 
 import type { WebSocket as WsWebSocket } from 'ws';
 import { handleDashboardRequest, handleDashboardRefreshIssues } from '../../dashboard/handler.js';
+import { getLogger } from '../../logger/logtape.js';
 import { getActiveRepo } from '../../mcp/session.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'dashboard']);
 import type { DashboardRequestData, StatsPeriod } from '../../types/websocket.js';
 
 /**
@@ -26,8 +29,7 @@ export function handleDashboardRequestWs(
   const repoName = repo?.repo ?? '';
 
   void handleDashboardRequest(statsPeriod, connectionId, owner, repoName).catch((err: unknown) => {
-    // eslint-disable-next-line no-console
-    console.error('[ws-handler:dashboard] Dashboard request failed:', err);
+    logger.error`Dashboard request failed: ${err}`;
   });
 }
 
@@ -47,8 +49,7 @@ export function handleDashboardStatsPeriodWs(
   const repoName = repo?.repo ?? '';
 
   void handleDashboardRequest(period, connectionId, owner, repoName).catch((err: unknown) => {
-    // eslint-disable-next-line no-console
-    console.error('[ws-handler:dashboard] Stats period change failed:', err);
+    logger.error`Stats period change failed: ${err}`;
   });
 }
 
@@ -66,7 +67,6 @@ export function handleDashboardRefreshIssuesWs(
   const repoName = repo?.repo ?? '';
 
   void handleDashboardRefreshIssues(connectionId, owner, repoName).catch((err: unknown) => {
-    // eslint-disable-next-line no-console
-    console.error('[ws-handler:dashboard] Dashboard refresh issues failed:', err);
+    logger.error`Dashboard refresh issues failed: ${err}`;
   });
 }

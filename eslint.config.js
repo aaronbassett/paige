@@ -81,6 +81,14 @@ export default [
       "@typescript-eslint/no-misused-promises": "error",
 
       // -----------------------------------------------------------
+      // Tagged template expressions (LogTape structured logging)
+      // -----------------------------------------------------------
+      "@typescript-eslint/no-unused-expressions": [
+        "error",
+        { allowTaggedTemplates: true },
+      ],
+
+      // -----------------------------------------------------------
       // General code quality
       // -----------------------------------------------------------
       "prefer-const": "error",

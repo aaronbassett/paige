@@ -2,8 +2,11 @@
 // delivers nudges with suppression rules (cooldown, flow state, mute).
 // Implementation for T322-T325
 
+import { getLogger } from '../logger/logtape.js';
 import { actionEvents, logAction, type ActionEventPayload } from '../logger/action-log.js';
 import { getDatabase } from '../database/db.js';
+
+const logger = getLogger(['paige', 'observer']);
 import { runTriage, type TriageContext } from './triage.js';
 import { deliverNudge, broadcastObserverStatus } from './nudge.js';
 import type { ActionType } from '../types/domain.js';
@@ -239,11 +242,7 @@ export class Observer {
       });
     } catch (err: unknown) {
       // Triage failure: Observer continues operating (spec scenario 10)
-      // eslint-disable-next-line no-console
-      console.warn(
-        '[observer] Triage evaluation failed (continuing):',
-        err instanceof Error ? err.message : err,
-      );
+      logger.warn`Triage evaluation failed (continuing): ${err instanceof Error ? err.message : err}`;
     }
   }
 }

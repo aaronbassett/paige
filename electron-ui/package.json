@@ -50,6 +50,8 @@
   "dependencies": {
     "@chroma-core/default-embed": "^0.1.9",
     "@floating-ui/react": "^0.27.17",
+    "@logtape/logtape": "^2.0.2",
+    "@logtape/pretty": "^2.0.2",
     "@monaco-editor/react": "^4.7.0",
     "@nivo/bar": "^0.99.0",
     "@nivo/core": "^0.99.0",

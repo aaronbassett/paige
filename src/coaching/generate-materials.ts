@@ -4,7 +4,10 @@
 
 import type { Kysely } from 'kysely';
 import type { DatabaseTables } from '../types/domain.js';
+import { getLogger } from '../logger/logtape.js';
 import { getDatabase } from '../database/db.js';
+
+const logger = getLogger(['paige', 'coaching', 'materials']);
 import { getSession } from '../database/queries/sessions.js';
 import { getGapsBySession } from '../database/queries/gaps.js';
 import {
@@ -45,8 +48,7 @@ export interface GenerateMaterialsInput {
 export async function generateLearningMaterials(input: GenerateMaterialsInput): Promise<void> {
   const db = getDatabase();
   if (db === null) {
-    // eslint-disable-next-line no-console
-    console.error('[generate-materials] No active database — skipping material generation');
+    logger.error`No active database — skipping material generation`;
     return;
   }
 
@@ -54,18 +56,14 @@ export async function generateLearningMaterials(input: GenerateMaterialsInput): 
     // Look up the session
     const session = await getSession(db, input.sessionId);
     if (session === undefined) {
-      // eslint-disable-next-line no-console
-      console.error(`[generate-materials] Session not found (id=${input.sessionId})`);
+      logger.error`Session not found (id=${input.sessionId})`;
       return;
     }
 
     // Resolve the phase from the database by looking up the plan and phases
     const phase = await resolvePhase(db, input.sessionId, input.phaseNumber);
     if (phase === null) {
-      // eslint-disable-next-line no-console
-      console.error(
-        `[generate-materials] Phase ${input.phaseNumber} not found for session ${input.sessionId}`,
-      );
+      logger.error`Phase ${input.phaseNumber} not found for session ${input.sessionId}`;
       return;
     }
 
@@ -136,8 +134,7 @@ export async function generateLearningMaterials(input: GenerateMaterialsInput): 
       },
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[generate-materials] Failed to generate materials:', err);
+    logger.error`Failed to generate materials: ${err}`;
   }
 }
 

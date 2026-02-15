@@ -5,8 +5,11 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { execSync } from 'node:child_process';
 import type { WebSocket as WsWebSocket } from 'ws';
+import { getLogger } from '../../logger/logtape.js';
 import { sendToClient } from '../server.js';
 import { loadEnv } from '../../config/env.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'session-start']);
 import { setActiveRepo, getActiveSessionId } from '../../mcp/session.js';
 import { getDatabase } from '../../database/db.js';
 import { updateSession } from '../../database/queries/sessions.js';
@@ -37,8 +40,7 @@ export function handleSessionStartRepo(
 
   // Validate owner and repo are non-empty strings
   if (!owner || !repo) {
-    // eslint-disable-next-line no-console
-    console.error('[ws-handler:session-start] Missing owner or repo in session:start_repo');
+    logger.error`Missing owner or repo in session:start_repo`;
     return;
   }
 
@@ -49,18 +51,13 @@ export function handleSessionStartRepo(
   if (!existsSync(repoDir)) {
     try {
       const cloneUrl = `https://github.com/${owner}/${repo}.git`;
-      // eslint-disable-next-line no-console
-      console.log(`[ws-handler:session-start] Cloning ${cloneUrl} to ${repoDir}`);
+      logger.info`Cloning ${cloneUrl} to ${repoDir}`;
       execSync(`git clone "${cloneUrl}" "${repoDir}"`, {
         stdio: 'pipe',
         timeout: 60_000, // 60 second timeout for clone
       });
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(
-        `[ws-handler:session-start] Failed to clone ${owner}/${repo}:`,
-        err instanceof Error ? err.message : err,
-      );
+      logger.error`Failed to clone ${owner}/${repo}: ${err instanceof Error ? err.message : err}`;
       return;
     }
   }
@@ -77,11 +74,7 @@ export function handleSessionStartRepo(
   // Kick off issue streaming pipeline in the background as a head-start.
   // Don't await — this runs concurrently while the user picks an issue.
   void assembleAndStreamIssues(owner, repo, connectionId).catch((err: unknown) => {
-    // eslint-disable-next-line no-console
-    console.error(
-      '[ws-handler:session-start] Background issue streaming failed:',
-      err instanceof Error ? err.message : err,
-    );
+    logger.error`Background issue streaming failed: ${err instanceof Error ? err.message : err}`;
   });
 }
 
@@ -100,15 +93,13 @@ export async function handleSessionSelectIssue(
 
   const sessionId = getActiveSessionId();
   if (sessionId === null) {
-    // eslint-disable-next-line no-console
-    console.error('[ws-handler:session-start] No active session for issue selection');
+    logger.error`No active session for issue selection`;
     return;
   }
 
   const db = getDatabase();
   if (db === null) {
-    // eslint-disable-next-line no-console
-    console.error('[ws-handler:session-start] Database not available for issue association');
+    logger.error`Database not available for issue association`;
     return;
   }
 

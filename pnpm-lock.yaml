@@ -17,6 +17,12 @@ importers:
       '@chroma-core/default-embed':
         specifier: ^0.1.9
         version: 0.1.9
+      '@logtape/logtape':
+        specifier: ^2.0.2
+        version: 2.0.2
+      '@logtape/pretty':
+        specifier: ^2.0.2
+        version: 2.0.2(@logtape/logtape@2.0.2)
       '@modelcontextprotocol/sdk':
         specifier: ^1.26.0
         version: 1.26.0(zod@4.3.6)
@@ -640,6 +646,14 @@ packages:
 
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
+
+  '@logtape/logtape@2.0.2':
+    resolution: {integrity: sha512-cveUBLbCMFkvkLycP/2vNWvywl47JcJbazHIju94/QNGboZ/jyYAgZIm0ZXezAOx3eIz8OG1EOZ5CuQP3+2FQg==}
+
+  '@logtape/pretty@2.0.2':
+    resolution: {integrity: sha512-WMKoHuaEZvJgDeciIM/OL+joDDlheuoSpkfJOuKncdim7eV6GfIh0BUxLt0Td4JJsljzt5dAttxaX0kXqE0N9Q==}
+    peerDependencies:
+      '@logtape/logtape': ^2.0.2
 
   '@mcp-ui/client@6.0.0':
     resolution: {integrity: sha512-dHIQGjFOoBWBntSRUJH5YFeq7xi2rEPS0EwokeNAnMg6xrjGjvNd6vTWDHFRC04OlO/ogvM1r5+xUoo0OETaaQ==}
@@ -3747,6 +3761,12 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@keyv/serialize@1.1.1': {}
+
+  '@logtape/logtape@2.0.2': {}
+
+  '@logtape/pretty@2.0.2(@logtape/logtape@2.0.2)':
+    dependencies:
+      '@logtape/logtape': 2.0.2
 
   '@mcp-ui/client@6.0.0(@preact/signals-core@1.13.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:

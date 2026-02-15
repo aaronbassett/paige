@@ -17,8 +17,11 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
+import { getLogger } from '../logger';
 import { useWebSocket } from './useWebSocket';
 import { editorState } from '../services/editor-state';
+
+const logger = getLogger(['paige', 'renderer', 'file-ops']);
 import {
   debounce,
   DEBOUNCE_BUFFER_UPDATE,
@@ -165,7 +168,7 @@ export function useFileOperations(): UseFileOperationsReturn {
       if (payload.success) {
         editorState.clearDirty(payload.path);
       } else {
-        console.error('[useFileOperations] Save failed:', payload.path, payload.error);
+        logger.error`Save failed: ${payload.path} — ${payload.error}`;
       }
     });
 

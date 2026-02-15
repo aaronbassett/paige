@@ -9,7 +9,10 @@
 
 import { join } from 'node:path';
 import type { WebSocket as WsWebSocket } from 'ws';
+import { getLogger } from '../../logger/logtape.js';
 import { sendToClient } from '../server.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'planning']);
 import { loadEnv } from '../../config/env.js';
 import { getActiveRepo, setActiveSessionId } from '../../mcp/session.js';
 import { getDatabase } from '../../database/db.js';
@@ -86,11 +89,7 @@ export function handlePlanningStart(_ws: WsWebSocket, data: unknown, connectionI
 
   // Fire-and-forget: run the planning pipeline in the background
   void runPlanningPipeline(connectionId, issue, repoPath, input).catch((err: unknown) => {
-    // eslint-disable-next-line no-console
-    console.error(
-      '[ws-handler:planning] Unhandled error in planning pipeline:',
-      err instanceof Error ? err.message : err,
-    );
+    logger.error`Unhandled error in planning pipeline: ${err instanceof Error ? err.message : err}`;
     const errorMessage: PlanningErrorMessage = {
       type: 'planning:error',
       data: {
@@ -184,11 +183,7 @@ async function handlePlanComplete(
   try {
     await persistPlanToDb(plan, repoPath, input);
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error(
-      '[ws-handler:planning] Failed to persist plan to DB (continuing):',
-      err instanceof Error ? err.message : err,
-    );
+    logger.error`Failed to persist plan to DB (continuing): ${err instanceof Error ? err.message : err}`;
   }
 
   // Fetch the project file tree for the completion payload

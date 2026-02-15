@@ -4,8 +4,11 @@
 import type { WebSocket as WsWebSocket } from 'ws';
 import { z } from 'zod';
 import type { PrCreateData } from '../../types/websocket.js';
+import { getLogger } from '../../logger/logtape.js';
 import { getActiveRepo, getActiveSessionId } from '../../mcp/session.js';
 import { getDatabase } from '../../database/db.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'pr']);
 import { loadEnv } from '../../config/env.js';
 import { broadcast } from '../server.js';
 import { callApi } from '../../api-client/claude.js';
@@ -76,8 +79,7 @@ export function handlePrSuggest(_ws: WsWebSocket, _data: unknown, _connectionId:
     } as never);
   })().catch((err: unknown) => {
     const message = err instanceof Error ? err.message : 'PR suggestion failed';
-    // eslint-disable-next-line no-console
-    console.error('[pr] Suggestion failed:', message);
+    logger.error`Suggestion failed: ${message}`;
     broadcast({
       type: 'pr:error',
       data: { error: message },
@@ -139,8 +141,7 @@ export function handlePrCreate(_ws: WsWebSocket, data: unknown, _connectionId: s
     } as never);
   })().catch((err: unknown) => {
     const message = err instanceof Error ? err.message : 'PR creation failed';
-    // eslint-disable-next-line no-console
-    console.error('[pr] PR creation failed:', message);
+    logger.error`PR creation failed: ${message}`;
     broadcast({
       type: 'pr:error',
       data: { error: message },

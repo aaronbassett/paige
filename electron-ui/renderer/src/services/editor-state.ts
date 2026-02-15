@@ -11,6 +11,9 @@
  */
 
 import type { TabState, CursorPosition } from '@shared/types/entities';
+import { getLogger } from '../logger';
+
+const logger = getLogger(['paige', 'renderer', 'editor']);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -357,7 +360,7 @@ class EditorStateService {
         listener();
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error('[EditorStateService] Listener error:', message);
+        logger.error`Listener error: ${message}`;
       }
     }
   }

@@ -8,7 +8,10 @@
 //   5. Send completion signal
 //   6. Return set of in-progress issue numbers for exclusion
 
+import { getLogger } from '../../logger/logtape.js';
 import { getOctokit, getAuthenticatedUser } from '../../github/client.js';
+
+const logger = getLogger(['paige', 'dashboard', 'in-progress']);
 import { summarizeIssue } from '../../github/summarize.js';
 import { getDatabase } from '../../database/db.js';
 import { getActiveSessionId } from '../../mcp/session.js';
@@ -132,11 +135,7 @@ export async function assembleAndStreamInProgress(
           data: { item },
         } as DashboardInProgressItemMessage);
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error(
-          `[dashboard:in-progress] Failed to fetch issue #${String(issueNumber)}:`,
-          err instanceof Error ? err.message : err,
-        );
+        logger.error`Failed to fetch issue #${String(issueNumber)}: ${err instanceof Error ? err.message : err}`;
       }
     }
   }
@@ -180,11 +179,7 @@ export async function assembleAndStreamInProgress(
       }
     }
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error(
-      '[dashboard:in-progress] Failed to fetch PRs:',
-      err instanceof Error ? err.message : err,
-    );
+    logger.error`Failed to fetch PRs: ${err instanceof Error ? err.message : err}`;
   }
 
   // Step 4: Signal completion

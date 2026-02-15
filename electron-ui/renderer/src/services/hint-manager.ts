@@ -13,6 +13,9 @@
  */
 
 import type { ExplorerHint, ExplorerHintStyle } from '@shared/types/entities';
+import { getLogger } from '../logger';
+
+const logger = getLogger(['paige', 'renderer', 'hints']);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -333,7 +336,7 @@ class HintManagerService {
         listener();
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error('[HintManagerService] Listener error:', message);
+        logger.error`Listener error: ${message}`;
       }
     }
   }

@@ -1,9 +1,11 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { setupLogging, getLogger } from './logger.js';
 import { setupPtyIpc } from './pty/pty-service.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const logger = getLogger(['paige', 'electron', 'main']);
 
 function createWindow(): BrowserWindow {
   const isMac = process.platform === 'darwin';
@@ -39,7 +41,9 @@ function createWindow(): BrowserWindow {
   return window;
 }
 
-void app.whenReady().then(() => {
+void app.whenReady().then(async () => {
+  await setupLogging();
+  logger.info`Paige Electron UI starting`;
   createWindow();
 
   app.on('activate', () => {

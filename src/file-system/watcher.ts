@@ -6,6 +6,10 @@ import { relative } from 'node:path';
 
 import { watch, type FSWatcher } from 'chokidar';
 
+import { getLogger } from '../logger/logtape.js';
+
+const logger = getLogger(['paige', 'watcher']);
+
 /** Types of file system change events. */
 export type FileChangeType = 'add' | 'change' | 'unlink';
 
@@ -120,8 +124,7 @@ export function createFileWatcher(projectDir: string): FileWatcher {
       if (nodeErr.code === 'UNKNOWN' && nodeErr.path?.includes('.overmind')) return;
       // Ignore EMFILE errors (too many open files) - polling fallback will handle it
       if (nodeErr.code === 'EMFILE') {
-        // eslint-disable-next-line no-console
-        console.warn('[watcher] Too many open files - using polling mode');
+        logger.warn`Too many open files - using polling mode`;
         return;
       }
       emitter.emit('error', error);

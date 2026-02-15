@@ -5,7 +5,10 @@ import type { WebSocket as WsWebSocket } from 'ws';
 
 import { getDatabase } from '../../database/db.js';
 import { logAction } from '../../logger/action-log.js';
+import { getLogger } from '../../logger/logtape.js';
 import { getActiveSessionId } from '../../mcp/session.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'user']);
 import { handleExplainThis } from '../../ui-apis/explain.js';
 import { broadcast } from '../server.js';
 import type { ActionType } from '../../types/domain.js';
@@ -22,8 +25,7 @@ function safeLogAction(actionType: ActionType, data?: Record<string, unknown>): 
   const sessionId = getActiveSessionId();
   if (db !== null && sessionId !== null) {
     logAction(db, sessionId, actionType, data).catch((err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error(`[ws-handler:user] Failed to log action "${actionType}":`, err);
+      logger.error`Failed to log action "${actionType}": ${err}`;
     });
   }
 }

@@ -4,7 +4,10 @@
 import { randomUUID } from 'node:crypto';
 import { WebSocket as WsWebSocket } from 'ws';
 
+import { getLogger } from '../../logger/logtape.js';
 import type { ConnectionInitData } from '../../types/websocket.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'connection']);
 import { getCollection } from '../../memory/chromadb.js';
 import { loadEnv } from '../../config/env.js';
 import { getProjectTree } from '../../file-system/tree.js';
@@ -71,8 +74,7 @@ export async function handleConnectionHello(
     const tree = await getProjectTree(env.projectDir);
     send(ws, 'fs:tree', { root: tree });
   } catch (err: unknown) {
-    // eslint-disable-next-line no-console
-    console.error('[ws-handler:connection] Failed to send initial file tree:', err);
+    logger.error`Failed to send initial file tree: ${err}`;
   }
 
   // Trigger dashboard data load so the dashboard populates on startup
@@ -80,8 +82,7 @@ export async function handleConnectionHello(
   const repo = getActiveRepo();
   handleDashboardRequest('last_week', connectionId, repo?.owner ?? '', repo?.repo ?? '').catch(
     (err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error('[ws-handler:connection] Failed to load initial dashboard data:', err);
+      logger.error`Failed to load initial dashboard data: ${err}`;
     },
   );
 }

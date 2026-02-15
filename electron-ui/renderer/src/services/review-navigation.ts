@@ -12,6 +12,9 @@
  */
 
 import type { ReviewComment } from '@shared/types/entities';
+import { getLogger } from '../logger';
+
+const logger = getLogger(['paige', 'renderer', 'review']);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -245,7 +248,7 @@ class ReviewNavigationService {
         listener();
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error('[ReviewNavigationService] Listener error:', message);
+        logger.error`Listener error: ${message}`;
       }
     }
   }

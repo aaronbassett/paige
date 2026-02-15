@@ -9,6 +9,9 @@
 
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
+import { getLogger } from '../logger';
+
+const logger = getLogger(['paige', 'renderer', 'error-boundary']);
 
 /* ---------------------------------------------------------------------------
  * Types
@@ -157,8 +160,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: unknown, errorInfo: ErrorInfo): void {
-    console.error('[ErrorBoundary] Caught rendering error:', error);
-    console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
+    logger.error`Caught rendering error: ${error}`;
+    logger.error`Component stack: ${errorInfo.componentStack}`;
   }
 
   private handleTryAgain = (): void => {
