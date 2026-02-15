@@ -170,6 +170,21 @@ const sessionSelectIssueWsDataSchema = z.object({
 
 const fsRequestTreeDataSchema = z.object({});
 
+const materialsViewDataSchema = z.object({
+  id: z.number(),
+});
+
+const materialsCompleteDataSchema = z.object({
+  id: z.number(),
+  answer: z.string(),
+});
+
+const materialsDismissDataSchema = z.object({
+  id: z.number(),
+});
+
+const materialsListDataSchema = z.object({});
+
 // ── Message Envelope Schema ─────────────────────────────────────────────────
 
 /**
@@ -221,6 +236,10 @@ export const messageDataSchemas = {
   'session:start_repo': sessionStartRepoDataSchema,
   'session:select_issue': sessionSelectIssueWsDataSchema,
   'fs:request_tree': fsRequestTreeDataSchema,
+  'materials:view': materialsViewDataSchema,
+  'materials:complete': materialsCompleteDataSchema,
+  'materials:dismiss': materialsDismissDataSchema,
+  'materials:list': materialsListDataSchema,
 } as const;
 
 /**

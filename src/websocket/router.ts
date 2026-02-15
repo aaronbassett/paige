@@ -26,6 +26,12 @@ import {
   handleTerminalResize,
   handleTerminalInput,
 } from './handlers/terminal.js';
+import {
+  handleMaterialsView,
+  handleMaterialsComplete,
+  handleMaterialsDismiss,
+  handleMaterialsList,
+} from './handlers/materials.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,6 +113,12 @@ const handlers = new Map<string, MessageHandler>([
   ['tree:collapse', notImplementedHandler('tree:collapse')],
   ['review:request', notImplementedHandler('review:request')],
   ['fs:request_tree', handleFsRequestTree],
+
+  // Learning materials handlers (Task 8)
+  ['materials:view', handleMaterialsView],
+  ['materials:complete', handleMaterialsComplete],
+  ['materials:dismiss', handleMaterialsDismiss],
+  ['materials:list', handleMaterialsList],
 ]);
 
 // ── Session Resolution Categories ────────────────────────────────────────────
