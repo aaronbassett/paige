@@ -73,7 +73,7 @@ export async function assembleAndStreamInProgress(
   }
 
   const octokit = getOctokit();
-  if (octokit === null) {
+  if (octokit === null || owner === '' || repo === '') {
     sendToClient(connectionId, {
       type: 'dashboard:in_progress_complete',
       data: {},

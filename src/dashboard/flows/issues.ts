@@ -64,8 +64,8 @@ export async function assembleAndStreamIssues(
   excludeIssueNumbers?: Set<number>,
 ): Promise<void> {
   const octokit = getOctokit();
-  if (octokit === null) {
-    // No GitHub token — send completion immediately with no issues
+  if (octokit === null || owner === '' || repo === '') {
+    // No GitHub token or no repo selected — send completion immediately with no issues
     sendToClient(connectionId, {
       type: 'dashboard:issues_complete',
       data: {},
