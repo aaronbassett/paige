@@ -124,6 +124,34 @@ export interface ScoredIssuePayload {
   readonly score: number;
 }
 
+/** PR status for the dashboard. */
+export type PRStatus = 'open' | 'draft';
+
+/** Item type discriminator for the in-progress panel. */
+export type InProgressItemType = 'issue' | 'pr';
+
+/** Unified in-progress item payload (issues + PRs). */
+export interface InProgressItemPayload {
+  readonly type: InProgressItemType;
+  readonly number: number;
+  readonly title: string;
+  readonly labels: readonly ScoredIssueLabel[];
+  readonly author: ScoredIssueAuthor;
+  readonly updatedAt: string;
+  readonly createdAt: string;
+  readonly htmlUrl: string;
+  readonly difficulty?: IssueDifficulty;  // issue-specific
+  readonly summary?: string;              // issue-specific
+  readonly prStatus?: PRStatus;           // PR-specific
+}
+
+export interface DashboardInProgressItemData {
+  readonly item: InProgressItemPayload;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface DashboardInProgressCompleteData {}
+
 // ── Client -> Server Message Data ───────────────────────────────────────────
 
 export interface ConnectionHelloData {
@@ -1044,6 +1072,16 @@ export interface DashboardIssuesCompleteMessage {
   readonly data: DashboardIssuesCompleteData;
 }
 
+export interface DashboardInProgressItemMessage {
+  readonly type: 'dashboard:in_progress_item';
+  readonly data: DashboardInProgressItemData;
+}
+
+export interface DashboardInProgressCompleteMessage {
+  readonly type: 'dashboard:in_progress_complete';
+  readonly data: DashboardInProgressCompleteData;
+}
+
 export interface PlanningStartedMessage {
   readonly type: 'planning:started';
   readonly data: PlanningStartedData;
@@ -1109,6 +1147,8 @@ export type ServerToClientMessage =
   | SessionIssueSelectedResponseMessage
   | DashboardSingleIssueMessage
   | DashboardIssuesCompleteMessage
+  | DashboardInProgressItemMessage
+  | DashboardInProgressCompleteMessage
   | PlanningStartedMessage
   | PlanningProgressMessage
   | PlanningPhaseUpdateMessage
