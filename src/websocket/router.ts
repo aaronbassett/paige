@@ -2,7 +2,10 @@
 // Implementation for T171
 
 import { WebSocket as WsWebSocket } from 'ws';
+import { getLogger } from '../logger/logtape.js';
 import type { ClientToServerMessage, ConnectionErrorData } from '../types/websocket.js';
+
+const logger = getLogger(['paige', 'ws-router']);
 import { resolveSession, touchSession } from '../session/resolve.js';
 import { handleConnectionHello } from './handlers/connection.js';
 import { handleFileOpen, handleFileSave } from './handlers/file.js';
@@ -168,8 +171,7 @@ export async function routeMessage(
   const handler = handlers.get(message.type);
 
   if (!handler) {
-    // eslint-disable-next-line no-console
-    console.warn(`[ws-router] Unknown message type: ${message.type}`);
+    logger.warn`Unknown message type: ${message.type}`;
     sendError(ws, 'NOT_IMPLEMENTED', `Unknown message type: "${message.type}"`);
     return;
   }
@@ -184,8 +186,7 @@ export async function routeMessage(
       }
     }
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error(`[ws-router] Session resolution failed for ${message.type}:`, err);
+    logger.error`Session resolution failed for ${message.type}: ${err}`;
     // Continue to handler even if session resolution fails — some handlers
     // (like repos:list, dashboard:request) can function without a session
   }
@@ -199,8 +200,7 @@ export async function routeMessage(
     }
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Handler error';
-    // eslint-disable-next-line no-console
-    console.error(`[ws-router] Handler error for ${message.type}:`, errorMessage);
+    logger.error`Handler error for ${message.type}: ${errorMessage}`;
     sendError(ws, 'INTERNAL_ERROR', errorMessage, { messageType: message.type });
   }
 }

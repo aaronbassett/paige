@@ -6,9 +6,12 @@ import { join, basename } from 'node:path';
 import { loadEnv } from './config/env.js';
 import { createDatabase, closeDatabase } from './database/db.js';
 import { createFileWatcher, type FileChangeEvent } from './file-system/watcher.js';
+import { setupLogging, getLogger } from './logger/logtape.js';
 import { initializeMemory, closeMemory } from './memory/chromadb.js';
 import { createMcpServer } from './mcp/server.js';
 import { createWebSocketServer, broadcast } from './websocket/server.js';
+
+const logger = getLogger(['paige', 'server']);
 
 export const VERSION = '1.0.0';
 
@@ -53,6 +56,9 @@ export interface ServerHandle {
  * @returns A promise resolving to a handle with the server and a close function.
  */
 export async function createServer(config: ServerConfig): Promise<ServerHandle> {
+  // Initialize structured logging before anything else
+  await setupLogging();
+
   const env = loadEnv();
   const startTime = Date.now();
 
@@ -103,8 +109,7 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
       });
 
       mcpHandle.handleRequest(req, res).catch((err: unknown) => {
-        // eslint-disable-next-line no-console
-        console.error('[server] MCP request error:', err);
+        logger.error`MCP request error: ${err}`;
         if (!res.headersSent) {
           res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Internal Server Error' }));
@@ -147,12 +152,10 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
   // Start watcher in background — don't block server startup
   fileWatcher.start().then(
     () => {
-      // eslint-disable-next-line no-console
-      console.log('[server] File watcher started');
+      logger.info`File watcher started`;
     },
     (err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error('[server] File watcher failed to start:', err);
+      logger.error`File watcher failed to start: ${err}`;
     },
   );
 
@@ -168,33 +171,21 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
   const listeningPort =
     address !== null && typeof address !== 'string' ? address.port : config.port;
 
-  // eslint-disable-next-line no-console
-  console.log(
-    [
-      `[server] Paige backend ready`,
-      `  Host:      ${env.host}`,
-      `  Port:      ${String(listeningPort)}`,
-      `  Project:   ${env.projectDir}`,
-      `  MCP:       http://${env.host}:${String(listeningPort)}/mcp`,
-      `  WebSocket: ws://${env.host}:${String(listeningPort)}/ws`,
-    ].join('\n'),
-  );
+  logger.info`Paige backend ready — host=${env.host} port=${String(listeningPort)} project=${env.projectDir}`;
+  logger.info`MCP: http://${env.host}:${String(listeningPort)}/mcp`;
+  logger.info`WebSocket: ws://${env.host}:${String(listeningPort)}/ws`;
 
   const close = async (): Promise<void> => {
-    // eslint-disable-next-line no-console
-    console.log('[server] Closing file watcher...');
+    logger.info`Closing file watcher...`;
     await fileWatcher.close();
 
-    // eslint-disable-next-line no-console
-    console.log('[server] Closing MCP server...');
+    logger.info`Closing MCP server...`;
     await mcpHandle.close();
 
-    // eslint-disable-next-line no-console
-    console.log('[server] Closing WebSocket server...');
+    logger.info`Closing WebSocket server...`;
     wsHandle.close();
 
-    // eslint-disable-next-line no-console
-    console.log('[server] Closing HTTP server...');
+    logger.info`Closing HTTP server...`;
     await new Promise<void>((resolve, reject) => {
       server.close((err) => {
         if (err) {
@@ -205,16 +196,13 @@ export async function createServer(config: ServerConfig): Promise<ServerHandle> 
       });
     });
 
-    // eslint-disable-next-line no-console
-    console.log('[server] Closing ChromaDB...');
+    logger.info`Closing ChromaDB...`;
     await closeMemory();
 
-    // eslint-disable-next-line no-console
-    console.log('[server] Closing database...');
+    logger.info`Closing database...`;
     await closeDatabase();
 
-    // eslint-disable-next-line no-console
-    console.log('[server] Shutdown complete');
+    logger.info`Shutdown complete`;
   };
 
   return { server, close };
@@ -228,19 +216,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   createServer({ port })
     .then((handle) => {
       serverHandle = handle;
-      // eslint-disable-next-line no-console
-      console.log('[server] Press Ctrl+C to stop');
+      logger.info`Press Ctrl+C to stop`;
     })
     .catch((err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error('[server] Failed to start:', err);
+      logger.fatal`Failed to start: ${err}`;
       process.exit(1);
     });
 
   // Graceful shutdown on SIGINT/SIGTERM
   const shutdown = async (signal: string): Promise<void> => {
-    // eslint-disable-next-line no-console
-    console.log(`\n[server] Received ${signal}, shutting down gracefully...`);
+    logger.info`Received ${signal}, shutting down gracefully...`;
     if (serverHandle) {
       await serverHandle.close();
     }

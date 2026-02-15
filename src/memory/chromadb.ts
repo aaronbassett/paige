@@ -1,6 +1,9 @@
 // ChromaDB client with lazy connection and graceful degradation
 
 import { ChromaClient, type Collection } from 'chromadb';
+import { getLogger } from '../logger/logtape.js';
+
+const logger = getLogger(['paige', 'memory']);
 
 const COLLECTION_NAME = 'paige_memories';
 
@@ -17,13 +20,11 @@ export function initializeMemory(chromadbUrl: string): Promise<void> {
     .then((col) => {
       collection = col;
       available = true;
-      // eslint-disable-next-line no-console
-      console.log(`[memory] ChromaDB connected — collection ${COLLECTION_NAME} ready`);
+      logger.info`ChromaDB connected — collection ${COLLECTION_NAME} ready`;
     })
     .catch(() => {
       available = false;
-      // eslint-disable-next-line no-console
-      console.warn(`[memory] ChromaDB unavailable at ${chromadbUrl} — memory features disabled`);
+      logger.warn`ChromaDB unavailable at ${chromadbUrl} — memory features disabled`;
     });
 }
 
@@ -54,8 +55,7 @@ export function getCollection(): Promise<Collection | null> {
       .then((col) => {
         collection = col;
         available = true;
-        // eslint-disable-next-line no-console
-        console.log(`[memory] ChromaDB reconnected — collection ${COLLECTION_NAME} ready`);
+        logger.info`ChromaDB reconnected — collection ${COLLECTION_NAME} ready`;
         return col;
       })
       .catch(() => {

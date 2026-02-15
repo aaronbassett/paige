@@ -10,7 +10,10 @@
 //   7. Stream each scored issue to the requesting client
 //   8. Send completion signal
 
+import { getLogger } from '../../logger/logtape.js';
 import { getOctokit, getAuthenticatedUser } from '../../github/client.js';
+
+const logger = getLogger(['paige', 'dashboard', 'issues']);
 import { scoreIssue, sortAndTakeTop, type ScorableIssue } from '../../github/scoring.js';
 import { summarizeIssue } from '../../github/summarize.js';
 import { getDatabase } from '../../database/db.js';
@@ -174,11 +177,7 @@ export async function assembleAndStreamIssues(
       } as DashboardSingleIssueMessage);
     } catch (err) {
       // Log but continue — a single summarisation failure should not block others
-      // eslint-disable-next-line no-console
-      console.error(
-        `[dashboard:issues] Failed to summarise issue #${String(issue.number)}:`,
-        err instanceof Error ? err.message : err,
-      );
+      logger.error`Failed to summarise issue #${String(issue.number)}: ${err instanceof Error ? err.message : err}`;
     }
   }
 

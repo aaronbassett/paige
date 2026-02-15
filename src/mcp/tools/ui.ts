@@ -4,7 +4,10 @@
 
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { getLogger } from '../../logger/logtape.js';
 import { broadcast } from '../../websocket/server.js';
+
+const logger = getLogger(['paige', 'mcp', 'tools']);
 import { readFile } from '../../file-system/file-ops.js';
 import { loadEnv } from '../../config/env.js';
 import { getActiveSessionId } from '../session.js';
@@ -162,8 +165,7 @@ export function registerUiTools(server: McpServer): void {
             phaseNumber: phase,
             sessionId,
           }).catch((err: unknown) => {
-            // eslint-disable-next-line no-console
-            console.error('[paige_update_phase] Failed to generate learning materials:', err);
+            logger.error`Failed to generate learning materials: ${err}`;
           });
         }
       }

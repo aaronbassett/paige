@@ -7,8 +7,11 @@ import { loadEnv } from '../../config/env.js';
 import { getDatabase } from '../../database/db.js';
 import { readFile, writeFile } from '../../file-system/file-ops.js';
 import { logAction } from '../../logger/action-log.js';
+import { getLogger } from '../../logger/logtape.js';
 import { getActiveSessionId } from '../../mcp/session.js';
 import type { ActionType } from '../../types/domain.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'file']);
 import type { FileOpenData, FileSaveData } from '../../types/websocket.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -45,8 +48,7 @@ function safeLogAction(actionType: ActionType, data?: Record<string, unknown>): 
   const sessionId = getActiveSessionId();
   if (db !== null && sessionId !== null) {
     logAction(db, sessionId, actionType, data).catch((err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error(`[ws-handler:file] Failed to log action "${actionType}":`, err);
+      logger.error`Failed to log action "${actionType}": ${err}`;
     });
   }
 }

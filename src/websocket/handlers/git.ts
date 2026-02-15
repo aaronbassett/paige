@@ -2,8 +2,11 @@
 // Wraps the git service functions and broadcasts results to connected clients.
 
 import type { WebSocket as WsWebSocket } from 'ws';
+import { getLogger } from '../../logger/logtape.js';
 import { getActiveRepo, getActiveSessionId } from '../../mcp/session.js';
 import { getDatabase } from '../../database/db.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'git']);
 import { loadEnv } from '../../config/env.js';
 import { broadcast } from '../server.js';
 import { updateSession } from '../../database/queries/sessions.js';
@@ -36,8 +39,7 @@ export function handleGitStatus(_ws: WsWebSocket, _data: unknown, _connectionId:
       data: status,
     } as never);
   })().catch((err: unknown) => {
-    // eslint-disable-next-line no-console
-    console.error('[git] Status check failed:', err);
+    logger.error`Status check failed: ${err}`;
   });
 }
 
@@ -84,8 +86,7 @@ export function handleGitSaveAndExit(
     } as never);
   })().catch((err: unknown) => {
     const message = err instanceof Error ? err.message : 'Save and exit failed';
-    // eslint-disable-next-line no-console
-    console.error('[git] Save and exit failed:', message);
+    logger.error`Save and exit failed: ${message}`;
   });
 }
 
@@ -117,7 +118,6 @@ export function handleGitDiscardAndExit(
     } as never);
   })().catch((err: unknown) => {
     const message = err instanceof Error ? err.message : 'Discard and exit failed';
-    // eslint-disable-next-line no-console
-    console.error('[git] Discard and exit failed:', message);
+    logger.error`Discard and exit failed: ${message}`;
   });
 }

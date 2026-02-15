@@ -6,8 +6,11 @@ import { join } from 'node:path';
 import { WebSocket as WsWebSocket } from 'ws';
 
 import { getProjectTree } from '../../file-system/tree.js';
+import { getLogger } from '../../logger/logtape.js';
 import { getActiveRepo } from '../../mcp/session.js';
 import { loadEnv } from '../../config/env.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'file-tree']);
 
 /**
  * Sends a typed JSON message to the client.
@@ -41,7 +44,6 @@ export async function handleFsRequestTree(
     const tree = await getProjectTree(projectDir);
     send(ws, 'fs:tree', { root: tree });
   } catch (err: unknown) {
-    // eslint-disable-next-line no-console
-    console.error('[ws-handler:file-tree] Failed to send file tree:', err);
+    logger.error`Failed to send file tree: ${err}`;
   }
 }

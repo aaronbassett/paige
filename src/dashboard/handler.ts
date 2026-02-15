@@ -1,8 +1,11 @@
 // Dashboard request dispatcher — handles dashboard:request and dashboard:refresh_issues
 // Orchestrates 4 progressive flows: state, issues, challenges, learning materials
 
+import { getLogger } from '../logger/logtape.js';
 import type { StatsPeriod } from '../types/websocket.js';
 import { getDatabase } from '../database/db.js';
+
+const logger = getLogger(['paige', 'dashboard']);
 import { logAction } from '../logger/action-log.js';
 import { getActiveSessionId } from '../mcp/session.js';
 import { broadcast } from '../websocket/server.js';
@@ -71,8 +74,7 @@ export async function handleDashboardRequest(
 
     flowStatus.state = true;
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[dashboard] Flow 1 (state) failed:', err);
+    logger.error`Flow 1 (state) failed: ${err}`;
   }
 
   // Flows 2-4: Run concurrently, each broadcasts/streams independently
@@ -85,8 +87,7 @@ export async function handleDashboardRequest(
       flowStatus.in_progress = true;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'In-progress flow failed';
-      // eslint-disable-next-line no-console
-      console.error('[dashboard] Flow 2a (in-progress) failed:', message);
+      logger.error`Flow 2a (in-progress) failed: ${message}`;
     }
 
     try {
@@ -94,8 +95,7 @@ export async function handleDashboardRequest(
       flowStatus.issues = true;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Issues flow failed';
-      // eslint-disable-next-line no-console
-      console.error('[dashboard] Flow 2b (issues) failed:', message);
+      logger.error`Flow 2b (issues) failed: ${message}`;
     }
   })();
 
@@ -109,8 +109,7 @@ export async function handleDashboardRequest(
         flowStatus.challenges = true;
       })
       .catch((err: unknown) => {
-        // eslint-disable-next-line no-console
-        console.error('[dashboard] Flow 3 (challenges) failed:', err);
+        logger.error`Flow 3 (challenges) failed: ${err}`;
       }),
 
     // Flow 4: Learning materials (frontend expects 'dashboard:materials')
@@ -122,8 +121,7 @@ export async function handleDashboardRequest(
         flowStatus.learning_materials = true;
       })
       .catch((err: unknown) => {
-        // eslint-disable-next-line no-console
-        console.error('[dashboard] Flow 4 (learning) failed:', err);
+        logger.error`Flow 4 (learning) failed: ${err}`;
       }),
   ];
 
@@ -156,7 +154,6 @@ export async function handleDashboardRefreshIssues(
     await assembleAndStreamIssues(owner, repo, connectionId, excludeNumbers);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Issues refresh failed';
-    // eslint-disable-next-line no-console
-    console.error('[dashboard] Issues refresh failed:', message);
+    logger.error`Issues refresh failed: ${message}`;
   }
 }

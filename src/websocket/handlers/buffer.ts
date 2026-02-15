@@ -7,7 +7,10 @@ import type { WebSocket as WsWebSocket } from 'ws';
 import { updateBuffer } from '../../file-system/buffer-cache.js';
 import { getDatabase } from '../../database/db.js';
 import { checkSignificantChange } from '../../logger/action-log.js';
+import { getLogger } from '../../logger/logtape.js';
 import { getActiveSessionId } from '../../mcp/session.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'buffer']);
 import type { BufferUpdateData } from '../../types/websocket.js';
 
 // ── Handler ──────────────────────────────────────────────────────────────────
@@ -30,8 +33,7 @@ export function handleBufferUpdate(_ws: WsWebSocket, data: unknown, _connectionI
   const sessionId = getActiveSessionId();
   if (db !== null && sessionId !== null) {
     checkSignificantChange(db, sessionId, path, content.length).catch((err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error('[buffer] checkSignificantChange failed:', err);
+      logger.error`checkSignificantChange failed: ${err}`;
     });
   }
 }

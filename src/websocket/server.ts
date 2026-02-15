@@ -6,8 +6,11 @@ import type { Server, IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket as WsWebSocket } from 'ws';
 import { ZodError } from 'zod';
+import { getLogger } from '../logger/logtape.js';
 import { routeMessage } from './router.js';
 import { validateClientMessage } from './schemas.js';
+
+const logger = getLogger(['paige', 'websocket']);
 import type {
   ServerToClientMessage,
   ClientToServerMessage,
@@ -125,8 +128,7 @@ export function createWebSocketServer(server: Server): WebSocketServerHandle {
       // routeMessage is async — fire-and-forget with error logging
       routeMessage(ws, validatedMessage as ClientToServerMessage, connectionId).catch(
         (err: unknown) => {
-          // eslint-disable-next-line no-console
-          console.error('[ws-server] Unhandled route error:', err);
+          logger.error`Unhandled route error: ${err}`;
         },
       );
     });

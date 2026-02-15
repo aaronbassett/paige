@@ -3,8 +3,11 @@
 
 import type { WebSocket as WsWebSocket } from 'ws';
 import type { ReviewRequestData } from '../../types/websocket.js';
+import { getLogger } from '../../logger/logtape.js';
 import { getActiveRepo, getActiveSessionId } from '../../mcp/session.js';
 import { getDatabase } from '../../database/db.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'review']);
 import { loadEnv } from '../../config/env.js';
 import { broadcast } from '../server.js';
 import { runReviewAgent } from '../../review/agent.js';
@@ -71,8 +74,7 @@ export function handleReviewRequest(_ws: WsWebSocket, data: unknown, _connection
     } as never);
   })().catch((err: unknown) => {
     const message = err instanceof Error ? err.message : 'Review failed';
-    // eslint-disable-next-line no-console
-    console.error('[review] Review agent failed:', message);
+    logger.error`Review agent failed: ${message}`;
     broadcast({
       type: 'review:error',
       data: { error: message },

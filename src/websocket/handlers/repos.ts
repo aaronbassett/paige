@@ -2,7 +2,10 @@
 // Fetches GitHub repository data and streams it to the requesting client.
 
 import type { WebSocket as WsWebSocket } from 'ws';
+import { getLogger } from '../../logger/logtape.js';
 import { fetchUserRepos, fetchRepoActivity } from '../../github/repos.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'repos']);
 import { sendToClient } from '../server.js';
 import type {
   ReposActivityRequestData,
@@ -51,11 +54,7 @@ export async function handleReposActivity(
         data: { repo: repoFullName, activities },
       } as RepoActivityResponseMessage);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(
-        `[ws-handler:repos] Failed to fetch activity for ${repoFullName}:`,
-        err instanceof Error ? err.message : err,
-      );
+      logger.error`Failed to fetch activity for ${repoFullName}: ${err instanceof Error ? err.message : err}`;
 
       // Send empty activities on failure so the frontend can still render
       sendToClient(connectionId, {

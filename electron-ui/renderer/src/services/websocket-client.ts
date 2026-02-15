@@ -10,10 +10,10 @@
  * everything goes through this WebSocket connection.
  */
 
-import type {
-  MessageType,
-  WebSocketMessage,
-} from '@shared/types/websocket-messages';
+import type { MessageType, WebSocketMessage } from '@shared/types/websocket-messages';
+import { getLogger } from '../logger';
+
+const logger = getLogger(['paige', 'renderer', 'websocket']);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -213,7 +213,7 @@ class WebSocketClient {
       },
     }).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[WebSocketClient] Failed to send connection:hello:', message);
+      logger.error`Failed to send connection:hello: ${message}`;
     });
 
     // Flush any queued operations
@@ -225,7 +225,7 @@ class WebSocketClient {
     try {
       msg = JSON.parse(String(event.data)) as WebSocketMessage;
     } catch {
-      console.error('[WebSocketClient] Failed to parse message:', event.data);
+      logger.error`Failed to parse message: ${event.data}`;
       return;
     }
 
@@ -248,7 +248,7 @@ class WebSocketClient {
           handler(msg);
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : 'Unknown error';
-          console.error(`[WebSocketClient] Handler error for "${msg.type}":`, message);
+          logger.error`Handler error for "${msg.type}": ${message}`;
         }
       }
     }
@@ -266,7 +266,7 @@ class WebSocketClient {
     // The close event will fire after this, which triggers reconnect.
     // We log here for visibility but don't take action since handleClose
     // manages the reconnect flow.
-    console.error('[WebSocketClient] Connection error');
+    logger.error`Connection error`;
   }
 
   // -------------------------------------------------------------------------
@@ -357,7 +357,7 @@ class WebSocketClient {
         listener(status, this.reconnectAttempt);
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error('[WebSocketClient] Status listener error:', message);
+        logger.error`Status listener error: ${message}`;
       }
     }
   }

@@ -1,5 +1,8 @@
 import { BrowserWindow, ipcMain } from 'electron';
+import { getLogger } from '../logger.js';
 import { ptyManager } from './pty-manager.js';
+
+const logger = getLogger(['paige', 'electron', 'pty']);
 
 /** IPC channel constants for terminal communication. */
 const CHANNELS = {
@@ -23,7 +26,7 @@ export function setupPtyIpc(mainWindow: BrowserWindow): () => void {
   // Handle PTY spawn request from renderer (includes projectDir from backend)
   const handleSpawn = (_event: Electron.IpcMainEvent, cwd?: string): void => {
     if (ptyManager.isAlive) {
-      console.warn('[PTY] PTY already spawned, ignoring spawn request');
+      logger.warn`PTY already spawned, ignoring spawn request`;
       return;
     }
 
@@ -43,9 +46,9 @@ export function setupPtyIpc(mainWindow: BrowserWindow): () => void {
         }
       });
     } catch (error) {
-      console.error('[PTY] Failed to spawn terminal:', error);
-      console.error('[PTY] Terminal will not be available. This may be due to node-pty native module issues.');
-      console.error('[PTY] Try rebuilding: cd electron-ui && npm rebuild node-pty');
+      logger.error`Failed to spawn terminal: ${error}`;
+      logger.error`Terminal will not be available. This may be due to node-pty native module issues.`;
+      logger.error`Try rebuilding: cd electron-ui && npm rebuild node-pty`;
     }
   };
 

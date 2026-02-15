@@ -1,6 +1,9 @@
 // Memory storage and retrieval via ChromaDB
 
 import { getCollection, setUnavailable } from './chromadb.js';
+import { getLogger } from '../logger/logtape.js';
+
+const logger = getLogger(['paige', 'memory']);
 
 /** Input for storing a memory document. */
 export interface MemoryInput {
@@ -43,8 +46,7 @@ export function addMemories(
   return getCollection()
     .then((col) => {
       if (col === null) {
-        // eslint-disable-next-line no-console
-        console.warn('[memory] addMemories skipped — ChromaDB unavailable');
+        logger.warn`addMemories skipped — ChromaDB unavailable`;
         return { added: 0 };
       }
 
@@ -63,8 +65,7 @@ export function addMemories(
     })
     .catch(() => {
       setUnavailable();
-      // eslint-disable-next-line no-console
-      console.warn('[memory] addMemories failed — marking ChromaDB unavailable');
+      logger.warn`addMemories failed — marking ChromaDB unavailable`;
       return { added: 0 };
     });
 }
@@ -85,8 +86,7 @@ export function queryMemories(params: {
   return getCollection()
     .then((col) => {
       if (col === null) {
-        // eslint-disable-next-line no-console
-        console.warn('[memory] queryMemories skipped — ChromaDB unavailable');
+        logger.warn`queryMemories skipped — ChromaDB unavailable`;
         return [];
       }
 
@@ -127,8 +127,7 @@ export function queryMemories(params: {
     })
     .catch(() => {
       setUnavailable();
-      // eslint-disable-next-line no-console
-      console.warn('[memory] queryMemories failed — marking ChromaDB unavailable');
+      logger.warn`queryMemories failed — marking ChromaDB unavailable`;
       return [];
     });
 }

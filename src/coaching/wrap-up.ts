@@ -1,5 +1,6 @@
 // Session wrap-up — calls 3 agents, stores results, updates session
 
+import { getLogger } from '../logger/logtape.js';
 import { getDatabase } from '../database/db.js';
 import { getSession, updateSession } from '../database/queries/sessions.js';
 import { getActionsBySession } from '../database/queries/actions.js';
@@ -15,6 +16,8 @@ import { runKnowledgeGapAgent } from './agents/knowledge-gap.js';
 import { runDreyfusAgent } from './agents/dreyfus.js';
 import { runReflectionAgent } from './agents/reflection.js';
 import type { DreyfusStage } from '../types/domain.js';
+
+const logger = getLogger(['paige', 'coaching', 'wrap-up']);
 
 export interface WrapUpResult {
   memoriesAdded: number;
@@ -124,8 +127,7 @@ export async function runSessionWrapUp(sessionId: number): Promise<WrapUpResult>
       severity: g.severity,
     }));
   } catch (error: unknown) {
-    // eslint-disable-next-line no-console
-    console.warn('[wrap-up] Knowledge gap agent failed:', error);
+    logger.warn`Knowledge gap agent failed: ${error}`;
   }
 
   // 4b. Agent 2: Dreyfus Assessment (Sonnet)
@@ -149,8 +151,7 @@ export async function runSessionWrapUp(sessionId: number): Promise<WrapUpResult>
       assessmentsUpdated += 1;
     }
   } catch (error: unknown) {
-    // eslint-disable-next-line no-console
-    console.warn('[wrap-up] Dreyfus agent failed:', error);
+    logger.warn`Dreyfus agent failed: ${error}`;
   }
 
   // 4c. Agent 3: Reflection / Memory Summarisation (Haiku)
@@ -174,8 +175,7 @@ export async function runSessionWrapUp(sessionId: number): Promise<WrapUpResult>
     );
     memoriesAdded = result.added;
   } catch (error: unknown) {
-    // eslint-disable-next-line no-console
-    console.warn('[wrap-up] Reflection agent failed:', error);
+    logger.warn`Reflection agent failed: ${error}`;
   }
 
   // 5. Mark session as completed (ALWAYS runs)

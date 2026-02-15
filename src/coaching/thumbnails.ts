@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { getLogger } from '../logger/logtape.js';
 import { loadEnv } from '../config/env.js';
+
+const logger = getLogger(['paige', 'coaching', 'thumbnails']);
 
 /**
  * Extract YouTube video ID from various URL formats.
@@ -55,8 +58,7 @@ export async function captureArticleThumbnail(
 
     return outputPath;
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[thumbnails] Failed to capture screenshot:', err);
+    logger.error`Failed to capture screenshot: ${err}`;
     return null;
   }
 }

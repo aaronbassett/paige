@@ -10,7 +10,10 @@ import {
   updateLearningMaterialStatus,
 } from '../../database/queries/learning-materials.js';
 import { logAction } from '../../logger/action-log.js';
+import { getLogger } from '../../logger/logtape.js';
 import { getActiveSessionId } from '../../mcp/session.js';
+
+const logger = getLogger(['paige', 'ws-handler', 'materials']);
 import { verifyAnswer } from '../../coaching/agents/verify-answer.js';
 import { broadcast } from '../server.js';
 import type { LearningMaterial } from '../../types/domain.js';
@@ -48,8 +51,7 @@ function safeLogAction(
   const sessionId = getActiveSessionId();
   if (db !== null && sessionId !== null) {
     logAction(db, sessionId, actionType, data).catch((err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error(`[ws-handler:materials] Failed to log action "${actionType}":`, err);
+      logger.error`Failed to log action "${actionType}": ${err}`;
     });
   }
 }
@@ -90,8 +92,7 @@ export function handleMaterialsView(_ws: WsWebSocket, data: unknown, _connection
       });
     })
     .catch((err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error('[ws-handler:materials] View failed:', err);
+      logger.error`View failed: ${err}`;
     });
 }
 
@@ -156,8 +157,7 @@ export function handleMaterialsComplete(
       });
     })
     .catch((err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error('[ws-handler:materials] Complete failed:', err);
+      logger.error`Complete failed: ${err}`;
       broadcast({
         type: 'materials:complete_result',
         data: { id, correct: false, message: 'Verification failed. Please try again.' },
@@ -196,8 +196,7 @@ export function handleMaterialsDismiss(
       });
     })
     .catch((err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error('[ws-handler:materials] Dismiss failed:', err);
+      logger.error`Dismiss failed: ${err}`;
     });
 }
 
@@ -221,7 +220,6 @@ export function handleMaterialsList(_ws: WsWebSocket, _data: unknown, _connectio
       });
     })
     .catch((err: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error('[ws-handler:materials] List failed:', err);
+      logger.error`List failed: ${err}`;
     });
 }

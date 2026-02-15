@@ -1,5 +1,8 @@
 import * as pty from 'node-pty';
 import type { IPty, IDisposable } from 'node-pty';
+import { getLogger } from '../logger.js';
+
+const logger = getLogger(['paige', 'electron', 'pty']);
 
 /**
  * Manages the lifecycle of a single PTY (pseudo-terminal) instance.
@@ -44,9 +47,9 @@ export class PtyManager {
       LANG: process.env.LANG || 'en_US.UTF-8',
     };
 
-    console.log(`[PTY] Spawning shell: ${shell}`);
-    console.log(`[PTY] CWD: ${workingDir}`);
-    console.log(`[PTY] PATH: ${env.PATH}`);
+    logger.info`Spawning shell: ${shell}`;
+    logger.debug`CWD: ${workingDir}`;
+    logger.debug`PATH: ${env.PATH}`;
 
     try {
       this.process = pty.spawn(shell, [], {
@@ -56,10 +59,10 @@ export class PtyManager {
         cwd: workingDir,
         env,
       });
-      console.log('[PTY] Shell spawned successfully');
+      logger.info`Shell spawned successfully`;
     } catch (error) {
-      console.error(`[PTY] Failed to spawn shell: ${shell}`, error);
-      console.error(`[PTY] Attempted with CWD=${workingDir}, PATH=${env.PATH}`);
+      logger.error`Failed to spawn shell: ${shell} — ${error}`;
+      logger.error`Attempted with CWD=${workingDir}, PATH=${env.PATH}`;
       throw error;
     }
   }
