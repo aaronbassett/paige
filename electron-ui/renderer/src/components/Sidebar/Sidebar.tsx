@@ -78,11 +78,19 @@ const placeholderStyle: React.CSSProperties = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function CoachingSidebar(): React.ReactElement {
+interface CoachingSidebarProps {
+  initialIssueContext?: IssueContext | null;
+  initialPhases?: Phase[] | null;
+}
+
+export function CoachingSidebar({
+  initialIssueContext = null,
+  initialPhases = null,
+}: CoachingSidebarProps): React.ReactElement {
   // ---- Session state -------------------------------------------------------
 
-  const [issueContext, setIssueContext] = useState<IssueContext | null>(null);
-  const [phases, setPhases] = useState<Phase[] | null>(null);
+  const [issueContext, setIssueContext] = useState<IssueContext | null>(initialIssueContext);
+  const [phases, setPhases] = useState<Phase[] | null>(initialPhases);
 
   // ---- Hooks ---------------------------------------------------------------
 

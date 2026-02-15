@@ -21,6 +21,11 @@ import { handleReposList, handleReposActivity } from './handlers/repos.js';
 import { handleSessionStartRepo } from './handlers/session-start.js';
 import { handlePlanningStart } from './handlers/planning.js';
 import { handleFsRequestTree } from './handlers/file-tree.js';
+import {
+  handleTerminalReady,
+  handleTerminalResize,
+  handleTerminalInput,
+} from './handlers/terminal.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -94,6 +99,9 @@ const handlers = new Map<string, MessageHandler>([
   ['repos:activity', handleReposActivity],
   ['session:start_repo', handleSessionStartRepo],
   ['session:select_issue', handlePlanningStart],
+  ['terminal:ready', handleTerminalReady],
+  ['terminal:resize', handleTerminalResize],
+  ['terminal:input', handleTerminalInput],
   ['terminal:command', notImplementedHandler('terminal:command')],
   ['tree:expand', notImplementedHandler('tree:expand')],
   ['tree:collapse', notImplementedHandler('tree:collapse')],
@@ -104,13 +112,19 @@ const handlers = new Map<string, MessageHandler>([
 // ── Session Resolution Categories ────────────────────────────────────────────
 
 /** Messages exempt from session resolution (initial handshake). */
-const SESSION_EXEMPT: ReadonlySet<string> = new Set(['connection:hello', 'fs:request_tree']);
+const SESSION_EXEMPT: ReadonlySet<string> = new Set([
+  'connection:hello',
+  'fs:request_tree',
+  'terminal:ready',
+]);
 
 /** High-frequency messages that only need a lightweight touch. */
 const SESSION_TOUCH: ReadonlySet<string> = new Set([
   'buffer:update',
   'editor:tab_switch',
   'editor:selection',
+  'terminal:input',
+  'terminal:resize',
 ]);
 
 // ── Public API ───────────────────────────────────────────────────────────────
