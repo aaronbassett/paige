@@ -174,6 +174,27 @@ export interface ScoredIssueAuthor {
   avatarUrl: string;
 }
 
+// PR status for the dashboard
+export type PRStatus = 'open' | 'draft';
+
+// Item type discriminator for the in-progress panel
+export type InProgressItemType = 'issue' | 'pr';
+
+// Unified in-progress item for the dashboard
+export interface InProgressItem {
+  type: InProgressItemType;
+  number: number;
+  title: string;
+  labels: ScoredIssueLabel[];
+  author: ScoredIssueAuthor;
+  updatedAt: string;
+  createdAt: string;
+  htmlUrl: string;
+  difficulty?: IssueDifficulty;  // issue-specific
+  summary?: string;              // issue-specific
+  prStatus?: PRStatus;           // PR-specific
+}
+
 // Fully scored issue for the dashboard
 export interface ScoredIssue {
   number: number;

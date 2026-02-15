@@ -17,6 +17,7 @@ import type {
   RepoInfo,
   RepoActivityEntry,
   ScoredIssue,
+  InProgressItem,
 } from './entities';
 
 // ---------------------------------------------------------------------------
@@ -36,7 +37,8 @@ export type ServerMessageType =
   // Dashboard data (6)
   | 'dashboard:dreyfus'
   | 'dashboard:stats'
-  | 'dashboard:in_progress'
+  | 'dashboard:in_progress_item'
+  | 'dashboard:in_progress_complete'
   | 'dashboard:issues'
   | 'dashboard:challenges'
   | 'dashboard:materials'
@@ -287,17 +289,18 @@ export interface DashboardStatsMessage extends BaseMessage {
   };
 }
 
-/** In-progress tasks. */
-export interface DashboardInProgressMessage extends BaseMessage {
-  type: 'dashboard:in_progress';
+/** A single in-progress item streamed from the backend. */
+export interface DashboardInProgressItemMessage extends BaseMessage {
+  type: 'dashboard:in_progress_item';
   payload: {
-    tasks: Array<{
-      id: string;
-      title: string;
-      progress: number;
-      dueDate?: string;
-    }>;
+    item: InProgressItem;
   };
+}
+
+/** Signal that all in-progress items have been streamed. */
+export interface DashboardInProgressCompleteMessage extends BaseMessage {
+  type: 'dashboard:in_progress_complete';
+  payload: Record<string, never>;
 }
 
 /** GitHub issues assigned to user. */
@@ -961,7 +964,8 @@ export type ServerMessage =
   | SessionEndMessage
   | DashboardDreyfusMessage
   | DashboardStatsMessage
-  | DashboardInProgressMessage
+  | DashboardInProgressItemMessage
+  | DashboardInProgressCompleteMessage
   | DashboardIssuesMessage
   | DashboardChallengesMessage
   | DashboardMaterialsMessage
