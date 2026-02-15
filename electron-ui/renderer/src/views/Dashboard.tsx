@@ -30,7 +30,7 @@ import { PracticeChallenges } from '../components/Dashboard/PracticeChallenges';
 import { LearningMaterials } from '../components/Dashboard/LearningMaterials';
 
 interface DashboardProps {
-  onNavigate: (view: AppView, context?: { issueNumber?: number }) => void;
+  onNavigate: (view: AppView, context?: { issueNumber?: number; kataId?: number }) => void;
 }
 
 const scrollContainerStyle: React.CSSProperties = {
@@ -141,6 +141,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     onNavigate('placeholder');
   }, [onNavigate]);
 
+  const handleChallengeClick = useCallback(
+    (challengeId: string) => {
+      onNavigate('challenge', { kataId: Number(challengeId) });
+    },
+    [onNavigate]
+  );
+
   const hasInProgressTasks = inProgressTasks !== null && inProgressTasks.length > 0;
 
   return (
@@ -178,7 +185,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </p>
           </section>
         )}
-        <PracticeChallenges challenges={challenges} onChallengeClick={handlePlaceholderNav} />
+        <PracticeChallenges challenges={challenges} onChallengeClick={handleChallengeClick} />
       </div>
 
       {/* Row 3: GitHub Issues (62%) + Learning Materials (38%) */}
