@@ -128,7 +128,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Row 2: In-Progress (62%) + Practice Challenges (38%) */}
       <div style={{ ...gridRowStyle, gridTemplateColumns: '62fr 38fr' }}>
-        <InProgress />
+        <InProgress onNavigate={onNavigate} />
         <PracticeChallenges challenges={challenges} onChallengeClick={handleChallengeClick} />
       </div>
 

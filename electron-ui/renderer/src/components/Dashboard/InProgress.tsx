@@ -15,7 +15,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import type { InProgressItem, IssueDifficulty } from '@shared/types/entities';
+import type { AppView, InProgressItem, IssueDifficulty } from '@shared/types/entities';
 import type { WebSocketMessage } from '@shared/types/websocket-messages';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { SortButton, type SortOption } from './SortButton';
@@ -290,7 +290,11 @@ const cardVariants = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function InProgress() {
+interface InProgressProps {
+  onNavigate: (view: AppView, context?: { issueNumber?: number }) => void;
+}
+
+export function InProgress({ onNavigate }: InProgressProps) {
   const { on } = useWebSocket();
 
   const [items, setItems] = useState<InProgressItem[]>([]);
@@ -342,9 +346,16 @@ export function InProgress() {
     setFilter(e.target.value as FilterMode);
   }, []);
 
-  const handleItemClick = useCallback((item: InProgressItem) => {
-    window.open(item.htmlUrl, '_blank');
-  }, []);
+  const handleItemClick = useCallback(
+    (item: InProgressItem) => {
+      if (item.type === 'issue') {
+        onNavigate('ide', { issueNumber: item.number });
+      } else {
+        window.open(item.htmlUrl, '_blank');
+      }
+    },
+    [onNavigate]
+  );
 
   const getRowStyle = (item: InProgressItem, index: number) => {
     return item.type === 'pr' ? prRowStyle(index) : issueRowStyle(index);
