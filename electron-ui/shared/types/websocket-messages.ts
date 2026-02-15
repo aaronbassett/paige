@@ -17,6 +17,9 @@ import type {
   RepoInfo,
   RepoActivityEntry,
   ScoredIssue,
+  ReviewScope,
+  ReviewResult,
+  ConventionalCommitType,
   LearningMaterial,
   InProgressItem,
 } from './entities';
@@ -79,6 +82,15 @@ export type ServerMessageType =
   | 'session:issue_selected'
   | 'dashboard:issue'
   | 'dashboard:issues_complete'
+  // Review & commit workflow (8)
+  | 'review:result'
+  | 'commit:suggestion'
+  | 'commit:error'
+  | 'pr:suggestion'
+  | 'pr:created'
+  | 'pr:error'
+  | 'git:status_result'
+  | 'git:exit_complete'
   // Learning materials (3)
   | 'materials:complete_result'
   | 'materials:updated'
@@ -125,6 +137,15 @@ export type ClientMessageType =
   | 'repos:activity'
   | 'session:start_repo'
   | 'session:select_issue'
+  // Review & commit workflow (8)
+  | 'review:request'
+  | 'commit:suggest'
+  | 'commit:execute'
+  | 'pr:suggest'
+  | 'pr:create'
+  | 'git:status'
+  | 'git:save_and_exit'
+  | 'git:discard_and_exit'
   // Learning materials (3)
   | 'materials:view'
   | 'materials:complete'
@@ -667,6 +688,58 @@ export interface DashboardIssuesCompleteMessage extends BaseMessage {
   payload: Record<string, never>;
 }
 
+// -- Review & commit workflow — server messages (8) --------------------------
+
+/** Code review result from the backend. */
+export interface ReviewResultMessage extends BaseMessage {
+  type: 'review:result';
+  payload: ReviewResult;
+}
+
+/** AI-generated commit message suggestion. */
+export interface CommitSuggestionMessage extends BaseMessage {
+  type: 'commit:suggestion';
+  payload: {
+    type: ConventionalCommitType;
+    subject: string;
+    body: string;
+  };
+}
+
+/** Commit operation error. */
+export interface CommitErrorMessage extends BaseMessage {
+  type: 'commit:error';
+  payload: {
+    error: string;
+  };
+}
+
+/** AI-generated pull request suggestion. */
+export interface PrSuggestionMessage extends BaseMessage {
+  type: 'pr:suggestion';
+  payload: {
+    title: string;
+    body: string;
+  };
+}
+
+/** Pull request successfully created. */
+export interface PrCreatedMessage extends BaseMessage {
+  type: 'pr:created';
+  payload: {
+    prUrl: string;
+    prNumber: number;
+  };
+}
+
+/** Pull request creation error. */
+export interface PrErrorMessage extends BaseMessage {
+  type: 'pr:error';
+  payload: {
+    error: string;
+  };
+}
+
 // -- Learning materials server messages (3) ----------------------------------
 
 /** Result of a materials:complete attempt. */
@@ -707,6 +780,22 @@ export interface ChallengeLoadErrorMessage extends BaseMessage {
   payload: {
     error: string;
   };
+}
+
+/** Git status result from the backend. */
+export interface GitStatusResultMessage extends BaseMessage {
+  type: 'git:status_result';
+  payload: {
+    clean: boolean;
+    modifiedFiles: string[];
+    untrackedFiles: string[];
+  };
+}
+
+/** Git exit operation completed. */
+export interface GitExitCompleteMessage extends BaseMessage {
+  type: 'git:exit_complete';
+  payload: Record<string, never>;
 }
 
 // ---------------------------------------------------------------------------
@@ -964,6 +1053,71 @@ export interface SessionSelectIssueMessage extends BaseMessage {
   };
 }
 
+// -- Review & commit workflow — client messages (8) --------------------------
+
+/** Request a code review from the backend. */
+export interface ReviewRequestMessage extends BaseMessage {
+  type: 'review:request';
+  payload: {
+    scope: ReviewScope;
+    activeFilePath?: string;
+    openFilePaths?: string[];
+  };
+}
+
+/** Request AI-generated commit message suggestion. */
+export interface CommitSuggestMessage extends BaseMessage {
+  type: 'commit:suggest';
+  payload: {
+    phaseNumber: number;
+  };
+}
+
+/** Execute a commit with the given message. */
+export interface CommitExecuteMessage extends BaseMessage {
+  type: 'commit:execute';
+  payload: {
+    type: ConventionalCommitType;
+    subject: string;
+    body: string;
+  };
+}
+
+/** Request AI-generated pull request suggestion. */
+export interface PrSuggestMessage extends BaseMessage {
+  type: 'pr:suggest';
+  payload: {
+    phaseNumber: number;
+  };
+}
+
+/** Create a pull request with the given details. */
+export interface PrCreateMessage extends BaseMessage {
+  type: 'pr:create';
+  payload: {
+    title: string;
+    body: string;
+  };
+}
+
+/** Request git status from the backend. */
+export interface GitStatusRequestMessage extends BaseMessage {
+  type: 'git:status';
+  payload: Record<string, never>;
+}
+
+/** Save all changes and exit the session. */
+export interface GitSaveAndExitMessage extends BaseMessage {
+  type: 'git:save_and_exit';
+  payload: Record<string, never>;
+}
+
+/** Discard all changes and exit the session. */
+export interface GitDiscardAndExitMessage extends BaseMessage {
+  type: 'git:discard_and_exit';
+  payload: Record<string, never>;
+}
+
 // -- Learning materials client messages (3) ----------------------------------
 
 /** User viewed a learning material (increments view count, opens URL). */
@@ -1040,6 +1194,14 @@ export type ServerMessage =
   | SessionIssueSelectedMessage
   | DashboardSingleIssueMessage
   | DashboardIssuesCompleteMessage
+  | ReviewResultMessage
+  | CommitSuggestionMessage
+  | CommitErrorMessage
+  | PrSuggestionMessage
+  | PrCreatedMessage
+  | PrErrorMessage
+  | GitStatusResultMessage
+  | GitExitCompleteMessage
   | MaterialsCompleteResultMessage
   | MaterialsUpdatedMessage
   | MaterialsOpenUrlMessage
@@ -1075,6 +1237,14 @@ export type ClientMessage =
   | ReposActivityRequestMessage
   | SessionStartRepoMessage
   | SessionSelectIssueMessage
+  | ReviewRequestMessage
+  | CommitSuggestMessage
+  | CommitExecuteMessage
+  | PrSuggestMessage
+  | PrCreateMessage
+  | GitStatusRequestMessage
+  | GitSaveAndExitMessage
+  | GitDiscardAndExitMessage
   | MaterialsViewMessage
   | MaterialsCompleteMessage
   | MaterialsDismissMessage

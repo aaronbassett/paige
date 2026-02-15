@@ -51,7 +51,7 @@ export function handleSessionStartRepo(
       const cloneUrl = `https://github.com/${owner}/${repo}.git`;
       // eslint-disable-next-line no-console
       console.log(`[ws-handler:session-start] Cloning ${cloneUrl} to ${repoDir}`);
-      execSync(`git clone --depth=1 "${cloneUrl}" "${repoDir}"`, {
+      execSync(`git clone "${cloneUrl}" "${repoDir}"`, {
         stdio: 'pipe',
         timeout: 60_000, // 60 second timeout for clone
       });

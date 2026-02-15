@@ -6,7 +6,7 @@
  *   - Center top: EditorTabs + CodeEditor + FloatingExplainButton (flex, 70%)
  *   - Center: StatusBar (32px)
  *   - Center bottom: Terminal area (30% height)
- *   - Right sidebar: Coaching Sidebar (280px, collapsible to 32px)
+ *   - Right sidebar: Coaching Sidebar (560px, collapsible to 32px)
  *
  * Sidebars collapse independently with Framer Motion spring animations.
  * Auto-collapses sidebars at <800px width, hides terminal at <500px height.
@@ -61,7 +61,7 @@ interface IDEProps {
 
 const SIDEBAR_LEFT_EXPANDED = 220;
 const SIDEBAR_LEFT_COLLAPSED = 32;
-const SIDEBAR_RIGHT_EXPANDED = 280;
+const SIDEBAR_RIGHT_EXPANDED = 560;
 const SIDEBAR_RIGHT_COLLAPSED = 32;
 const AUTO_COLLAPSE_WIDTH = 800;
 const AUTO_HIDE_TERMINAL_HEIGHT = 500;
@@ -133,7 +133,7 @@ function useActiveTabPath(): string | undefined {
 // IDE component
 // ---------------------------------------------------------------------------
 
-export function IDE({ onNavigate: _onNavigate, planningResult }: IDEProps) {
+export function IDE({ onNavigate, planningResult }: IDEProps) {
   // Sidebar and terminal visibility state
   const [leftCollapsed, setLeftCollapsed] = useState(() => window.innerWidth < AUTO_COLLAPSE_WIDTH);
   const [rightCollapsed, setRightCollapsed] = useState(
@@ -179,8 +179,8 @@ export function IDE({ onNavigate: _onNavigate, planningResult }: IDEProps) {
   // Coaching messages (anchored balloons + unanchored toasts)
   const { messages, dismissMessage, expandedIds, expandMessage } = useCoachingMessages();
 
-  // Review navigation (prev/next/exit for review comments)
-  const { reviewState, focusedMessageId, next, previous, exitReview } = useReviewNavigation();
+  // Review navigation (focused message for coaching overlay)
+  const { focusedMessageId } = useReviewNavigation();
 
   // WebSocket send for review and explain
   const { send } = useWebSocket();
@@ -243,13 +243,6 @@ export function IDE({ onNavigate: _onNavigate, planningResult }: IDEProps) {
   // -------------------------------------------------------------------------
   // Callbacks
   // -------------------------------------------------------------------------
-
-  const handleReview = useCallback(
-    (scope: string) => {
-      void send('user:review', { scope });
-    },
-    [send]
-  );
 
   const handleExplain = useCallback(
     (payload: ExplainPayload) => {
@@ -376,15 +369,7 @@ export function IDE({ onNavigate: _onNavigate, planningResult }: IDEProps) {
         </div>
 
         {/* Status bar */}
-        <StatusBar
-          onReview={handleReview}
-          reviewActive={reviewState.active}
-          reviewCurrentIndex={reviewState.currentIndex}
-          reviewTotal={reviewState.total}
-          onReviewNext={next}
-          onReviewPrevious={previous}
-          onReviewExit={exitReview}
-        />
+        <StatusBar />
 
         {/* Terminal area */}
         {!terminalHidden && (
@@ -430,6 +415,7 @@ export function IDE({ onNavigate: _onNavigate, planningResult }: IDEProps) {
           <CoachingSidebar
             initialIssueContext={initialIssueContext}
             initialPhases={initialPhases}
+            onNavigate={onNavigate}
           />
         )}
       </motion.aside>

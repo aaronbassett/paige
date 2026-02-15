@@ -2,30 +2,43 @@
  * CoachingSidebar -- Container component that composes all sidebar
  * sub-components and manages session state via WebSocket.
  *
- * Fills its parent container (280px wide, height set by parent IDE.tsx).
- * Renders a vertical stack: IssueContext, HintIllustration + HintSlider,
- * and PhaseStepper. Before a session starts, shows a muted placeholder.
+ * Fills its parent container (height set by parent IDE.tsx).
+ * Renders a vertical stack: back-to-dashboard link, IssueContext,
+ * HintSlider, PhaseStepper, review/commit controls, ReviewResults,
+ * and modal portals for CommitModal, PrModal, and SaveDiscardModal.
  *
- * Handles three session lifecycle messages (start, restore, end) and
- * phase:transition messages with Framer Motion spring animations.
+ * Handles session lifecycle messages, phase:transition, review:result,
+ * buffer:update (for re-review detection), and git:exit_complete.
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { IssueContext, Phase, HintLevel } from '@shared/types/entities';
+import type {
+  IssueContext,
+  Phase,
+  HintLevel,
+  ReviewResult,
+  ReviewScope,
+  AppView,
+} from '@shared/types/entities';
 import type {
   WebSocketMessage,
   SessionStartMessage,
   SessionRestoreMessage,
   PhaseTransitionMessage,
+  ReviewResultMessage,
 } from '@shared/types/websocket-messages';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useHintLevel } from '../../hooks/useHintLevel';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { editorState } from '../../services/editor-state';
 import { IssueContextDisplay } from './IssueContext';
 import { HintSlider } from './HintSlider';
-import { HintIllustration } from './HintIllustration';
 import { PhaseStepper } from './PhaseStepper';
+import { ReviewResults } from './ReviewResults';
+import { CommitModal } from '../Modals/CommitModal';
+import { PrModal } from '../Modals/PrModal';
+import { SaveDiscardModal } from '../Modals/SaveDiscardModal';
 
 // ---------------------------------------------------------------------------
 // Spring preset
@@ -33,6 +46,12 @@ import { PhaseStepper } from './PhaseStepper';
 
 /** Standard spring preset shared across Paige animations. */
 const SPRING_TRANSITION = { type: 'spring' as const, stiffness: 300, damping: 28 };
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+type CommitState = 'idle' | 'ready_to_commit' | 'needs_re_review';
 
 // ---------------------------------------------------------------------------
 // Styles
@@ -74,6 +93,167 @@ const placeholderStyle: React.CSSProperties = {
   padding: 'var(--space-md)',
 };
 
+const backLinkStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  padding: 'var(--space-xs) var(--space-md)',
+  fontFamily: 'var(--font-family)',
+  fontSize: 'var(--font-small-size)',
+  color: 'var(--text-muted)',
+  cursor: 'pointer',
+  textAlign: 'left',
+  transition: 'color 0.15s ease',
+};
+
+const reviewSectionStyle: React.CSSProperties = {
+  padding: 'var(--space-sm) var(--space-md)',
+  borderTop: '1px solid var(--border-subtle)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 'var(--space-xs)',
+};
+
+const reviewButtonRowStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 0,
+  alignItems: 'stretch',
+  position: 'relative',
+};
+
+const reviewMainButtonStyle: React.CSSProperties = {
+  flex: 1,
+  padding: 'var(--space-xs) var(--space-sm)',
+  borderRadius: '6px 0 0 6px',
+  border: '1px solid var(--border-subtle)',
+  background: 'var(--bg-surface)',
+  color: 'var(--text-primary)',
+  fontFamily: 'var(--font-family)',
+  fontSize: 'var(--font-small-size)',
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'background 0.15s ease',
+  textAlign: 'center',
+};
+
+const reviewDropdownButtonStyle: React.CSSProperties = {
+  width: '28px',
+  padding: 0,
+  borderRadius: '0 6px 6px 0',
+  border: '1px solid var(--border-subtle)',
+  borderLeft: 'none',
+  background: 'var(--bg-surface)',
+  color: 'var(--text-muted)',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '10px',
+  transition: 'background 0.15s ease',
+};
+
+const dropdownMenuStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: '100%',
+  right: 0,
+  marginTop: '2px',
+  background: 'var(--bg-elevated)',
+  border: '1px solid var(--border-subtle)',
+  borderRadius: '6px',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+  zIndex: 100,
+  minWidth: '180px',
+  overflow: 'hidden',
+};
+
+const dropdownItemStyle: React.CSSProperties = {
+  width: '100%',
+  padding: 'var(--space-xs) var(--space-sm)',
+  border: 'none',
+  background: 'transparent',
+  color: 'var(--text-primary)',
+  fontFamily: 'var(--font-family)',
+  fontSize: 'var(--font-small-size)',
+  cursor: 'pointer',
+  textAlign: 'left',
+  transition: 'background 0.1s ease',
+};
+
+const commitButtonBaseStyle: React.CSSProperties = {
+  padding: 'var(--space-xs) var(--space-sm)',
+  borderRadius: '6px',
+  border: 'none',
+  fontFamily: 'var(--font-family)',
+  fontSize: 'var(--font-small-size)',
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'opacity 0.15s ease, background 0.15s ease',
+  textAlign: 'center',
+};
+
+const prButtonStyle: React.CSSProperties = {
+  ...commitButtonBaseStyle,
+  width: '100%',
+  background: 'var(--accent-primary, #d97757)',
+  color: '#faf9f5',
+};
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getCommitButtonStyle(state: CommitState): React.CSSProperties {
+  switch (state) {
+    case 'ready_to_commit':
+      return {
+        ...commitButtonBaseStyle,
+        background: 'var(--accent-primary, #d97757)',
+        color: '#faf9f5',
+      };
+    case 'needs_re_review':
+      return {
+        ...commitButtonBaseStyle,
+        background: 'transparent',
+        border: '1px solid var(--text-muted)',
+        color: 'var(--text-muted)',
+        cursor: 'not-allowed',
+        opacity: 0.6,
+      };
+    case 'idle':
+    default:
+      return {
+        ...commitButtonBaseStyle,
+        background: 'transparent',
+        border: '1px solid var(--border-subtle)',
+        color: 'var(--text-muted)',
+        cursor: 'not-allowed',
+        opacity: 0.5,
+      };
+  }
+}
+
+function getCommitButtonLabel(state: CommitState): string {
+  switch (state) {
+    case 'needs_re_review':
+      return 'Re-review needed';
+    case 'ready_to_commit':
+      return 'Commit & Continue';
+    case 'idle':
+    default:
+      return 'Commit & Continue';
+  }
+}
+
+/** Get the active phase number from the phases list. */
+function getActivePhaseNumber(phases: Phase[]): number {
+  const active = phases.find((p) => p.status === 'active');
+  return active ? active.number : 1;
+}
+
+/** Check if all phases are complete. */
+function allPhasesComplete(phases: Phase[]): boolean {
+  return phases.every((p) => p.status === 'complete');
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -81,16 +261,31 @@ const placeholderStyle: React.CSSProperties = {
 interface CoachingSidebarProps {
   initialIssueContext?: IssueContext | null;
   initialPhases?: Phase[] | null;
+  onNavigate?: (view: AppView) => void;
 }
 
 export function CoachingSidebar({
   initialIssueContext = null,
   initialPhases = null,
+  onNavigate,
 }: CoachingSidebarProps): React.ReactElement {
   // ---- Session state -------------------------------------------------------
 
   const [issueContext, setIssueContext] = useState<IssueContext | null>(initialIssueContext);
   const [phases, setPhases] = useState<Phase[] | null>(initialPhases);
+
+  // ---- Review / commit state -----------------------------------------------
+
+  const [reviewResult, setReviewResult] = useState<ReviewResult | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [commitState, setCommitState] = useState<CommitState>('idle');
+  const [showReviewDropdown, setShowReviewDropdown] = useState(false);
+
+  // ---- Modal state ---------------------------------------------------------
+
+  const [commitModalOpen, setCommitModalOpen] = useState(false);
+  const [prModalOpen, setPrModalOpen] = useState(false);
+  const [saveDiscardModalOpen, setSaveDiscardModalOpen] = useState(false);
 
   // ---- Hooks ---------------------------------------------------------------
 
@@ -123,6 +318,8 @@ export function CoachingSidebar({
     const unsubEnd = on('session:end', () => {
       setIssueContext(null);
       setPhases(null);
+      setReviewResult(null);
+      setCommitState('idle');
     });
 
     const unsubTransition = on('phase:transition', (msg: WebSocketMessage) => {
@@ -133,6 +330,40 @@ export function CoachingSidebar({
           phase.number === payload.phaseNumber ? { ...phase, status: payload.newStatus } : phase
         );
       });
+      // Reset review state on phase transition
+      setReviewResult(null);
+      setCommitState('idle');
+      setReviewLoading(false);
+    });
+
+    const unsubReviewResult = on('review:result', (msg: WebSocketMessage) => {
+      const { payload } = msg as ReviewResultMessage;
+      setReviewResult(payload);
+      setReviewLoading(false);
+      if (payload.phaseComplete === true) {
+        setCommitState('ready_to_commit');
+      } else {
+        setCommitState('idle');
+      }
+    });
+
+    const unsubBufferUpdate = on('buffer:update', () => {
+      // If we had a review result and the user edits code, they need to re-review.
+      // Use the functional form of setReviewResult to read current value without
+      // adding reviewResult to the dependency array.
+      setReviewResult((prev) => {
+        if (prev !== null) {
+          setCommitState('needs_re_review');
+        }
+        return prev;
+      });
+    });
+
+    const unsubGitExitComplete = on('git:exit_complete', () => {
+      setSaveDiscardModalOpen(false);
+      if (onNavigate) {
+        onNavigate('dashboard');
+      }
     });
 
     return () => {
@@ -140,8 +371,29 @@ export function CoachingSidebar({
       unsubRestore();
       unsubEnd();
       unsubTransition();
+      unsubReviewResult();
+      unsubBufferUpdate();
+      unsubGitExitComplete();
     };
-  }, [on]);
+  }, [on, onNavigate]);
+
+  // ---- Close dropdown on outside click ------------------------------------
+
+  useEffect(() => {
+    if (!showReviewDropdown) return;
+
+    const handleClick = () => setShowReviewDropdown(false);
+    // Use a short delay so the click that opened the dropdown does not
+    // immediately close it.
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClick);
+    }, 0);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClick);
+    };
+  }, [showReviewDropdown]);
 
   // ---- Handlers ------------------------------------------------------------
 
@@ -159,6 +411,87 @@ export function CoachingSidebar({
     [setHintLevel]
   );
 
+  const handleReview = useCallback(
+    (scope: ReviewScope) => {
+      setReviewLoading(true);
+      setReviewResult(null);
+      setShowReviewDropdown(false);
+
+      const activeTabPath = editorState.getActiveTabPath();
+      const openTabs = editorState.getTabs();
+      const openFilePaths = openTabs.map((t) => t.path);
+
+      void send('review:request', {
+        scope,
+        activeFilePath: activeTabPath,
+        openFilePaths,
+      });
+    },
+    [send]
+  );
+
+  const handleReviewPhase = useCallback(() => {
+    handleReview('phase');
+  }, [handleReview]);
+
+  const handleDismissReview = useCallback(() => {
+    setReviewResult(null);
+  }, []);
+
+  const handleCodeCommentClick = useCallback(
+    (filePath: string, _line: number) => {
+      // Open the file in the editor; decoration-based navigation
+      // will handle scrolling to the specific line.
+      void send('file:open', { path: filePath });
+    },
+    [send]
+  );
+
+  const handleCommitClick = useCallback(() => {
+    if (commitState === 'ready_to_commit') {
+      setCommitModalOpen(true);
+    }
+  }, [commitState]);
+
+  const handleOpenPr = useCallback(() => {
+    setPrModalOpen(true);
+  }, []);
+
+  const handleBackToDashboard = useCallback(() => {
+    // Check for dirty tabs
+    const tabs = editorState.getTabs();
+    const hasDirtyTabs = tabs.some((t) => t.isDirty);
+
+    if (hasDirtyTabs) {
+      setSaveDiscardModalOpen(true);
+    } else {
+      if (onNavigate) {
+        onNavigate('dashboard');
+      }
+    }
+  }, [onNavigate]);
+
+  const handleSaveAndExit = useCallback(() => {
+    void send('git:save_and_exit', {});
+  }, [send]);
+
+  const handleDiscardAndExit = useCallback(() => {
+    void send('git:discard_and_exit', {});
+  }, [send]);
+
+  const handleSaveDiscardClose = useCallback(() => {
+    setSaveDiscardModalOpen(false);
+  }, []);
+
+  const handleNavigateFromPr = useCallback(
+    (view: AppView) => {
+      if (onNavigate) {
+        onNavigate(view);
+      }
+    },
+    [onNavigate]
+  );
+
   // ---- Loading state -------------------------------------------------------
 
   const hasSession = issueContext !== null && phases !== null;
@@ -171,18 +504,38 @@ export function CoachingSidebar({
     );
   }
 
+  // ---- Derived state -------------------------------------------------------
+
+  const activePhaseNumber = getActivePhaseNumber(phases);
+  const isAllComplete = allPhasesComplete(phases);
+
   // ---- Active session ------------------------------------------------------
 
   return (
     <aside style={sidebarStyle} aria-label="Coaching sidebar">
+      {/* Back to dashboard link */}
+      <button
+        type="button"
+        style={backLinkStyle}
+        onClick={handleBackToDashboard}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = 'var(--text-secondary)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = 'var(--text-muted)';
+        }}
+        aria-label="Back to dashboard"
+      >
+        &#x2190; Dashboard
+      </button>
+
       {/* Issue context -- always visible at the top, not scrollable */}
       <IssueContextDisplay issueContext={issueContext} />
 
-      {/* Scrollable content area for hint controls + phase stepper */}
+      {/* Scrollable content area for hint controls + phase stepper + review */}
       <div style={scrollableAreaStyle}>
-        {/* Hint illustration + slider */}
+        {/* Hint slider */}
         <div style={hintSectionStyle}>
-          <HintIllustration level={hintLevel} />
           <HintSlider level={hintLevel} onChange={handleHintChange} />
         </div>
 
@@ -200,7 +553,154 @@ export function CoachingSidebar({
             <PhaseStepper phases={phases} hintLevel={hintLevel} onExpandStep={handleExpandStep} />
           </motion.div>
         </AnimatePresence>
+
+        {/* Review / Commit / PR controls */}
+        <div style={reviewSectionStyle}>
+          {isAllComplete ? (
+            /* All phases complete: show Open PR button */
+            <button
+              type="button"
+              style={prButtonStyle}
+              onClick={handleOpenPr}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '0.85';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '1';
+              }}
+            >
+              Open Pull Request
+            </button>
+          ) : (
+            /* Active phase: show review + commit controls */
+            <>
+              {/* Review split button */}
+              <div style={reviewButtonRowStyle}>
+                <button
+                  type="button"
+                  style={reviewMainButtonStyle}
+                  onClick={handleReviewPhase}
+                  disabled={reviewLoading}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--bg-inset)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'var(--bg-surface)';
+                  }}
+                >
+                  {reviewLoading ? 'Reviewing...' : 'Review Phase'}
+                </button>
+                <button
+                  type="button"
+                  style={reviewDropdownButtonStyle}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowReviewDropdown((prev) => !prev);
+                  }}
+                  aria-label="Review scope options"
+                  aria-expanded={showReviewDropdown}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--bg-inset)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'var(--bg-surface)';
+                  }}
+                >
+                  &#x25BC;
+                </button>
+
+                {/* Dropdown menu */}
+                {showReviewDropdown && (
+                  <div style={dropdownMenuStyle}>
+                    <button
+                      type="button"
+                      style={dropdownItemStyle}
+                      onClick={() => handleReview('current_file')}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-surface)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      Review Current File
+                    </button>
+                    <button
+                      type="button"
+                      style={dropdownItemStyle}
+                      onClick={() => handleReview('open_files')}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-surface)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      Review Open Files
+                    </button>
+                    <button
+                      type="button"
+                      style={dropdownItemStyle}
+                      onClick={() => handleReview('current_task')}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-surface)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      Review Current Task
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Commit button */}
+              <button
+                type="button"
+                style={getCommitButtonStyle(commitState)}
+                onClick={handleCommitClick}
+                disabled={commitState !== 'ready_to_commit'}
+                title={
+                  commitState === 'needs_re_review'
+                    ? 'Code changed since last review. Review again before committing.'
+                    : commitState === 'idle'
+                      ? 'Complete a review first to enable committing.'
+                      : 'Commit this phase and continue to the next.'
+                }
+              >
+                {getCommitButtonLabel(commitState)}
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Review results */}
+        <ReviewResults
+          result={reviewResult}
+          loading={reviewLoading}
+          onDismiss={handleDismissReview}
+          onCodeCommentClick={handleCodeCommentClick}
+        />
       </div>
+
+      {/* Modals */}
+      <CommitModal
+        isOpen={commitModalOpen}
+        phaseNumber={activePhaseNumber}
+        onClose={() => setCommitModalOpen(false)}
+      />
+      <PrModal
+        isOpen={prModalOpen}
+        onClose={() => setPrModalOpen(false)}
+        onNavigate={handleNavigateFromPr}
+      />
+      <SaveDiscardModal
+        isOpen={saveDiscardModalOpen}
+        onSave={handleSaveAndExit}
+        onDiscard={handleDiscardAndExit}
+        onClose={handleSaveDiscardClose}
+      />
     </aside>
   );
 }

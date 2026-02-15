@@ -7,6 +7,7 @@ import * as migration001 from './migrations/001-initial.js';
 import * as migration002 from './migrations/002-session-auto-timeout.js';
 import * as migration003 from './migrations/003-stats-expansion.js';
 import * as migration004 from './migrations/004-learning-materials.js';
+import * as migration005 from './migrations/005-branch-stash.js';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ class InlineMigrationProvider implements MigrationProvider {
       '002-session-auto-timeout': migration002,
       '003-stats-expansion': migration003,
       '004-learning-materials': migration004,
+      '005-branch-stash': migration005,
     });
   }
 }

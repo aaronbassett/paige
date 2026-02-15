@@ -1,12 +1,8 @@
 /**
  * HintSlider -- 4-position discrete slider for coaching hint level.
  *
- * Renders a horizontal track with 4 clickable positions (None, Light,
- * Medium, Heavy), a terracotta sliding indicator, and an illustration
- * area above the slider that shows a visual cue for the current level.
- *
- * The slider uses CSS transitions for smooth position changes and
- * opacity fades for the illustration swap. No Framer Motion required.
+ * Renders an ASCII progress bar [====..........] with 4 clickable zones,
+ * a centered level name below, and a description below that.
  *
  * Levels:
  *   0 = None   (student working alone)
@@ -31,11 +27,11 @@ export interface HintSliderProps {
 // Constants
 // ---------------------------------------------------------------------------
 
-const LEVELS: Array<{ value: HintLevel; label: string; emoji: string }> = [
-  { value: 0, label: 'None', emoji: '\uD83D\uDCBB' },
-  { value: 1, label: 'Light', emoji: '\uD83D\uDCDA' },
-  { value: 2, label: 'Medium', emoji: '\uD83D\uDC49' },
-  { value: 3, label: 'Heavy', emoji: '\uD83C\uDF79' },
+const LEVELS: Array<{ value: HintLevel; label: string }> = [
+  { value: 0, label: 'None' },
+  { value: 1, label: 'Light' },
+  { value: 2, label: 'Medium' },
+  { value: 3, label: 'Heavy' },
 ];
 
 const LEVEL_DESCRIPTIONS: Record<HintLevel, string> = {
@@ -45,13 +41,26 @@ const LEVEL_DESCRIPTIONS: Record<HintLevel, string> = {
   3: 'Detailed walkthroughs',
 };
 
-/** Track has 3 gaps between 4 positions. Indicator moves in thirds. */
-const POSITION_PERCENT: Record<HintLevel, string> = {
-  0: '0%',
-  1: '33.333%',
-  2: '66.666%',
-  3: '100%',
-};
+const TOTAL_CHARS = 14;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function buildBar(level: HintLevel): string {
+  const fillCount = Math.round((level / 3) * TOTAL_CHARS);
+  return '[' + '='.repeat(fillCount) + '\u00B7'.repeat(TOTAL_CHARS - fillCount) + ']';
+}
+
+/**
+ * Given a click position (0-based character index within the bar content,
+ * excluding the brackets), returns the corresponding hint level (0-3).
+ */
+function charIndexToLevel(charIndex: number): HintLevel {
+  const zoneSize = TOTAL_CHARS / 4;
+  const raw = Math.floor(charIndex / zoneSize);
+  return Math.min(3, Math.max(0, raw)) as HintLevel;
+}
 
 // ---------------------------------------------------------------------------
 // Styles
@@ -66,20 +75,15 @@ const containerStyle: React.CSSProperties = {
   fontFamily: 'var(--font-family)',
 };
 
-const illustrationContainerStyle: React.CSSProperties = {
-  height: '80px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  position: 'relative',
-  width: '100%',
-};
-
-const illustrationStyle: React.CSSProperties = {
-  fontSize: '48px',
+const barStyle: React.CSSProperties = {
+  fontFamily: 'monospace',
+  fontSize: '18px',
   lineHeight: 1,
-  transition: 'opacity 0.3s ease',
+  color: 'var(--accent-primary)',
+  cursor: 'pointer',
   userSelect: 'none',
+  margin: 0,
+  letterSpacing: '1px',
 };
 
 const descriptionStyle: React.CSSProperties = {
@@ -89,35 +93,6 @@ const descriptionStyle: React.CSSProperties = {
   textAlign: 'center',
   minHeight: '1.4em',
   transition: 'opacity 0.2s ease',
-};
-
-const trackContainerStyle: React.CSSProperties = {
-  position: 'relative',
-  width: '100%',
-  maxWidth: '240px',
-  height: '24px',
-  display: 'flex',
-  alignItems: 'center',
-};
-
-const trackStyle: React.CSSProperties = {
-  position: 'absolute',
-  left: '8px',
-  right: '8px',
-  height: '4px',
-  background: 'var(--border-subtle)',
-  borderRadius: '2px',
-};
-
-const dotsContainerStyle: React.CSSProperties = {
-  position: 'absolute',
-  left: '8px',
-  right: '8px',
-  top: 0,
-  bottom: 0,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
 };
 
 const labelsContainerStyle: React.CSSProperties = {
@@ -146,54 +121,6 @@ const activeLabelStyle: React.CSSProperties = {
 };
 
 // ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function SliderDot({
-  level,
-  isActive,
-  onClick,
-}: {
-  level: HintLevel;
-  isActive: boolean;
-  onClick: () => void;
-}) {
-  const dotStyle: React.CSSProperties = {
-    width: '16px',
-    height: '16px',
-    borderRadius: '50%',
-    background: isActive ? 'var(--accent-primary)' : 'var(--bg-surface)',
-    border: isActive ? '2px solid var(--accent-primary)' : '2px solid var(--border-default)',
-    cursor: 'pointer',
-    transition: 'background 0.3s ease, border-color 0.3s ease, transform 0.2s ease',
-    transform: isActive ? 'scale(1.25)' : 'scale(1)',
-    zIndex: isActive ? 2 : 1,
-    position: 'relative',
-    padding: 0,
-    outline: 'none',
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onClick();
-    }
-  };
-
-  return (
-    <button
-      type="button"
-      style={dotStyle}
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
-      aria-label={`Set hint level to ${LEVELS[level]!.label}`}
-      data-level={level}
-      data-active={isActive}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -207,62 +134,51 @@ export function HintSlider({ level, onChange }: HintSliderProps) {
     [level, onChange]
   );
 
-  const activeConfig = LEVELS[level]!;
+  const handleBarClick = useCallback(
+    (e: React.MouseEvent<HTMLPreElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const charWidth = rect.width / (TOTAL_CHARS + 2); // +2 for brackets
+      const charIndex = Math.floor(x / charWidth) - 1; // -1 for opening bracket
+      if (charIndex < 0 || charIndex >= TOTAL_CHARS) return;
+      const newLevel = charIndexToLevel(charIndex);
+      if (newLevel !== level) {
+        onChange(newLevel);
+      }
+    },
+    [level, onChange]
+  );
 
-  // Indicator bar that slides along the track to show progress
-  const indicatorStyle: React.CSSProperties = {
-    position: 'absolute',
-    left: '8px',
-    height: '4px',
-    background: 'var(--accent-primary)',
-    borderRadius: '2px',
-    width: POSITION_PERCENT[level],
-    transition: 'width 0.3s ease',
-  };
+  const activeConfig = LEVELS[level]!;
+  const bar = buildBar(level);
 
   return (
     <div style={containerStyle} role="group" aria-label="Hint level selector">
-      {/* Illustration area */}
-      <div style={illustrationContainerStyle} aria-hidden="true">
-        <span style={illustrationStyle} data-testid="hint-illustration" key={level}>
-          {activeConfig.emoji}
-        </span>
-      </div>
-
-      {/* Description */}
-      <p style={descriptionStyle} aria-live="polite">
-        {LEVEL_DESCRIPTIONS[level]}
-      </p>
-
-      {/* Slider track */}
-      <div
-        style={trackContainerStyle}
+      {/* ASCII progress bar */}
+      <pre
+        style={barStyle}
+        onClick={handleBarClick}
         role="slider"
         aria-valuemin={0}
         aria-valuemax={3}
         aria-valuenow={level}
         aria-valuetext={`${activeConfig.label} - ${LEVEL_DESCRIPTIONS[level]}`}
         aria-label="Hint level"
-        tabIndex={-1}
+        tabIndex={0}
+        data-testid="hint-bar"
       >
-        {/* Background track */}
-        <div style={trackStyle} />
+        {bar}
+      </pre>
 
-        {/* Active fill indicator */}
-        <div style={indicatorStyle} data-testid="slider-indicator" />
+      {/* Level name */}
+      <p style={{ ...descriptionStyle, fontWeight: 600, color: 'var(--accent-primary)' }}>
+        {activeConfig.label}
+      </p>
 
-        {/* Position dots */}
-        <div style={dotsContainerStyle}>
-          {LEVELS.map(({ value }) => (
-            <SliderDot
-              key={value}
-              level={value}
-              isActive={value === level}
-              onClick={() => handleLevelClick(value)}
-            />
-          ))}
-        </div>
-      </div>
+      {/* Description */}
+      <p style={descriptionStyle} aria-live="polite">
+        {LEVEL_DESCRIPTIONS[level]}
+      </p>
 
       {/* Labels */}
       <div style={labelsContainerStyle}>
@@ -280,6 +196,7 @@ export function HintSlider({ level, onChange }: HintSliderProps) {
               }
             }}
             data-testid={`hint-label-${value}`}
+            data-active={value === level}
           >
             {label}
           </span>

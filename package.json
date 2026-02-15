@@ -45,7 +45,6 @@
     "keyv": "^5.6.0",
     "kysely": "^0.28.11",
     "octokit": "^5.0.5",
-    "playwright": "^1.58.2",
     "ws": "^8.19.0",
     "zod": "^4.3.6"
   },
@@ -64,6 +63,7 @@
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",

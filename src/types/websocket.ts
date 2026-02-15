@@ -288,9 +288,111 @@ export interface TreeCollapseData {
   readonly path: string;
 }
 
+// ── Review / Commit / PR / Git Data ─────────────────────────────────────
+
+export type ReviewScope = 'phase' | 'current_file' | 'open_files' | 'current_task';
+
+export type CodeCommentSeverity = 'suggestion' | 'issue' | 'praise';
+
+export type ConventionalCommitType =
+  | 'fix'
+  | 'feat'
+  | 'docs'
+  | 'style'
+  | 'refactor'
+  | 'test'
+  | 'chore'
+  | 'perf'
+  | 'ci'
+  | 'build';
+
 export interface ReviewRequestData {
-  readonly phaseId: number;
+  readonly scope: ReviewScope;
+  readonly activeFilePath?: string;
+  readonly openFilePaths?: readonly string[];
 }
+
+export interface ReviewCodeComment {
+  readonly filePath: string;
+  readonly startLine: number;
+  readonly endLine: number;
+  readonly comment: string;
+  readonly severity: CodeCommentSeverity;
+}
+
+export interface ReviewTaskFeedback {
+  readonly taskTitle: string;
+  readonly feedback: string;
+  readonly taskComplete: boolean;
+}
+
+export interface ReviewResultData {
+  readonly overallFeedback: string;
+  readonly codeComments: readonly ReviewCodeComment[];
+  readonly taskFeedback?: readonly ReviewTaskFeedback[];
+  readonly phaseComplete?: boolean;
+}
+
+export interface CommitSuggestData {
+  readonly phaseNumber: number;
+}
+
+export interface CommitSuggestionData {
+  readonly type: ConventionalCommitType;
+  readonly subject: string;
+  readonly body: string;
+}
+
+export interface CommitExecuteData {
+  readonly type: ConventionalCommitType;
+  readonly subject: string;
+  readonly body: string;
+}
+
+export interface CommitErrorData {
+  readonly error: string;
+}
+
+export interface PrSuggestData {
+  readonly phaseNumber: number;
+}
+
+export interface PrSuggestionData {
+  readonly title: string;
+  readonly body: string;
+}
+
+export interface PrCreateData {
+  readonly title: string;
+  readonly body: string;
+}
+
+export interface PrCreatedData {
+  readonly prUrl: string;
+  readonly prNumber: number;
+}
+
+export interface PrErrorData {
+  readonly error: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface GitStatusRequestData {}
+
+export interface GitStatusResultData {
+  readonly clean: boolean;
+  readonly modifiedFiles: readonly string[];
+  readonly untrackedFiles: readonly string[];
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface GitSaveAndExitData {}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface GitDiscardAndExitData {}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface GitExitCompleteData {}
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ReposListRequestData {}
@@ -845,6 +947,41 @@ export interface FsRequestTreeMessage {
   readonly data: FsRequestTreeData;
 }
 
+export interface CommitSuggestMessage {
+  readonly type: 'commit:suggest';
+  readonly data: CommitSuggestData;
+}
+
+export interface CommitExecuteMessage {
+  readonly type: 'commit:execute';
+  readonly data: CommitExecuteData;
+}
+
+export interface PrSuggestMessage {
+  readonly type: 'pr:suggest';
+  readonly data: PrSuggestData;
+}
+
+export interface PrCreateMessage {
+  readonly type: 'pr:create';
+  readonly data: PrCreateData;
+}
+
+export interface GitStatusRequestMessage {
+  readonly type: 'git:status';
+  readonly data: GitStatusRequestData;
+}
+
+export interface GitSaveAndExitMessage {
+  readonly type: 'git:save_and_exit';
+  readonly data: GitSaveAndExitData;
+}
+
+export interface GitDiscardAndExitMessage {
+  readonly type: 'git:discard_and_exit';
+  readonly data: GitDiscardAndExitData;
+}
+
 /** Union of all client-to-server message types. */
 export type ClientToServerMessage =
   | ConnectionHelloMessage
@@ -874,6 +1011,13 @@ export type ClientToServerMessage =
   | TreeExpandMessage
   | TreeCollapseMessage
   | ReviewRequestMessage
+  | CommitSuggestMessage
+  | CommitExecuteMessage
+  | PrSuggestMessage
+  | PrCreateMessage
+  | GitStatusRequestMessage
+  | GitSaveAndExitMessage
+  | GitDiscardAndExitMessage
   | ReposListRequestMessage
   | ReposActivityRequestMessage
   | SessionStartRepoMessage
@@ -1107,6 +1251,46 @@ export interface PlanningErrorMessage {
   readonly data: PlanningErrorData;
 }
 
+export interface ReviewResultMessage {
+  readonly type: 'review:result';
+  readonly data: ReviewResultData;
+}
+
+export interface CommitSuggestionMessage {
+  readonly type: 'commit:suggestion';
+  readonly data: CommitSuggestionData;
+}
+
+export interface CommitErrorMessage {
+  readonly type: 'commit:error';
+  readonly data: CommitErrorData;
+}
+
+export interface PrSuggestionMessage {
+  readonly type: 'pr:suggestion';
+  readonly data: PrSuggestionData;
+}
+
+export interface PrCreatedMessage {
+  readonly type: 'pr:created';
+  readonly data: PrCreatedData;
+}
+
+export interface PrErrorMessage {
+  readonly type: 'pr:error';
+  readonly data: PrErrorData;
+}
+
+export interface GitStatusResultMessage {
+  readonly type: 'git:status_result';
+  readonly data: GitStatusResultData;
+}
+
+export interface GitExitCompleteMessage {
+  readonly type: 'git:exit_complete';
+  readonly data: GitExitCompleteData;
+}
+
 /** Union of all server-to-client message types. */
 export type ServerToClientMessage =
   | ConnectionInitMessage
@@ -1153,7 +1337,15 @@ export type ServerToClientMessage =
   | PlanningProgressMessage
   | PlanningPhaseUpdateMessage
   | PlanningCompleteMessage
-  | PlanningErrorMessage;
+  | PlanningErrorMessage
+  | ReviewResultMessage
+  | CommitSuggestionMessage
+  | CommitErrorMessage
+  | PrSuggestionMessage
+  | PrCreatedMessage
+  | PrErrorMessage
+  | GitStatusResultMessage
+  | GitExitCompleteMessage;
 
 // ── Combined Type ───────────────────────────────────────────────────────────
 

@@ -15,6 +15,8 @@ export interface Session {
   ended_at: string | null; // ISO 8601, null if active
   last_activity_at: string; // ISO 8601
   total_duration_ms: number | null; // Pre-computed total session duration
+  branch_name: string | null; // Git branch for this session
+  stash_name: string | null; // Git stash name for save-and-exit
 }
 
 // ── Plan ─────────────────────────────────────────────────────────────────────
@@ -227,6 +229,8 @@ export type ApiCallType =
   | 'practice_review'
   | 'issue_suitability'
   | 'issue_summary'
+  | 'commit_suggest'
+  | 'pr_suggest'
   | 'materials_generation'
   | 'answer_verification';
 

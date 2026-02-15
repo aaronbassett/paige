@@ -1,12 +1,11 @@
 /**
- * IssueContext — Sidebar section displaying the active GitHub issue.
+ * IssueContext -- Sidebar section displaying the active GitHub issue.
  *
  * Shows issue number (clickable link), title (truncated to 2 lines),
- * colored label pills with auto-contrast text, and a toggleable AI summary.
+ * colored label pills with auto-contrast text, and an AI summary.
  * Returns null when issueContext is null (parent handles loading state).
  */
 
-import { useState } from 'react';
 import type { IssueContext } from '@shared/types/entities';
 
 // ---------------------------------------------------------------------------
@@ -84,26 +83,14 @@ const labelsContainerStyle: React.CSSProperties = {
 const labelPillStyle = (color: string): React.CSSProperties => ({
   display: 'inline-flex',
   alignItems: 'center',
-  borderRadius: '10px',
-  padding: '2px 8px',
-  fontSize: 'var(--font-label-size)',
+  borderRadius: '4px',
+  padding: '1px 6px',
+  fontSize: 'calc(var(--font-label-size) - 1px)',
   fontFamily: 'var(--font-family)',
   backgroundColor: color.startsWith('#') ? color : `#${color}`,
   color: getContrastColor(color),
   lineHeight: 1.4,
 });
-
-const summaryToggleStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: 'var(--accent-primary)',
-  fontFamily: 'var(--font-family)',
-  fontSize: 'var(--font-small-size)',
-  cursor: 'pointer',
-  padding: 'var(--space-xs) 0',
-  marginTop: 'var(--space-sm)',
-  display: 'block',
-};
 
 const summaryTextStyle: React.CSSProperties = {
   color: 'var(--text-secondary)',
@@ -118,8 +105,6 @@ const summaryTextStyle: React.CSSProperties = {
 // ---------------------------------------------------------------------------
 
 export function IssueContextDisplay({ issueContext }: IssueContextProps) {
-  const [summaryExpanded, setSummaryExpanded] = useState(false);
-
   if (issueContext === null) {
     return null;
   }
@@ -157,25 +142,11 @@ export function IssueContextDisplay({ issueContext }: IssueContextProps) {
         </div>
       )}
 
-      {/* AI Summary toggle */}
+      {/* AI Summary */}
       {hasSummary && (
-        <>
-          <button
-            type="button"
-            style={summaryToggleStyle}
-            onClick={() => setSummaryExpanded((prev) => !prev)}
-            aria-expanded={summaryExpanded}
-            aria-controls="issue-summary"
-          >
-            {summaryExpanded ? 'Hide summary' : 'Show summary'}
-          </button>
-
-          {summaryExpanded && (
-            <p id="issue-summary" style={summaryTextStyle}>
-              {displaySummary}
-            </p>
-          )}
-        </>
+        <p id="issue-summary" style={summaryTextStyle}>
+          {displaySummary}
+        </p>
       )}
     </section>
   );
