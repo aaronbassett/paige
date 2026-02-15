@@ -19,7 +19,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import type { editor as MonacoEditorNS } from 'monaco-editor';
-import type { AppView } from '@shared/types/entities';
+import type { AppView, IssueContext, Phase } from '@shared/types/entities';
 import { CodeEditor } from '../components/Editor/Editor';
 import { EditorTabs } from '../components/Editor/EditorTabs';
 import { StatusBar } from '../components/Editor/StatusBar';
@@ -259,6 +259,29 @@ export function IDE({ onNavigate: _onNavigate, planningResult }: IDEProps) {
   );
 
   // -------------------------------------------------------------------------
+  // Transform planningResult into sidebar initial state
+  // -------------------------------------------------------------------------
+
+  const initialIssueContext: IssueContext | null = planningResult
+    ? {
+        number: planningResult.issueContext.number,
+        title: planningResult.issueContext.title,
+        url: planningResult.issueContext.url,
+        labels: planningResult.issueContext.labels.map((name) => ({ name, color: '#6b6960' })),
+      }
+    : null;
+
+  const initialPhases: Phase[] | null = planningResult
+    ? planningResult.plan.phases.map((phase) => ({
+        number: phase.number as 1 | 2 | 3 | 4 | 5,
+        title: phase.title,
+        status: phase.status as 'pending' | 'active' | 'complete',
+        summary: phase.description,
+        steps: phase.tasks.map((task) => ({ title: task.title, description: task.description })),
+      }))
+    : null;
+
+  // -------------------------------------------------------------------------
   // Computed widths
   // -------------------------------------------------------------------------
 
@@ -403,7 +426,12 @@ export function IDE({ onNavigate: _onNavigate, planningResult }: IDEProps) {
           </button>
           {!rightCollapsed && <span style={sidebarLabelStyle}>Coaching</span>}
         </div>
-        {!rightCollapsed && <CoachingSidebar />}
+        {!rightCollapsed && (
+          <CoachingSidebar
+            initialIssueContext={initialIssueContext}
+            initialPhases={initialPhases}
+          />
+        )}
       </motion.aside>
 
       {/* Toast container for unanchored coaching messages */}
