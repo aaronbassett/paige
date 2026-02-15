@@ -124,3 +124,18 @@ export async function updateSession(
 
   return session;
 }
+
+/**
+ * Returns issue numbers from all active sessions that have a non-null issue_number.
+ * Used by the dashboard in-progress flow to identify which issues are being worked on.
+ */
+export async function getInProgressIssueNumbers(db: AppDatabase): Promise<number[]> {
+  const rows = await db
+    .selectFrom('sessions')
+    .select('issue_number')
+    .where('status', '=', 'active')
+    .where('issue_number', 'is not', null)
+    .execute();
+
+  return rows.map((row) => row.issue_number as number);
+}
