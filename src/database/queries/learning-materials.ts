@@ -69,7 +69,7 @@ export async function updateLearningMaterialStatus(
 ): Promise<LearningMaterial | undefined> {
   const updates: Record<string, unknown> = { status };
   if (status === 'completed') {
-    updates.completed_at = new Date().toISOString();
+    updates['completed_at'] = new Date().toISOString();
   }
 
   await db
