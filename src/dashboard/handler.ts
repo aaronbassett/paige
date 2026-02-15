@@ -7,6 +7,7 @@ import { logAction } from '../logger/action-log.js';
 import { getActiveSessionId } from '../mcp/session.js';
 import { broadcast } from '../websocket/server.js';
 import { assembleState } from './flows/state.js';
+import { assembleAndStreamInProgress } from './flows/in-progress.js';
 import { assembleAndStreamIssues } from './flows/issues.js';
 import { assembleChallenges } from './flows/challenges.js';
 import { assembleLearningMaterials } from './flows/learning.js';
@@ -15,6 +16,7 @@ import { assembleLearningMaterials } from './flows/learning.js';
 export interface DashboardResult {
   flowsCompleted: {
     state: boolean;
+    in_progress: boolean;
     issues: boolean;
     challenges: boolean;
     learning_materials: boolean;
@@ -43,6 +45,7 @@ export async function handleDashboardRequest(
   const sessionId = getActiveSessionId();
   const flowStatus = {
     state: false,
+    in_progress: false,
     issues: false,
     challenges: false,
     learning_materials: false,
@@ -73,17 +76,31 @@ export async function handleDashboardRequest(
   }
 
   // Flows 2-4: Run concurrently, each broadcasts/streams independently
+  // Flow 2: In-progress items + issues (sequential dependency)
+  // In-progress runs first to get exclusion set, then issues uses it
+  const inProgressAndIssues = (async () => {
+    let excludeNumbers = new Set<number>();
+    try {
+      excludeNumbers = await assembleAndStreamInProgress(owner, repo, connectionId);
+      flowStatus.in_progress = true;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'In-progress flow failed';
+      // eslint-disable-next-line no-console
+      console.error('[dashboard] Flow 2a (in-progress) failed:', message);
+    }
+
+    try {
+      await assembleAndStreamIssues(owner, repo, connectionId, excludeNumbers);
+      flowStatus.issues = true;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Issues flow failed';
+      // eslint-disable-next-line no-console
+      console.error('[dashboard] Flow 2b (issues) failed:', message);
+    }
+  })();
+
   const flowPromises = [
-    // Flow 2: GitHub issues — streamed per-issue to the requesting client
-    assembleAndStreamIssues(owner, repo, connectionId)
-      .then(() => {
-        flowStatus.issues = true;
-      })
-      .catch((err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Issues flow failed';
-        // eslint-disable-next-line no-console
-        console.error('[dashboard] Flow 2 (issues) failed:', message);
-      }),
+    inProgressAndIssues,
 
     // Flow 3: Active challenges
     assembleChallenges()
@@ -135,7 +152,8 @@ export async function handleDashboardRefreshIssues(
   repo: string,
 ): Promise<void> {
   try {
-    await assembleAndStreamIssues(owner, repo, connectionId);
+    const excludeNumbers = await assembleAndStreamInProgress(owner, repo, connectionId);
+    await assembleAndStreamIssues(owner, repo, connectionId, excludeNumbers);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Issues refresh failed';
     // eslint-disable-next-line no-console
