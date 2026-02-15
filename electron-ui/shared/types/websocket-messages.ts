@@ -75,7 +75,10 @@ export type ServerMessageType =
   | 'session:repo_started'
   | 'session:issue_selected'
   | 'dashboard:issue'
-  | 'dashboard:issues_complete';
+  | 'dashboard:issues_complete'
+  // Challenge flow (2)
+  | 'challenge:loaded'
+  | 'challenge:load_error';
 
 /** Client-to-server message type literals (23 types). */
 export type ClientMessageType =
@@ -114,7 +117,9 @@ export type ClientMessageType =
   | 'repos:list'
   | 'repos:activity'
   | 'session:start_repo'
-  | 'session:select_issue';
+  | 'session:select_issue'
+  // Challenge flow (1)
+  | 'challenge:load';
 
 /** All 51 message types (server + client). */
 export type MessageType = ServerMessageType | ClientMessageType;
@@ -655,6 +660,28 @@ export interface DashboardIssuesCompleteMessage extends BaseMessage {
   payload: Record<string, never>;
 }
 
+// -- Challenge flow (2) ------------------------------------------------------
+
+/** Full kata data loaded for challenge view. */
+export interface ChallengeLoadedMessage extends BaseMessage {
+  type: 'challenge:loaded';
+  payload: {
+    kataId: number;
+    title: string;
+    description: string;
+    scaffoldingCode: string;
+    constraints: Array<{ id: string; description: string }>;
+  };
+}
+
+/** Error loading kata for challenge view. */
+export interface ChallengeLoadErrorMessage extends BaseMessage {
+  type: 'challenge:load_error';
+  payload: {
+    error: string;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Client -> Server message interfaces (27)
 // ---------------------------------------------------------------------------
@@ -910,6 +937,16 @@ export interface SessionSelectIssueMessage extends BaseMessage {
   };
 }
 
+// -- Challenge flow (1) ------------------------------------------------------
+
+/** Request full kata data for challenge view. */
+export interface ChallengeLoadMessage extends BaseMessage {
+  type: 'challenge:load';
+  payload: {
+    kataId: number;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Aggregate union types
 // ---------------------------------------------------------------------------
@@ -954,7 +991,9 @@ export type ServerMessage =
   | SessionRepoStartedMessage
   | SessionIssueSelectedMessage
   | DashboardSingleIssueMessage
-  | DashboardIssuesCompleteMessage;
+  | DashboardIssuesCompleteMessage
+  | ChallengeLoadedMessage
+  | ChallengeLoadErrorMessage;
 
 /** Union of all 27 client-to-server messages. */
 export type ClientMessage =
@@ -984,7 +1023,8 @@ export type ClientMessage =
   | ReposListRequestMessage
   | ReposActivityRequestMessage
   | SessionStartRepoMessage
-  | SessionSelectIssueMessage;
+  | SessionSelectIssueMessage
+  | ChallengeLoadMessage;
 
 /** Union of all 61 WebSocket messages. */
 export type WebSocketMessage = ServerMessage | ClientMessage;

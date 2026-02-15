@@ -211,6 +211,22 @@ export interface PracticeViewPreviousAttemptsData {
   readonly kataId: number;
 }
 
+export interface ChallengeLoadData {
+  readonly kataId: number;
+}
+
+export interface ChallengeLoadedData {
+  readonly kataId: number;
+  readonly title: string;
+  readonly description: string;
+  readonly scaffoldingCode: string;
+  readonly constraints: readonly { readonly id: string; readonly description: string }[];
+}
+
+export interface ChallengeLoadErrorData {
+  readonly error: string;
+}
+
 export interface DashboardRequestData {
   readonly statsPeriod: StatsPeriod;
 }
@@ -726,6 +742,11 @@ export interface PracticeViewPreviousAttemptsMessage {
   readonly data: PracticeViewPreviousAttemptsData;
 }
 
+export interface ChallengeLoadMessage {
+  readonly type: 'challenge:load';
+  readonly data: ChallengeLoadData;
+}
+
 export interface DashboardRequestMessage {
   readonly type: 'dashboard:request';
   readonly data: DashboardRequestData;
@@ -815,6 +836,7 @@ export type ClientToServerMessage =
   | PracticeSubmitSolutionMessage
   | PracticeRequestHintMessage
   | PracticeViewPreviousAttemptsMessage
+  | ChallengeLoadMessage
   | DashboardRequestMessage
   | DashboardRefreshIssuesMessage
   | TerminalCommandMessage
@@ -942,6 +964,16 @@ export interface PracticePreviousAttemptsMessage {
   readonly data: PracticePreviousAttemptsData;
 }
 
+export interface ChallengeLoadedMessage {
+  readonly type: 'challenge:loaded';
+  readonly data: ChallengeLoadedData;
+}
+
+export interface ChallengeLoadErrorMessage {
+  readonly type: 'challenge:load_error';
+  readonly data: ChallengeLoadErrorData;
+}
+
 export interface ReviewErrorMessage {
   readonly type: 'review:error';
   readonly data: ReviewErrorData;
@@ -1061,6 +1093,8 @@ export type ServerToClientMessage =
   | PracticeSolutionReviewMessage
   | PracticeHintMessage
   | PracticePreviousAttemptsMessage
+  | ChallengeLoadedMessage
+  | ChallengeLoadErrorMessage
   | ReviewErrorMessage
   | DashboardStateMessage
   | DashboardIssuesMessage

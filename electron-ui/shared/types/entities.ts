@@ -115,7 +115,7 @@ export interface TabState {
 export type HintLevel = 0 | 1 | 2 | 3;
 
 // App view type
-export type AppView = 'dashboard' | 'ide' | 'planning' | 'placeholder' | 'landing';
+export type AppView = 'dashboard' | 'ide' | 'planning' | 'placeholder' | 'landing' | 'challenge';
 
 // Global session state
 export interface SessionState {
