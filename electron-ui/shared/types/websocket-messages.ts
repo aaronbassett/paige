@@ -17,6 +17,7 @@ import type {
   RepoInfo,
   RepoActivityEntry,
   ScoredIssue,
+  LearningMaterial,
 } from './entities';
 
 // ---------------------------------------------------------------------------
@@ -75,7 +76,11 @@ export type ServerMessageType =
   | 'session:repo_started'
   | 'session:issue_selected'
   | 'dashboard:issue'
-  | 'dashboard:issues_complete';
+  | 'dashboard:issues_complete'
+  // Learning materials (3)
+  | 'materials:complete_result'
+  | 'materials:updated'
+  | 'materials:open_url';
 
 /** Client-to-server message type literals (23 types). */
 export type ClientMessageType =
@@ -114,7 +119,11 @@ export type ClientMessageType =
   | 'repos:list'
   | 'repos:activity'
   | 'session:start_repo'
-  | 'session:select_issue';
+  | 'session:select_issue'
+  // Learning materials (3)
+  | 'materials:view'
+  | 'materials:complete'
+  | 'materials:dismiss';
 
 /** All 51 message types (server + client). */
 export type MessageType = ServerMessageType | ClientMessageType;
@@ -325,12 +334,7 @@ export interface DashboardChallengesMessage extends BaseMessage {
 export interface DashboardMaterialsMessage extends BaseMessage {
   type: 'dashboard:materials';
   payload: {
-    materials: Array<{
-      id: string;
-      title: string;
-      type: 'article' | 'video' | 'tutorial';
-      url: string;
-    }>;
+    materials: LearningMaterial[];
   };
 }
 
@@ -655,6 +659,26 @@ export interface DashboardIssuesCompleteMessage extends BaseMessage {
   payload: Record<string, never>;
 }
 
+// -- Learning materials server messages (3) ----------------------------------
+
+/** Result of a materials:complete attempt. */
+export interface MaterialsCompleteResultMessage extends BaseMessage {
+  type: 'materials:complete_result';
+  payload: { id: number; correct: boolean; message?: string };
+}
+
+/** Material updated (view count, status change). */
+export interface MaterialsUpdatedMessage extends BaseMessage {
+  type: 'materials:updated';
+  payload: { id: number; viewCount: number; status: 'pending' | 'completed' | 'dismissed' };
+}
+
+/** Request the renderer to open a URL in the system browser. */
+export interface MaterialsOpenUrlMessage extends BaseMessage {
+  type: 'materials:open_url';
+  payload: { url: string };
+}
+
 // ---------------------------------------------------------------------------
 // Client -> Server message interfaces (27)
 // ---------------------------------------------------------------------------
@@ -910,11 +934,31 @@ export interface SessionSelectIssueMessage extends BaseMessage {
   };
 }
 
+// -- Learning materials client messages (3) ----------------------------------
+
+/** User viewed a learning material (increments view count, opens URL). */
+export interface MaterialsViewMessage extends BaseMessage {
+  type: 'materials:view';
+  payload: { id: number };
+}
+
+/** User submitted an answer to a material's comprehension question. */
+export interface MaterialsCompleteMessage extends BaseMessage {
+  type: 'materials:complete';
+  payload: { id: number; answer: string };
+}
+
+/** User dismissed a learning material. */
+export interface MaterialsDismissMessage extends BaseMessage {
+  type: 'materials:dismiss';
+  payload: { id: number };
+}
+
 // ---------------------------------------------------------------------------
 // Aggregate union types
 // ---------------------------------------------------------------------------
 
-/** Union of all 28 server-to-client messages. */
+/** Union of all server-to-client messages. */
 export type ServerMessage =
   | ConnectionHelloMessage
   | ConnectionInitMessage
@@ -954,9 +998,12 @@ export type ServerMessage =
   | SessionRepoStartedMessage
   | SessionIssueSelectedMessage
   | DashboardSingleIssueMessage
-  | DashboardIssuesCompleteMessage;
+  | DashboardIssuesCompleteMessage
+  | MaterialsCompleteResultMessage
+  | MaterialsUpdatedMessage
+  | MaterialsOpenUrlMessage;
 
-/** Union of all 27 client-to-server messages. */
+/** Union of all client-to-server messages. */
 export type ClientMessage =
   | ConnectionReadyMessage
   | DashboardStatsPeriodMessage
@@ -984,9 +1031,12 @@ export type ClientMessage =
   | ReposListRequestMessage
   | ReposActivityRequestMessage
   | SessionStartRepoMessage
-  | SessionSelectIssueMessage;
+  | SessionSelectIssueMessage
+  | MaterialsViewMessage
+  | MaterialsCompleteMessage
+  | MaterialsDismissMessage;
 
-/** Union of all 61 WebSocket messages. */
+/** Union of all WebSocket messages. */
 export type WebSocketMessage = ServerMessage | ClientMessage;
 
 // ---------------------------------------------------------------------------
@@ -1062,4 +1112,36 @@ export function isEditorDecorationsMessage(msg: WebSocketMessage): msg is Editor
  */
 export function isDashboardIssuesMessage(msg: WebSocketMessage): msg is DashboardIssuesMessage {
   return msg.type === 'dashboard:issues';
+}
+
+/**
+ * Narrow a WebSocketMessage to DashboardMaterialsMessage.
+ */
+export function isDashboardMaterialsMessage(
+  msg: WebSocketMessage
+): msg is DashboardMaterialsMessage {
+  return msg.type === 'dashboard:materials';
+}
+
+/**
+ * Narrow a WebSocketMessage to MaterialsCompleteResultMessage.
+ */
+export function isMaterialsCompleteResultMessage(
+  msg: WebSocketMessage
+): msg is MaterialsCompleteResultMessage {
+  return msg.type === 'materials:complete_result';
+}
+
+/**
+ * Narrow a WebSocketMessage to MaterialsUpdatedMessage.
+ */
+export function isMaterialsUpdatedMessage(msg: WebSocketMessage): msg is MaterialsUpdatedMessage {
+  return msg.type === 'materials:updated';
+}
+
+/**
+ * Narrow a WebSocketMessage to MaterialsOpenUrlMessage.
+ */
+export function isMaterialsOpenUrlMessage(msg: WebSocketMessage): msg is MaterialsOpenUrlMessage {
+  return msg.type === 'materials:open_url';
 }

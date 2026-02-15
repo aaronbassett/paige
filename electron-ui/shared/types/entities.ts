@@ -190,3 +190,17 @@ export interface ScoredIssue {
   htmlUrl: string;
   score: number;
 }
+
+// Learning material recommended by the coaching system
+export interface LearningMaterial {
+  id: number;
+  type: 'youtube' | 'article';
+  url: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string | null;
+  question: string;
+  viewCount: number;
+  status: 'pending' | 'completed' | 'dismissed';
+  createdAt: string;
+}
