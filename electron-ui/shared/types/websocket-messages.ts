@@ -20,6 +20,8 @@ import type {
   ReviewScope,
   ReviewResult,
   ConventionalCommitType,
+  LearningMaterial,
+  InProgressItem,
 } from './entities';
 
 // ---------------------------------------------------------------------------
@@ -39,7 +41,8 @@ export type ServerMessageType =
   // Dashboard data (6)
   | 'dashboard:dreyfus'
   | 'dashboard:stats'
-  | 'dashboard:in_progress'
+  | 'dashboard:in_progress_item'
+  | 'dashboard:in_progress_complete'
   | 'dashboard:issues'
   | 'dashboard:challenges'
   | 'dashboard:materials'
@@ -87,7 +90,14 @@ export type ServerMessageType =
   | 'pr:created'
   | 'pr:error'
   | 'git:status_result'
-  | 'git:exit_complete';
+  | 'git:exit_complete'
+  // Learning materials (3)
+  | 'materials:complete_result'
+  | 'materials:updated'
+  | 'materials:open_url'
+  // Challenge flow (2)
+  | 'challenge:loaded'
+  | 'challenge:load_error';
 
 /** Client-to-server message type literals (23 types). */
 export type ClientMessageType =
@@ -135,7 +145,13 @@ export type ClientMessageType =
   | 'pr:create'
   | 'git:status'
   | 'git:save_and_exit'
-  | 'git:discard_and_exit';
+  | 'git:discard_and_exit'
+  // Learning materials (3)
+  | 'materials:view'
+  | 'materials:complete'
+  | 'materials:dismiss'
+  // Challenge flow (1)
+  | 'challenge:load';
 
 /** All 51 message types (server + client). */
 export type MessageType = ServerMessageType | ClientMessageType;
@@ -303,17 +319,18 @@ export interface DashboardStatsMessage extends BaseMessage {
   };
 }
 
-/** In-progress tasks. */
-export interface DashboardInProgressMessage extends BaseMessage {
-  type: 'dashboard:in_progress';
+/** A single in-progress item streamed from the backend. */
+export interface DashboardInProgressItemMessage extends BaseMessage {
+  type: 'dashboard:in_progress_item';
   payload: {
-    tasks: Array<{
-      id: string;
-      title: string;
-      progress: number;
-      dueDate?: string;
-    }>;
+    item: InProgressItem;
   };
+}
+
+/** Signal that all in-progress items have been streamed. */
+export interface DashboardInProgressCompleteMessage extends BaseMessage {
+  type: 'dashboard:in_progress_complete';
+  payload: Record<string, never>;
 }
 
 /** GitHub issues assigned to user. */
@@ -346,12 +363,7 @@ export interface DashboardChallengesMessage extends BaseMessage {
 export interface DashboardMaterialsMessage extends BaseMessage {
   type: 'dashboard:materials';
   payload: {
-    materials: Array<{
-      id: string;
-      title: string;
-      type: 'article' | 'video' | 'tutorial';
-      url: string;
-    }>;
+    materials: LearningMaterial[];
   };
 }
 
@@ -728,6 +740,48 @@ export interface PrErrorMessage extends BaseMessage {
   };
 }
 
+// -- Learning materials server messages (3) ----------------------------------
+
+/** Result of a materials:complete attempt. */
+export interface MaterialsCompleteResultMessage extends BaseMessage {
+  type: 'materials:complete_result';
+  payload: { id: number; correct: boolean; message?: string };
+}
+
+/** Material updated (view count, status change). */
+export interface MaterialsUpdatedMessage extends BaseMessage {
+  type: 'materials:updated';
+  payload: { id: number; viewCount: number; status: 'pending' | 'completed' | 'dismissed' };
+}
+
+/** Request the renderer to open a URL in the system browser. */
+export interface MaterialsOpenUrlMessage extends BaseMessage {
+  type: 'materials:open_url';
+  payload: { url: string };
+}
+
+// -- Challenge flow (2) ------------------------------------------------------
+
+/** Full kata data loaded for challenge view. */
+export interface ChallengeLoadedMessage extends BaseMessage {
+  type: 'challenge:loaded';
+  payload: {
+    kataId: number;
+    title: string;
+    description: string;
+    scaffoldingCode: string;
+    constraints: Array<{ id: string; description: string }>;
+  };
+}
+
+/** Error loading kata for challenge view. */
+export interface ChallengeLoadErrorMessage extends BaseMessage {
+  type: 'challenge:load_error';
+  payload: {
+    error: string;
+  };
+}
+
 /** Git status result from the backend. */
 export interface GitStatusResultMessage extends BaseMessage {
   type: 'git:status_result';
@@ -1064,6 +1118,36 @@ export interface GitDiscardAndExitMessage extends BaseMessage {
   payload: Record<string, never>;
 }
 
+// -- Learning materials client messages (3) ----------------------------------
+
+/** User viewed a learning material (increments view count, opens URL). */
+export interface MaterialsViewMessage extends BaseMessage {
+  type: 'materials:view';
+  payload: { id: number };
+}
+
+/** User submitted an answer to a material's comprehension question. */
+export interface MaterialsCompleteMessage extends BaseMessage {
+  type: 'materials:complete';
+  payload: { id: number; answer: string };
+}
+
+/** User dismissed a learning material. */
+export interface MaterialsDismissMessage extends BaseMessage {
+  type: 'materials:dismiss';
+  payload: { id: number };
+}
+
+// -- Challenge flow (1) ------------------------------------------------------
+
+/** Request full kata data for challenge view. */
+export interface ChallengeLoadMessage extends BaseMessage {
+  type: 'challenge:load';
+  payload: {
+    kataId: number;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Aggregate union types
 // ---------------------------------------------------------------------------
@@ -1078,7 +1162,8 @@ export type ServerMessage =
   | SessionEndMessage
   | DashboardDreyfusMessage
   | DashboardStatsMessage
-  | DashboardInProgressMessage
+  | DashboardInProgressItemMessage
+  | DashboardInProgressCompleteMessage
   | DashboardIssuesMessage
   | DashboardChallengesMessage
   | DashboardMaterialsMessage
@@ -1116,7 +1201,12 @@ export type ServerMessage =
   | PrCreatedMessage
   | PrErrorMessage
   | GitStatusResultMessage
-  | GitExitCompleteMessage;
+  | GitExitCompleteMessage
+  | MaterialsCompleteResultMessage
+  | MaterialsUpdatedMessage
+  | MaterialsOpenUrlMessage
+  | ChallengeLoadedMessage
+  | ChallengeLoadErrorMessage;
 
 /** Union of all client-to-server messages. */
 export type ClientMessage =
@@ -1154,7 +1244,11 @@ export type ClientMessage =
   | PrCreateMessage
   | GitStatusRequestMessage
   | GitSaveAndExitMessage
-  | GitDiscardAndExitMessage;
+  | GitDiscardAndExitMessage
+  | MaterialsViewMessage
+  | MaterialsCompleteMessage
+  | MaterialsDismissMessage
+  | ChallengeLoadMessage;
 
 /** Union of all WebSocket messages. */
 export type WebSocketMessage = ServerMessage | ClientMessage;
@@ -1232,4 +1326,36 @@ export function isEditorDecorationsMessage(msg: WebSocketMessage): msg is Editor
  */
 export function isDashboardIssuesMessage(msg: WebSocketMessage): msg is DashboardIssuesMessage {
   return msg.type === 'dashboard:issues';
+}
+
+/**
+ * Narrow a WebSocketMessage to DashboardMaterialsMessage.
+ */
+export function isDashboardMaterialsMessage(
+  msg: WebSocketMessage
+): msg is DashboardMaterialsMessage {
+  return msg.type === 'dashboard:materials';
+}
+
+/**
+ * Narrow a WebSocketMessage to MaterialsCompleteResultMessage.
+ */
+export function isMaterialsCompleteResultMessage(
+  msg: WebSocketMessage
+): msg is MaterialsCompleteResultMessage {
+  return msg.type === 'materials:complete_result';
+}
+
+/**
+ * Narrow a WebSocketMessage to MaterialsUpdatedMessage.
+ */
+export function isMaterialsUpdatedMessage(msg: WebSocketMessage): msg is MaterialsUpdatedMessage {
+  return msg.type === 'materials:updated';
+}
+
+/**
+ * Narrow a WebSocketMessage to MaterialsOpenUrlMessage.
+ */
+export function isMaterialsOpenUrlMessage(msg: WebSocketMessage): msg is MaterialsOpenUrlMessage {
+  return msg.type === 'materials:open_url';
 }

@@ -124,6 +124,34 @@ export interface ScoredIssuePayload {
   readonly score: number;
 }
 
+/** PR status for the dashboard. */
+export type PRStatus = 'open' | 'draft';
+
+/** Item type discriminator for the in-progress panel. */
+export type InProgressItemType = 'issue' | 'pr';
+
+/** Unified in-progress item payload (issues + PRs). */
+export interface InProgressItemPayload {
+  readonly type: InProgressItemType;
+  readonly number: number;
+  readonly title: string;
+  readonly labels: readonly ScoredIssueLabel[];
+  readonly author: ScoredIssueAuthor;
+  readonly updatedAt: string;
+  readonly createdAt: string;
+  readonly htmlUrl: string;
+  readonly difficulty?: IssueDifficulty; // issue-specific
+  readonly summary?: string; // issue-specific
+  readonly prStatus?: PRStatus; // PR-specific
+}
+
+export interface DashboardInProgressItemData {
+  readonly item: InProgressItemPayload;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface DashboardInProgressCompleteData {}
+
 // ── Client -> Server Message Data ───────────────────────────────────────────
 
 export interface ConnectionHelloData {
@@ -209,6 +237,22 @@ export interface PracticeRequestHintData {
 
 export interface PracticeViewPreviousAttemptsData {
   readonly kataId: number;
+}
+
+export interface ChallengeLoadData {
+  readonly kataId: number;
+}
+
+export interface ChallengeLoadedData {
+  readonly kataId: number;
+  readonly title: string;
+  readonly description: string;
+  readonly scaffoldingCode: string;
+  readonly constraints: readonly { readonly id: string; readonly description: string }[];
+}
+
+export interface ChallengeLoadErrorData {
+  readonly error: string;
 }
 
 export interface DashboardRequestData {
@@ -828,6 +872,11 @@ export interface PracticeViewPreviousAttemptsMessage {
   readonly data: PracticeViewPreviousAttemptsData;
 }
 
+export interface ChallengeLoadMessage {
+  readonly type: 'challenge:load';
+  readonly data: ChallengeLoadData;
+}
+
 export interface DashboardRequestMessage {
   readonly type: 'dashboard:request';
   readonly data: DashboardRequestData;
@@ -952,6 +1001,7 @@ export type ClientToServerMessage =
   | PracticeSubmitSolutionMessage
   | PracticeRequestHintMessage
   | PracticeViewPreviousAttemptsMessage
+  | ChallengeLoadMessage
   | DashboardRequestMessage
   | DashboardRefreshIssuesMessage
   | TerminalCommandMessage
@@ -1086,6 +1136,16 @@ export interface PracticePreviousAttemptsMessage {
   readonly data: PracticePreviousAttemptsData;
 }
 
+export interface ChallengeLoadedMessage {
+  readonly type: 'challenge:loaded';
+  readonly data: ChallengeLoadedData;
+}
+
+export interface ChallengeLoadErrorMessage {
+  readonly type: 'challenge:load_error';
+  readonly data: ChallengeLoadErrorData;
+}
+
 export interface ReviewErrorMessage {
   readonly type: 'review:error';
   readonly data: ReviewErrorData;
@@ -1154,6 +1214,16 @@ export interface DashboardSingleIssueMessage {
 export interface DashboardIssuesCompleteMessage {
   readonly type: 'dashboard:issues_complete';
   readonly data: DashboardIssuesCompleteData;
+}
+
+export interface DashboardInProgressItemMessage {
+  readonly type: 'dashboard:in_progress_item';
+  readonly data: DashboardInProgressItemData;
+}
+
+export interface DashboardInProgressCompleteMessage {
+  readonly type: 'dashboard:in_progress_complete';
+  readonly data: DashboardInProgressCompleteData;
 }
 
 export interface PlanningStartedMessage {
@@ -1245,6 +1315,8 @@ export type ServerToClientMessage =
   | PracticeSolutionReviewMessage
   | PracticeHintMessage
   | PracticePreviousAttemptsMessage
+  | ChallengeLoadedMessage
+  | ChallengeLoadErrorMessage
   | ReviewErrorMessage
   | DashboardStateMessage
   | DashboardIssuesMessage
@@ -1259,6 +1331,8 @@ export type ServerToClientMessage =
   | SessionIssueSelectedResponseMessage
   | DashboardSingleIssueMessage
   | DashboardIssuesCompleteMessage
+  | DashboardInProgressItemMessage
+  | DashboardInProgressCompleteMessage
   | PlanningStartedMessage
   | PlanningProgressMessage
   | PlanningPhaseUpdateMessage

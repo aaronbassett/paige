@@ -4,7 +4,7 @@ import { type Generated, Kysely, SqliteDialect } from 'kysely';
 import { up as up001 } from '../../../../src/database/migrations/001-initial.js';
 import { up as up002 } from '../../../../src/database/migrations/002-session-auto-timeout.js';
 import { up as up003 } from '../../../../src/database/migrations/003-stats-expansion.js';
-import { up as up004 } from '../../../../src/database/migrations/004-branch-stash.js';
+import { up as up004 } from '../../../../src/database/migrations/005-branch-stash.js';
 
 /** Minimal table shape for migration test queries. */
 interface TestSessionsTable {
@@ -18,7 +18,7 @@ interface TestSessionsTable {
   };
 }
 
-describe('004-branch-stash migration', () => {
+describe('005-branch-stash migration', () => {
   let rawDb: Kysely<unknown>;
   let db: Kysely<TestSessionsTable>;
 

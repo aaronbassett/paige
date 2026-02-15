@@ -12,6 +12,7 @@ import { handleHintsLevelChange } from './handlers/hints.js';
 import { handleUserIdleStart, handleUserIdleEnd, handleUserExplain } from './handlers/user.js';
 import { handleObserverMute } from './handlers/observer.js';
 import { handlePracticeSubmitSolution } from './handlers/practice.js';
+import { handleChallengeLoad } from './handlers/challenge.js';
 import {
   handleDashboardRequestWs,
   handleDashboardRefreshIssuesWs,
@@ -30,6 +31,12 @@ import { handleReviewRequest } from './handlers/review.js';
 import { handleCommitSuggest, handleCommitExecute } from './handlers/commit.js';
 import { handlePrSuggest, handlePrCreate } from './handlers/pr.js';
 import { handleGitStatus, handleGitSaveAndExit, handleGitDiscardAndExit } from './handlers/git.js';
+import {
+  handleMaterialsView,
+  handleMaterialsComplete,
+  handleMaterialsDismiss,
+  handleMaterialsList,
+} from './handlers/materials.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -96,6 +103,7 @@ const handlers = new Map<string, MessageHandler>([
   ['practice:submit_solution', handlePracticeSubmitSolution],
   ['practice:request_hint', notImplementedHandler('practice:request_hint')],
   ['practice:view_previous_attempts', notImplementedHandler('practice:view_previous_attempts')],
+  ['challenge:load', handleChallengeLoad],
   ['dashboard:request', handleDashboardRequestWs],
   ['dashboard:refresh_issues', handleDashboardRefreshIssuesWs],
   ['dashboard:stats_period', handleDashboardStatsPeriodWs],
@@ -118,6 +126,12 @@ const handlers = new Map<string, MessageHandler>([
   ['git:save_and_exit', handleGitSaveAndExit],
   ['git:discard_and_exit', handleGitDiscardAndExit],
   ['fs:request_tree', handleFsRequestTree],
+
+  // Learning materials handlers (Task 8)
+  ['materials:view', handleMaterialsView],
+  ['materials:complete', handleMaterialsComplete],
+  ['materials:dismiss', handleMaterialsDismiss],
+  ['materials:list', handleMaterialsList],
 ]);
 
 // ── Session Resolution Categories ────────────────────────────────────────────
