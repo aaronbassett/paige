@@ -58,6 +58,7 @@ export async function assembleAndStreamIssues(
   owner: string,
   repo: string,
   connectionId: string,
+  excludeIssueNumbers?: Set<number>,
 ): Promise<void> {
   const octokit = getOctokit();
   if (octokit === null) {
@@ -80,7 +81,9 @@ export async function assembleAndStreamIssues(
   });
 
   // Filter out pull requests (GitHub's issues endpoint includes PRs)
-  const issues = (rawIssues as OctokitIssue[]).filter((issue) => issue.pull_request === undefined);
+  const issues = (rawIssues as OctokitIssue[])
+    .filter((issue) => issue.pull_request === undefined)
+    .filter((issue) => !excludeIssueNumbers?.has(issue.number));
 
   if (issues.length === 0) {
     sendToClient(connectionId, {
