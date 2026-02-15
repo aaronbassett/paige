@@ -107,7 +107,7 @@ export async function handleExplainThis(
   const userMessage =
     `Please explain the following code from ${data.path} ` +
     `(lines ${String(data.range.startLine)}-${String(data.range.endLine)}):\n\n` +
-    `\`\`\`\n${data.selectedText}\n\`\`\``;
+    `\`\`\`\n${data.text}\n\`\`\``;
 
   // Call Claude API
   const response = await callApi({

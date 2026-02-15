@@ -230,13 +230,15 @@ export interface CodeEditorProps {
    * FloatingExplainButton) can access the Monaco editor instance.
    */
   editorInstanceRef?: React.MutableRefObject<MonacoEditorNS.IStandaloneCodeEditor | null>;
+  /** Called when the Monaco editor instance is ready. */
+  onEditorReady?: (editor: MonacoEditorNS.IStandaloneCodeEditor) => void;
 }
 
 // ---------------------------------------------------------------------------
 // CodeEditor component
 // ---------------------------------------------------------------------------
 
-export function CodeEditor({ editorInstanceRef }: CodeEditorProps) {
+export function CodeEditor({ editorInstanceRef, onEditorReady }: CodeEditorProps) {
   // Internal ref -- always maintained
   const editorRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
@@ -270,6 +272,9 @@ export function CodeEditor({ editorInstanceRef }: CodeEditorProps) {
         editorInstanceRef.current = editor;
       }
 
+      // Notify parent that the editor is ready
+      onEditorReady?.(editor);
+
       // Track cursor position changes
       editor.onDidChangeCursorPosition((e) => {
         const currentPath = editorState.getActiveTabPath();
@@ -284,7 +289,7 @@ export function CodeEditor({ editorInstanceRef }: CodeEditorProps) {
       // Focus the editor on mount
       editor.focus();
     },
-    [editorInstanceRef]
+    [editorInstanceRef, onEditorReady]
   );
 
   // -------------------------------------------------------------------------

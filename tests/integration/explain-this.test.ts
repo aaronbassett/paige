@@ -66,8 +66,7 @@ function defaultExplainData(): UserExplainData {
   return {
     path: 'src/utils/helpers.ts',
     range: { startLine: 10, endLine: 25 },
-    selectedText:
-      'function debounce(fn: Function, delay: number) {\n  let timer: NodeJS.Timeout;\n  return (...args: unknown[]) => {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn(...args), delay);\n  };\n}',
+    text: 'function debounce(fn: Function, delay: number) {\n  let timer: NodeJS.Timeout;\n  return (...args: unknown[]) => {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn(...args), delay);\n  };\n}',
   };
 }
 
@@ -334,7 +333,7 @@ describe('handleExplainThis (integration)', () => {
     const userMessage = callOptions.userMessage;
 
     // Verify the user message contains the selected code and file path
-    expect(userMessage).toContain(data.selectedText);
+    expect(userMessage).toContain(data.text);
     expect(userMessage).toContain(data.path);
   });
 });

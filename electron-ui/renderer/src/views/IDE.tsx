@@ -154,12 +154,11 @@ export function IDE({ onNavigate, planningResult }: IDEProps) {
     null
   );
 
-  // Sync ref to state after editor mounts. The CodeEditor onMount callback sets
-  // the ref; this effect detects the change and syncs it into React state so
-  // CoachingOverlay can consume it during render.
-  useEffect(() => {
-    setEditorInstance(editorInstanceRef.current);
-  }, [activeTabPath]);
+  // Callback from CodeEditor when Monaco is ready — syncs into React state
+  // so FloatingExplainButton and CoachingOverlay can consume it during render.
+  const handleEditorReady = useCallback((editor: MonacoEditorNS.IStandaloneCodeEditor) => {
+    setEditorInstance(editor);
+  }, []);
 
   // Wire file operations (Cmd+S, Cmd+W, WebSocket flows)
   useFileOperations();
@@ -347,10 +346,10 @@ export function IDE({ onNavigate, planningResult }: IDEProps) {
         >
           <EditorTabs />
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>
-            <CodeEditor editorInstanceRef={editorInstanceRef} />
+            <CodeEditor editorInstanceRef={editorInstanceRef} onEditorReady={handleEditorReady} />
             {activeTabPath !== undefined && (
               <FloatingExplainButton
-                editorRef={editorInstanceRef}
+                editor={editorInstance}
                 path={activeTabPath}
                 onExplain={handleExplain}
               />
