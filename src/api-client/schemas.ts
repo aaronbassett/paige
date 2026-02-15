@@ -165,3 +165,28 @@ export const issueSuitabilitySchema = z.object({
   ),
 });
 export type IssueSuitabilityResponse = z.infer<typeof issueSuitabilitySchema>;
+
+// ── Learning Material Generation (Sonnet) ───────────────────────────────────
+// Generates curated learning resources (videos, articles) for identified knowledge gaps.
+
+export const learningMaterialGenerationSchema = z.object({
+  materials: z.array(
+    z.object({
+      type: z.enum(['youtube', 'article']),
+      url: z.string().url(),
+      title: z.string(),
+      description: z.string(),
+      question: z.string(),
+    }),
+  ),
+});
+export type LearningMaterialGenerationResponse = z.infer<typeof learningMaterialGenerationSchema>;
+
+// ── Answer Verification (Sonnet) ────────────────────────────────────────────
+// Verifies developer answers to learning material comprehension questions.
+
+export const answerVerificationSchema = z.object({
+  correct: z.boolean(),
+  feedback: z.string(),
+});
+export type AnswerVerificationResponse = z.infer<typeof answerVerificationSchema>;

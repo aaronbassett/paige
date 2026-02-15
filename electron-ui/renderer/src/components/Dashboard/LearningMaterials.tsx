@@ -1,46 +1,36 @@
 /**
  * LearningMaterials -- Dashboard section showing recommended learning
- * materials (articles, videos, tutorials).
+ * materials (articles, videos).
  *
- * Each material card displays a monospace type badge (DOC / VID / TUT)
- * and a title. Clicking a card calls onMaterialClick to navigate to
- * a placeholder view.
+ * Each material renders as a MaterialCard with thumbnail, type badge,
+ * title, description, view count, and action buttons (view, complete, dismiss).
+ *
+ * Clicking "complete" opens a CompletionModal where the learner answers
+ * a comprehension question. The answer is validated server-side and
+ * feedback is shown via coaching toasts.
  *
  * States:
- *   - Loading (materials === null): 2 pulsing skeleton placeholders
- *   - Empty (materials is []): "No materials available" message
- *   - Ready: scrollable list of material cards with hover effect
+ *   - Loading (materials === null): "Loading..." text
+ *   - Empty (no pending materials): encouragement to complete phases
+ *   - Ready: animated list of pending MaterialCards
  */
+
+import { useState, useEffect, useCallback } from 'react';
+import { AnimatePresence, LayoutGroup } from 'framer-motion';
+import type { LearningMaterial } from '@shared/types/entities';
+import type { WebSocketMessage } from '@shared/types/websocket-messages';
+import { MaterialCard } from './materials/MaterialCard';
+import { CompletionModal } from './materials/CompletionModal';
+import { showCoachingToast } from '../Hints/EditorToast';
+import { useWebSocket } from '../../hooks/useWebSocket';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 interface LearningMaterialsProps {
-  materials: Array<{
-    id: string;
-    title: string;
-    type: 'article' | 'video' | 'tutorial';
-    url: string;
-  }> | null;
-  onMaterialClick: () => void;
+  materials: LearningMaterial[] | null;
 }
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const SKELETON_COUNT = 2;
-
-/** Badge text and color for each material type. */
-const TYPE_BADGE_CONFIG: Record<
-  'article' | 'video' | 'tutorial',
-  { label: string; color: string }
-> = {
-  article: { label: 'DOC', color: 'var(--status-info)' },
-  video: { label: 'VID', color: 'var(--accent-primary)' },
-  tutorial: { label: 'TUT', color: 'var(--status-success)' },
-};
 
 // ---------------------------------------------------------------------------
 // Styles
@@ -55,131 +45,168 @@ const containerStyle: React.CSSProperties = {
   minHeight: 0,
 };
 
+const headerStyle: React.CSSProperties = {
+  fontSize: 'var(--text-sm)',
+  fontWeight: 700,
+  color: 'var(--text-primary)',
+  marginBottom: 'var(--space-sm)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+};
+
 const listStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 'var(--space-sm)',
-};
-
-const cardStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--space-sm)',
-  padding: 'var(--space-sm) var(--space-md)',
-  borderRadius: '6px',
-  border: '1px solid var(--border-subtle)',
-  cursor: 'pointer',
-  transition: 'background 0.15s ease',
-};
-
-const badgeStyle = (color: string): React.CSSProperties => ({
-  display: 'inline-flex',
-  alignItems: 'center',
-  borderRadius: '4px',
-  padding: '2px 6px',
-  fontSize: 'var(--font-small-size)',
-  fontWeight: 600,
-  fontFamily: 'var(--font-family), monospace',
-  color,
-  border: `1px solid ${color}`,
-  background: 'transparent',
-  flexShrink: 0,
-  lineHeight: 1.4,
-});
-
-const titleStyle: React.CSSProperties = {
-  color: 'var(--text-primary)',
-  fontFamily: 'var(--font-family)',
-  fontSize: 'var(--font-body-size)',
-  margin: 0,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
+  gap: 'var(--space-xs)',
+  overflowY: 'auto',
   flex: 1,
-  minWidth: 0,
-};
-
-const skeletonCardStyle: React.CSSProperties = {
-  ...cardStyle,
-  cursor: 'default',
-  height: '40px',
-  background: 'var(--bg-elevated)',
-  animation: 'breathe 2s ease-in-out infinite',
 };
 
 const emptyStyle: React.CSSProperties = {
   color: 'var(--text-muted)',
-  fontFamily: 'var(--font-family)',
-  fontSize: 'var(--font-body-size)',
+  fontSize: 'var(--text-sm)',
   textAlign: 'center',
-  padding: 'var(--space-md)',
+  padding: 'var(--space-lg)',
 };
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function LearningMaterials({ materials, onMaterialClick }: LearningMaterialsProps) {
+export function LearningMaterials({ materials }: LearningMaterialsProps) {
+  const { send, on } = useWebSocket();
+  const [localMaterials, setLocalMaterials] = useState<LearningMaterial[]>(materials ?? []);
+  const [modalMaterial, setModalMaterial] = useState<LearningMaterial | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Sync from parent prop
+  useEffect(() => {
+    if (materials) setLocalMaterials(materials);
+  }, [materials]);
+
+  // Listen for server responses
+  useEffect(() => {
+    const unsubs = [
+      on('materials:updated', (msg: WebSocketMessage) => {
+        const { id, viewCount, status } = msg.payload as {
+          id: number;
+          viewCount: number;
+          status: string;
+        };
+        setLocalMaterials((prev) =>
+          status === 'pending'
+            ? prev.map((m) =>
+                m.id === id ? { ...m, viewCount, status: status as LearningMaterial['status'] } : m
+              )
+            : prev.filter((m) => m.id !== id)
+        );
+      }),
+      on('materials:complete_result', (msg: WebSocketMessage) => {
+        const { id, correct, message } = msg.payload as {
+          id: number;
+          correct: boolean;
+          message?: string;
+        };
+        setSubmitting(false);
+        if (correct) {
+          setModalMaterial(null);
+          showCoachingToast({
+            messageId: `material-complete-${id}`,
+            message: 'Nice work! Material marked as complete.',
+            type: 'success',
+          });
+        } else {
+          setModalMaterial(null);
+          showCoachingToast({
+            messageId: `material-retry-${id}`,
+            message: message ?? 'Not quite \u2014 give the material another read and try again.',
+            type: 'warning',
+          });
+        }
+      }),
+      on('materials:open_url', (msg: WebSocketMessage) => {
+        const { url } = msg.payload as { url: string };
+        window.open(url, '_blank');
+      }),
+    ];
+
+    return () => unsubs.forEach((u) => u());
+  }, [on]);
+
+  const handleView = useCallback(
+    (id: number) => {
+      void send('materials:view', { id });
+    },
+    [send]
+  );
+
+  const handleComplete = useCallback(
+    (id: number) => {
+      const material = localMaterials.find((m) => m.id === id);
+      if (material) setModalMaterial(material);
+    },
+    [localMaterials]
+  );
+
+  const handleDismiss = useCallback(
+    (id: number) => {
+      void send('materials:dismiss', { id });
+    },
+    [send]
+  );
+
+  const handleSubmitAnswer = useCallback(
+    (id: number, answer: string) => {
+      setSubmitting(true);
+      void send('materials:complete', { id, answer });
+    },
+    [send]
+  );
+
+  // Loading state
+  if (materials === null) {
+    return (
+      <div style={containerStyle}>
+        <div style={headerStyle}>Learning Materials</div>
+        <div style={emptyStyle}>Loading...</div>
+      </div>
+    );
+  }
+
+  const pendingMaterials = localMaterials.filter((m) => m.status === 'pending');
+
   return (
-    <section style={containerStyle} aria-label="Learning materials">
-      <pre className="figlet-header" style={{ fontSize: '18px' }}>
-        MATERIALS
-      </pre>
+    <div style={containerStyle}>
+      <div style={headerStyle}>Learning Materials</div>
 
-      {/* Loading state: skeleton placeholders */}
-      {materials === null && (
-        <div style={listStyle} role="status" aria-label="Loading materials">
-          {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-            <div
-              key={i}
-              style={{ ...skeletonCardStyle, animationDelay: `${i * 150}ms` }}
-              aria-hidden="true"
-            />
-          ))}
-        </div>
+      {pendingMaterials.length === 0 ? (
+        <div style={emptyStyle}>Complete coaching phases to unlock learning materials</div>
+      ) : (
+        <LayoutGroup>
+          <div style={listStyle}>
+            <AnimatePresence mode="popLayout">
+              {pendingMaterials.map((material) => (
+                <MaterialCard
+                  key={material.id}
+                  material={material}
+                  onView={handleView}
+                  onComplete={handleComplete}
+                  onDismiss={handleDismiss}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        </LayoutGroup>
       )}
 
-      {/* Empty state */}
-      {materials !== null && materials.length === 0 && (
-        <p style={emptyStyle}>No materials available</p>
+      {modalMaterial && (
+        <CompletionModal
+          material={modalMaterial}
+          onSubmit={handleSubmitAnswer}
+          onClose={() => setModalMaterial(null)}
+          submitting={submitting}
+        />
       )}
-
-      {/* Populated state */}
-      {materials !== null && materials.length > 0 && (
-        <div style={listStyle}>
-          {materials.map((material) => {
-            const config = TYPE_BADGE_CONFIG[material.type];
-
-            return (
-              <div
-                key={material.id}
-                style={cardStyle}
-                onClick={() => onMaterialClick()}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-elevated)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background = '';
-                }}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onMaterialClick();
-                  }
-                }}
-                aria-label={`${config.label}: ${material.title}`}
-              >
-                <span style={badgeStyle(config.color)}>{config.label}</span>
-                <p style={titleStyle} title={material.title}>
-                  {material.title}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
+    </div>
   );
 }

@@ -6,6 +6,7 @@ import type { DatabaseTables } from '../types/domain.js';
 import * as migration001 from './migrations/001-initial.js';
 import * as migration002 from './migrations/002-session-auto-timeout.js';
 import * as migration003 from './migrations/003-stats-expansion.js';
+import * as migration004 from './migrations/004-learning-materials.js';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -29,6 +30,7 @@ class InlineMigrationProvider implements MigrationProvider {
       '001-initial': migration001,
       '002-session-auto-timeout': migration002,
       '003-stats-expansion': migration003,
+      '004-learning-materials': migration004,
     });
   }
 }

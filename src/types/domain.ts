@@ -138,6 +138,27 @@ export interface KataSpec {
   created_at: string; // ISO 8601
 }
 
+// ── Learning Material ────────────────────────────────────────────────────────
+
+export type LearningMaterialType = 'youtube' | 'article';
+export type LearningMaterialStatus = 'pending' | 'completed' | 'dismissed';
+
+export interface LearningMaterial {
+  id: number;
+  session_id: number;
+  phase_id: number | null;
+  type: LearningMaterialType;
+  url: string;
+  title: string;
+  description: string;
+  thumbnail_url: string | null;
+  question: string;
+  status: LearningMaterialStatus;
+  view_count: number;
+  created_at: string;
+  completed_at: string | null;
+}
+
 // ── Action Log ───────────────────────────────────────────────────────────────
 
 export type ActionType =
@@ -176,6 +197,12 @@ export type ActionType =
   | 'practice_solution_reviewed'
   // Dashboard Actions
   | 'dashboard_loaded'
+  // Learning Materials
+  | 'learning_material_generated'
+  | 'learning_material_viewed'
+  | 'learning_material_completed'
+  | 'learning_material_dismissed'
+  | 'learning_material_answer_checked'
   // Session Lifecycle
   | 'session_started'
   | 'session_ended';
@@ -199,7 +226,9 @@ export type ApiCallType =
   | 'explain_this'
   | 'practice_review'
   | 'issue_suitability'
-  | 'issue_summary';
+  | 'issue_summary'
+  | 'materials_generation'
+  | 'answer_verification';
 
 export interface ApiCallLogEntry {
   id: number;
@@ -265,4 +294,5 @@ export interface DatabaseTables {
   session_wrap_up_errors: SessionWrapUpError;
   hint_level_spans: HintLevelSpan;
   issue_labels: IssueLabel;
+  learning_materials: LearningMaterial;
 }

@@ -12,11 +12,10 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import type { AppView } from '@shared/types/entities';
+import type { AppView, LearningMaterial } from '@shared/types/entities';
 import type {
   DashboardDreyfusMessage,
   DashboardChallengesMessage,
-  DashboardMaterialsMessage,
   WebSocketMessage,
 } from '@shared/types/websocket-messages';
 import type { DashboardStatsPayload, StatsPeriod } from '../components/Dashboard/stats/types';
@@ -58,9 +57,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const [challenges, setChallenges] = useState<
     DashboardChallengesMessage['payload']['challenges'] | null
   >(null);
-  const [materials, setMaterials] = useState<
-    DashboardMaterialsMessage['payload']['materials'] | null
-  >(null);
+  const [materials, setMaterials] = useState<LearningMaterial[] | null>(null);
 
   // Subscribe to dashboard WebSocket messages (issues removed)
   useEffect(() => {
@@ -78,8 +75,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         setChallenges(m.payload.challenges);
       }),
       on('dashboard:materials', (msg: WebSocketMessage) => {
-        const m = msg as DashboardMaterialsMessage;
-        setMaterials(m.payload.materials);
+        const payload = msg.payload as { materials: LearningMaterial[] };
+        setMaterials(payload.materials);
       }),
     ];
 
@@ -100,10 +97,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     },
     [send]
   );
-
-  const handlePlaceholderNav = useCallback(() => {
-    onNavigate('placeholder');
-  }, [onNavigate]);
 
   const handleChallengeClick = useCallback(
     (challengeId: string) => {
@@ -142,7 +135,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* Row 3: GitHub Issues (62%) + Learning Materials (38%) */}
       <div style={{ ...gridRowStyle, gridTemplateColumns: '62fr 38fr', flex: 1, marginBottom: 0 }}>
         <GitHubIssues onNavigate={onNavigate} />
-        <LearningMaterials materials={materials} onMaterialClick={handlePlaceholderNav} />
+        <LearningMaterials materials={materials} />
       </div>
     </main>
   );

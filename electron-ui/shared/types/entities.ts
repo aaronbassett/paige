@@ -190,9 +190,9 @@ export interface InProgressItem {
   updatedAt: string;
   createdAt: string;
   htmlUrl: string;
-  difficulty?: IssueDifficulty;  // issue-specific
-  summary?: string;              // issue-specific
-  prStatus?: PRStatus;           // PR-specific
+  difficulty?: IssueDifficulty; // issue-specific
+  summary?: string; // issue-specific
+  prStatus?: PRStatus; // PR-specific
 }
 
 // Fully scored issue for the dashboard
@@ -210,4 +210,18 @@ export interface ScoredIssue {
   createdAt: string;
   htmlUrl: string;
   score: number;
+}
+
+// Learning material recommended by the coaching system
+export interface LearningMaterial {
+  id: number;
+  type: 'youtube' | 'article';
+  url: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string | null;
+  question: string;
+  viewCount: number;
+  status: 'pending' | 'completed' | 'dismissed';
+  createdAt: string;
 }

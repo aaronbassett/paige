@@ -7,6 +7,8 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { broadcast } from '../../websocket/server.js';
 import { readFile } from '../../file-system/file-ops.js';
 import { loadEnv } from '../../config/env.js';
+import { getActiveSessionId } from '../session.js';
+import { generateLearningMaterials } from '../../coaching/generate-materials.js';
 
 /** Registers UI control tools on the MCP server. */
 export function registerUiTools(server: McpServer): void {
@@ -151,6 +153,20 @@ export function registerUiTools(server: McpServer): void {
           },
         },
       } as never);
+
+      // Fire-and-forget: generate learning materials when a phase completes
+      if (status === 'complete') {
+        const sessionId = getActiveSessionId();
+        if (sessionId !== null) {
+          void generateLearningMaterials({
+            phaseNumber: phase,
+            sessionId,
+          }).catch((err: unknown) => {
+            // eslint-disable-next-line no-console
+            console.error('[paige_update_phase] Failed to generate learning materials:', err);
+          });
+        }
+      }
 
       return {
         content: [{ type: 'text' as const, text: JSON.stringify({ success: true }) }],

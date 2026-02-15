@@ -140,9 +140,9 @@ export interface InProgressItemPayload {
   readonly updatedAt: string;
   readonly createdAt: string;
   readonly htmlUrl: string;
-  readonly difficulty?: IssueDifficulty;  // issue-specific
-  readonly summary?: string;              // issue-specific
-  readonly prStatus?: PRStatus;           // PR-specific
+  readonly difficulty?: IssueDifficulty; // issue-specific
+  readonly summary?: string; // issue-specific
+  readonly prStatus?: PRStatus; // PR-specific
 }
 
 export interface DashboardInProgressItemData {
