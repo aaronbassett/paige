@@ -9,7 +9,6 @@
  * Mocks:
  *   - framer-motion: motion.div as plain div, AnimatePresence as pass-through
  *   - useWebSocket: captures `on` handlers so tests can simulate server messages
- *   - HintIllustration: avoids SVG asset loading in tests
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -42,16 +41,6 @@ vi.mock('framer-motion', () => ({
     }) => <div {...rest}>{children}</div>,
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-// ---------------------------------------------------------------------------
-// Mock HintIllustration (avoids SVG asset loading via import.meta.url)
-// ---------------------------------------------------------------------------
-
-vi.mock('../../renderer/src/components/Sidebar/HintIllustration', () => ({
-  HintIllustration: ({ level }: { level: number }) => (
-    <div data-testid="hint-illustration">Level {level}</div>
-  ),
 }));
 
 // ---------------------------------------------------------------------------
@@ -264,9 +253,8 @@ describe('Coaching sidebar workflow integration', () => {
     const slider = screen.getByRole('slider');
     expect(slider).toHaveAttribute('aria-valuenow', '3');
 
-    // Verify the active dot at level 3
-    const dot3 = screen.getByLabelText('Set hint level to Heavy');
-    expect(dot3).toHaveAttribute('data-active', 'true');
+    // Verify the Heavy label is marked active
+    expect(heavyLabel).toHaveAttribute('data-active', 'true');
   });
 
   // -------------------------------------------------------------------------

@@ -18,6 +18,8 @@ export interface UpdateSessionInput {
   last_activity_at?: string;
   issue_number?: number | null;
   issue_title?: string | null;
+  branch_name?: string | null;
+  stash_name?: string | null;
 }
 
 // ── Queries ─────────────────────────────────────────────────────────────────
@@ -94,6 +96,12 @@ export async function updateSession(
   }
   if (input.issue_title !== undefined) {
     updates['issue_title'] = input.issue_title;
+  }
+  if (input.branch_name !== undefined) {
+    updates['branch_name'] = input.branch_name;
+  }
+  if (input.stash_name !== undefined) {
+    updates['stash_name'] = input.stash_name;
   }
 
   // Guard: nothing to update

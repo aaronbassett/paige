@@ -516,7 +516,7 @@ describe('T522: Animation performance (visual validation)', () => {
     //
     // Validated by:
     // - PhaseStepper uses CSS @keyframes "pulse" animation
-    // - HintIllustration uses CSS @keyframes "fadeIn" animation
+    // - HintSlider uses CSS transitions for smooth level changes
     // - Skeleton loading uses CSS @keyframes "breathe" animation
     // - All use will-change or transform properties for GPU acceleration
     const cssAnimations = ['pulse', 'fadeIn', 'breathe'];

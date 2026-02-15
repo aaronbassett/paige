@@ -137,6 +137,42 @@ export interface ReviewComment {
   type: CoachingMessageType;
 }
 
+// Review workflow types
+export type ReviewScope = 'phase' | 'current_file' | 'open_files' | 'current_task';
+export type CodeCommentSeverity = 'suggestion' | 'issue' | 'praise';
+export type ConventionalCommitType =
+  | 'fix'
+  | 'feat'
+  | 'docs'
+  | 'style'
+  | 'refactor'
+  | 'test'
+  | 'chore'
+  | 'perf'
+  | 'ci'
+  | 'build';
+
+export interface ReviewCodeComment {
+  filePath: string;
+  startLine: number;
+  endLine: number;
+  comment: string;
+  severity: CodeCommentSeverity;
+}
+
+export interface ReviewTaskFeedback {
+  taskTitle: string;
+  feedback: string;
+  taskComplete: boolean;
+}
+
+export interface ReviewResult {
+  overallFeedback: string;
+  codeComments: ReviewCodeComment[];
+  taskFeedback?: ReviewTaskFeedback[];
+  phaseComplete?: boolean;
+}
+
 // Issue difficulty levels
 export type IssueDifficulty = 'low' | 'medium' | 'high' | 'very_high' | 'extreme';
 

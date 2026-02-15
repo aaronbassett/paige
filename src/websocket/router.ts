@@ -26,6 +26,10 @@ import {
   handleTerminalResize,
   handleTerminalInput,
 } from './handlers/terminal.js';
+import { handleReviewRequest } from './handlers/review.js';
+import { handleCommitSuggest, handleCommitExecute } from './handlers/commit.js';
+import { handlePrSuggest, handlePrCreate } from './handlers/pr.js';
+import { handleGitStatus, handleGitSaveAndExit, handleGitDiscardAndExit } from './handlers/git.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -105,7 +109,14 @@ const handlers = new Map<string, MessageHandler>([
   ['terminal:command', notImplementedHandler('terminal:command')],
   ['tree:expand', notImplementedHandler('tree:expand')],
   ['tree:collapse', notImplementedHandler('tree:collapse')],
-  ['review:request', notImplementedHandler('review:request')],
+  ['review:request', handleReviewRequest],
+  ['commit:suggest', handleCommitSuggest],
+  ['commit:execute', handleCommitExecute],
+  ['pr:suggest', handlePrSuggest],
+  ['pr:create', handlePrCreate],
+  ['git:status', handleGitStatus],
+  ['git:save_and_exit', handleGitSaveAndExit],
+  ['git:discard_and_exit', handleGitDiscardAndExit],
   ['fs:request_tree', handleFsRequestTree],
 ]);
 

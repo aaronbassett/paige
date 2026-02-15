@@ -2,7 +2,7 @@
  * Unit tests for the IssueContextDisplay component.
  *
  * Covers rendering of issue number link, title truncation, label pills
- * with auto-contrast colors, AI summary toggle, and null-state handling.
+ * with auto-contrast colors, AI summary display, and null-state handling.
  */
 
 import { render, screen } from '@testing-library/react';
@@ -163,78 +163,35 @@ describe('IssueContextDisplay', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Summary toggle
+  // Summary (always visible)
   // -------------------------------------------------------------------------
 
-  describe('summary toggle', () => {
-    it('shows toggle button when summary is present', () => {
+  describe('summary', () => {
+    it('shows summary when summary is present', () => {
       const issue = makeIssueContext();
       render(<IssueContextDisplay issueContext={issue} />);
 
-      const toggleButton = screen.getByRole('button', { name: /show summary/i });
-      expect(toggleButton).toBeInTheDocument();
+      expect(screen.getByText(/OAuth callback/)).toBeInTheDocument();
     });
 
-    it('does not show toggle button when summary is absent', () => {
+    it('does not show summary when summary is absent', () => {
       const issue = makeIssueContext({ summary: undefined });
       render(<IssueContextDisplay issueContext={issue} />);
 
-      expect(screen.queryByRole('button', { name: /summary/i })).not.toBeInTheDocument();
+      expect(screen.queryByText(/OAuth callback/)).not.toBeInTheDocument();
     });
 
-    it('does not show toggle button when summary is empty string', () => {
+    it('does not show summary when summary is empty string', () => {
       const issue = makeIssueContext({ summary: '' });
       render(<IssueContextDisplay issueContext={issue} />);
 
-      expect(screen.queryByRole('button', { name: /summary/i })).not.toBeInTheDocument();
-    });
-
-    it('toggles summary visibility on button click', async () => {
-      const issue = makeIssueContext();
-      const user = userEvent.setup();
-      render(<IssueContextDisplay issueContext={issue} />);
-
-      // Initially summary is hidden
       expect(screen.queryByText(/OAuth callback/)).not.toBeInTheDocument();
-
-      // Click to show
-      const toggleButton = screen.getByRole('button', { name: /show summary/i });
-      await user.click(toggleButton);
-
-      // Summary should now be visible
-      expect(screen.getByText(/OAuth callback/)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /hide summary/i })).toBeInTheDocument();
-
-      // Click to hide
-      await user.click(screen.getByRole('button', { name: /hide summary/i }));
-
-      // Summary should be hidden again
-      expect(screen.queryByText(/OAuth callback/)).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /show summary/i })).toBeInTheDocument();
     });
 
-    it('sets aria-expanded correctly', async () => {
-      const issue = makeIssueContext();
-      const user = userEvent.setup();
-      render(<IssueContextDisplay issueContext={issue} />);
-
-      const toggleButton = screen.getByRole('button', { name: /show summary/i });
-      expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
-
-      await user.click(toggleButton);
-      expect(screen.getByRole('button', { name: /hide summary/i })).toHaveAttribute(
-        'aria-expanded',
-        'true'
-      );
-    });
-
-    it('truncates summary at 250 characters with ellipsis', async () => {
+    it('truncates summary at 250 characters with ellipsis', () => {
       const longSummary = 'A'.repeat(300);
       const issue = makeIssueContext({ summary: longSummary });
-      const user = userEvent.setup();
       render(<IssueContextDisplay issueContext={issue} />);
-
-      await user.click(screen.getByRole('button', { name: /show summary/i }));
 
       const summaryEl = screen.getByText(/A+\u2026/);
       expect(summaryEl).toBeInTheDocument();
@@ -242,13 +199,10 @@ describe('IssueContextDisplay', () => {
       expect(summaryEl.textContent!.length).toBe(251);
     });
 
-    it('does not truncate summary at or under 250 characters', async () => {
+    it('does not truncate summary at or under 250 characters', () => {
       const shortSummary = 'B'.repeat(250);
       const issue = makeIssueContext({ summary: shortSummary });
-      const user = userEvent.setup();
       render(<IssueContextDisplay issueContext={issue} />);
-
-      await user.click(screen.getByRole('button', { name: /show summary/i }));
 
       const summaryEl = screen.getByText('B'.repeat(250));
       expect(summaryEl).toBeInTheDocument();
