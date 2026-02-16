@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type {
   ChallengeLoadedMessage,
   ChallengeLoadErrorMessage,
@@ -39,6 +39,13 @@ export function ChallengeView({ kataId, onBack }: ChallengeViewProps) {
     'loading'
   );
   const [editorValue, setEditorValue] = useState('');
+
+  // Refs so the WS handler always reads the latest values without
+  // needing functional updaters (which React strict mode double-invokes).
+  const activeConstraintsRef = useRef(activeConstraints);
+  activeConstraintsRef.current = activeConstraints;
+  const roundRef = useRef(round);
+  roundRef.current = round;
 
   // Load kata on mount
   useEffect(() => {
@@ -86,59 +93,49 @@ export function ChallengeView({ kataId, onBack }: ChallengeViewProps) {
         constraintsUnlocked: string[];
       };
 
-      if (data.passed) {
-        // Use functional state updates to read current values
-        setActiveConstraints((prevConstraints) => {
-          const nextConstraintIndex = prevConstraints.length;
-
-          setRound((prevRound) => {
-            // Access kata via closure — it's stable once set
-            if (!kata) return prevRound;
-
-            if (prevRound >= MAX_ROUNDS || nextConstraintIndex >= kata.constraints.length) {
-              // Challenge complete
-              setMessages((prev) => [
-                ...prev,
-                { role: 'ai', content: data.review, type: 'review' as const },
-                {
-                  role: 'ai',
-                  content: 'Challenge complete! Great work progressing through all the rounds.',
-                  type: 'review' as const,
-                },
-              ]);
-              setStatus('complete');
-              return prevRound;
-            }
-
-            // Next round: add next constraint
-            const nextConstraint = kata.constraints[nextConstraintIndex];
-
-            setMessages((prev) => [
-              ...prev,
-              { role: 'ai', content: data.review, type: 'review' as const },
-              {
-                role: 'ai',
-                content: `Nice work! Now try it again with this added constraint:\n\n> ${nextConstraint.description}`,
-                type: 'challenge' as const,
-              },
-            ]);
-            setEditorValue(kata.scaffoldingCode);
-            setStatus('idle');
-
-            return prevRound + 1;
-          });
-
-          // Return updated constraints for next round
-          if (!kata) return prevConstraints;
-          const nextIndex = prevConstraints.length;
-          if (nextIndex >= kata.constraints.length) return prevConstraints;
-          return [...prevConstraints, kata.constraints[nextIndex].id];
-        });
-      } else {
-        // Failed — keep same round, re-enable editor with their code
+      if (!data.passed) {
         setMessages((prev) => [...prev, { role: 'ai', content: data.review, type: 'review' }]);
         setStatus('idle');
+        return;
       }
+
+      if (!kata) return;
+
+      const currentConstraints = activeConstraintsRef.current;
+      const currentRound = roundRef.current;
+      const nextConstraintIndex = currentConstraints.length;
+
+      if (currentRound >= MAX_ROUNDS || nextConstraintIndex >= kata.constraints.length) {
+        // Challenge complete
+        setMessages((prev) => [
+          ...prev,
+          { role: 'ai', content: data.review, type: 'review' as const },
+          {
+            role: 'ai',
+            content: 'Challenge complete! Great work progressing through all the rounds.',
+            type: 'review' as const,
+          },
+        ]);
+        setStatus('complete');
+        return;
+      }
+
+      // Next round: add the next constraint
+      const nextConstraint = kata.constraints[nextConstraintIndex];
+
+      setMessages((prev) => [
+        ...prev,
+        { role: 'ai', content: data.review, type: 'review' as const },
+        {
+          role: 'ai',
+          content: `Nice work! Now try it again with this added constraint:\n\n> ${nextConstraint.description}`,
+          type: 'challenge' as const,
+        },
+      ]);
+      setActiveConstraints([...currentConstraints, nextConstraint.id]);
+      setRound(currentRound + 1);
+      setEditorValue(kata.scaffoldingCode);
+      setStatus('idle');
     });
 
     const unsubError = on('review:error', (msg: WebSocketMessage) => {
