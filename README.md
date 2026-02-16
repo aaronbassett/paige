@@ -47,6 +47,9 @@ When you take away AI's ability to just do the work, it has to do something hard
 
 ## Quick Start
 
+> [!WARNING]
+> **Heads up:** Paige uses your authenticated GitHub account to discover public repos with open issues for coaching. We recommend testing with a dedicated test repo rather than your production repositories.
+
 ```bash
 # 1. Clone and setup (one-time)
 git clone https://github.com/aaronbassett/paige.git
@@ -55,6 +58,7 @@ cd paige
 
 # 2. Add your Anthropic API key to .env
 echo "ANTHROPIC_API_KEY=sk-ant-your-key-here" >> .env
+echo "GITHUB_TOKEN=ghp_xxxxxx" >> .env
 
 # 3. Start everything
 overmind start
