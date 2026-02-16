@@ -34,6 +34,8 @@ interface PaigeMenuAPI {
 
 interface PaigeAPI {
   readonly platform: NodeJS.Platform;
+  /** Open a URL in the host OS default browser. */
+  openExternal: (url: string) => void;
   terminal: PaigeTerminalAPI;
   menu: PaigeMenuAPI;
 }

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from 'electron';
+import { app, BrowserWindow, Menu, shell, ipcMain } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { setupLogging, getLogger } from './logger.js';
@@ -141,6 +141,13 @@ function buildAppMenu(): void {
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
+
+// IPC: open a URL in the host OS default browser
+ipcMain.on('shell:openExternal', (_event, url: string) => {
+  if (typeof url === 'string' && (url.startsWith('https://') || url.startsWith('http://'))) {
+    void shell.openExternal(url);
+  }
+});
 
 void app.whenReady().then(async () => {
   await setupLogging();

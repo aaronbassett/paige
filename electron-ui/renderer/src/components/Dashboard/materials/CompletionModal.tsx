@@ -23,6 +23,7 @@ interface CompletionModalProps {
   onSubmit: (id: number, answer: string) => void;
   onClose: () => void;
   submitting?: boolean;
+  feedback?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -119,6 +120,7 @@ export function CompletionModal({
   onSubmit,
   onClose,
   submitting = false,
+  feedback = null,
 }: CompletionModalProps) {
   const [answer, setAnswer] = useState('');
 
@@ -182,6 +184,23 @@ export function CompletionModal({
               placeholder="Type your answer here..."
               disabled={submitting}
             />
+            {feedback && (
+              <p
+                style={{
+                  margin: 0,
+                  padding: 'var(--space-sm)',
+                  background: 'rgba(224, 82, 82, 0.1)',
+                  border: '1px solid rgba(224, 82, 82, 0.3)',
+                  borderRadius: '6px',
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--text-sm)',
+                  lineHeight: 1.5,
+                }}
+                role="alert"
+              >
+                {feedback}
+              </p>
+            )}
           </div>
 
           <div style={footerStyle}>

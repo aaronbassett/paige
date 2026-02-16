@@ -2,11 +2,16 @@
  * MaterialCard -- Individual learning material card for the dashboard.
  *
  * Displays a thumbnail (or placeholder), type badge (VID / DOC), title,
- * description, view count, and action buttons (view, complete, dismiss).
+ * description, view count, and action buttons (complete, dismiss).
  *
- * Uses framer-motion for layout animations and enter/exit transitions.
+ * Thumbnail, title, and description link to the resource URL and open in the
+ * host OS default browser via `window.paige.openExternal`.
+ *
+ * Completed materials show a trophy instead of the graduation cap and are
+ * rendered with reduced opacity.
  */
 
+import { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { LearningMaterial } from '@shared/types/entities';
 
@@ -52,6 +57,7 @@ const thumbnailStyle: React.CSSProperties = {
   objectFit: 'cover',
   background: 'var(--bg-surface)',
   flexShrink: 0,
+  cursor: 'pointer',
 };
 
 const contentStyle: React.CSSProperties = {
@@ -75,6 +81,7 @@ const titleStyle: React.CSSProperties = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
+  cursor: 'pointer',
 };
 
 const descriptionStyle: React.CSSProperties = {
@@ -83,6 +90,7 @@ const descriptionStyle: React.CSSProperties = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
+  cursor: 'pointer',
 };
 
 const viewCountStyle: React.CSSProperties = {
@@ -110,12 +118,17 @@ const iconBtnStyle: React.CSSProperties = {
 };
 
 const placeholderThumbStyle: React.CSSProperties = {
-  ...thumbnailStyle,
+  width: 80,
+  height: 45,
+  borderRadius: '4px',
+  background: 'var(--bg-surface)',
+  flexShrink: 0,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   fontSize: '20px',
   color: 'var(--text-muted)',
+  cursor: 'pointer',
 };
 
 const badgeStyle: React.CSSProperties = {
@@ -133,25 +146,37 @@ const badgeStyle: React.CSSProperties = {
 
 export function MaterialCard({ material, onView, onComplete, onDismiss }: MaterialCardProps) {
   const badge = TYPE_BADGE[material.type];
+  const isCompleted = material.status === 'completed';
 
   const viewCountText =
     material.viewCount > 0
       ? `Viewed ${material.viewCount} time${material.viewCount !== 1 ? 's' : ''}`
       : 'Not yet viewed';
 
+  const openLink = useCallback(() => {
+    onView(material.id);
+    window.paige.openExternal(material.url);
+  }, [material.id, material.url, onView]);
+
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={{ opacity: isCompleted ? 0.45 : 1, y: 0 }}
       exit={{ opacity: 0, x: -20, height: 0, marginBottom: 0 }}
       transition={{ duration: 0.2 }}
       style={cardStyle}
     >
       {material.thumbnailUrl ? (
-        <img src={material.thumbnailUrl} alt={material.title} style={thumbnailStyle} />
+        <img
+          src={material.thumbnailUrl}
+          alt={material.title}
+          style={thumbnailStyle}
+          onClick={openLink}
+          role="link"
+        />
       ) : (
-        <div style={placeholderThumbStyle} aria-hidden="true">
+        <div style={placeholderThumbStyle} aria-hidden="true" onClick={openLink} role="link">
           {material.type === 'youtube' ? '\u25B6' : '\u2759'}
         </div>
       )}
@@ -159,37 +184,46 @@ export function MaterialCard({ material, onView, onComplete, onDismiss }: Materi
       <div style={contentStyle}>
         <div style={titleRowStyle}>
           <span style={{ ...badgeStyle, background: badge.color }}>{badge.label}</span>
-          <span style={titleStyle}>{material.title}</span>
+          <span style={titleStyle} onClick={openLink} role="link">
+            {material.title}
+          </span>
         </div>
-        <span style={descriptionStyle}>{material.description}</span>
+        <span style={descriptionStyle} onClick={openLink} role="link">
+          {material.description}
+        </span>
         <span style={viewCountStyle}>{viewCountText}</span>
       </div>
 
       <div style={actionsStyle}>
-        <button
-          style={iconBtnStyle}
-          onClick={() => onView(material.id)}
-          aria-label="View material"
-          title="Open in browser"
-        >
-          &#x2197;
-        </button>
-        <button
-          style={{ ...iconBtnStyle, color: 'var(--status-success)' }}
-          onClick={() => onComplete(material.id)}
-          aria-label="Complete material"
-          title="Mark as complete"
-        >
-          &#x2713;
-        </button>
-        <button
-          style={{ ...iconBtnStyle, color: 'var(--status-error, #d97757)' }}
-          onClick={() => onDismiss(material.id)}
-          aria-label="Dismiss material"
-          title="Dismiss"
-        >
-          &#x2715;
-        </button>
+        {!isCompleted && (
+          <button
+            style={iconBtnStyle}
+            onClick={() => onComplete(material.id)}
+            aria-label="Complete material"
+            title="Mark as complete"
+          >
+            {'\uD83C\uDF93'}
+          </button>
+        )}
+        {isCompleted && (
+          <span
+            style={{ ...iconBtnStyle, cursor: 'default', border: 'none' }}
+            aria-label="Completed"
+            title="Completed"
+          >
+            {'\uD83C\uDFC6'}
+          </span>
+        )}
+        {!isCompleted && (
+          <button
+            style={{ ...iconBtnStyle, color: 'var(--status-error, #d97757)' }}
+            onClick={() => onDismiss(material.id)}
+            aria-label="Dismiss material"
+            title="Dismiss"
+          >
+            &#x2715;
+          </button>
+        )}
       </div>
     </motion.div>
   );

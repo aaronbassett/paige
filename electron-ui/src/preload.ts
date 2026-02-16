@@ -4,6 +4,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 interface PaigeAPI {
   /** The operating system platform (e.g. 'darwin', 'linux', 'win32') */
   readonly platform: NodeJS.Platform;
+  /** Open a URL in the host OS default browser. */
+  openExternal: (url: string) => void;
   /** Terminal IPC bridge for xterm.js integration */
   terminal: {
     /** Spawn a new PTY with the given working directory. */
@@ -28,6 +30,9 @@ interface PaigeAPI {
 
 const api: PaigeAPI = {
   platform: process.platform,
+  openExternal: (url: string) => {
+    ipcRenderer.send('shell:openExternal', url);
+  },
   terminal: {
     spawn: (cwd?: string) => {
       ipcRenderer.send('terminal:spawn', cwd);
