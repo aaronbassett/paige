@@ -27,7 +27,7 @@ const DEMO_CHALLENGES: Array<{
   difficulty: 'easy' | 'medium' | 'hard';
   estimatedMinutes: number;
   scaffolding: string;
-  constraints: string[];
+  constraints: Array<{ id: string; description: string; minLevel: number }>;
 }> = [
   {
     title: 'Array Deduplication',
@@ -37,9 +37,17 @@ const DEMO_CHALLENGES: Array<{
     estimatedMinutes: 10,
     scaffolding: 'export function deduplicate<T>(items: T[]): T[] {\n  // your code here\n}',
     constraints: [
-      'Preserve original order of first occurrence',
-      'Handle objects by reference equality',
-      'Do not use Set',
+      {
+        id: 'preserve-order',
+        description: 'Preserve original order of first occurrence',
+        minLevel: 3,
+      },
+      {
+        id: 'reference-equality',
+        description: 'Handle objects by reference equality',
+        minLevel: 5,
+      },
+      { id: 'no-set', description: 'Do not use Set', minLevel: 7 },
     ],
   },
   {
@@ -68,9 +76,17 @@ const DEMO_CHALLENGES: Array<{
       '}',
     ].join('\n'),
     constraints: [
-      'Generic type parameter for event map',
-      'Must support multiple listeners per event',
-      'emit must enforce correct payload types',
+      { id: 'generic-event-map', description: 'Generic type parameter for event map', minLevel: 3 },
+      {
+        id: 'multiple-listeners',
+        description: 'Must support multiple listeners per event',
+        minLevel: 5,
+      },
+      {
+        id: 'enforce-payload-types',
+        description: 'emit must enforce correct payload types',
+        minLevel: 7,
+      },
     ],
   },
 ];

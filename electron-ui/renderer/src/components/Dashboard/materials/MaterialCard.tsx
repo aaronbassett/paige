@@ -105,13 +105,13 @@ const actionsStyle: React.CSSProperties = {
 };
 
 const iconBtnStyle: React.CSSProperties = {
-  background: 'none',
+  background: 'rgba(255, 255, 255, 0.06)',
   border: '1px solid var(--border-subtle)',
-  borderRadius: '4px',
-  padding: '4px 6px',
+  borderRadius: '6px',
+  padding: '6px 8px',
   cursor: 'pointer',
   color: 'var(--text-muted)',
-  fontSize: '12px',
+  fontSize: '15px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -221,7 +221,7 @@ export function MaterialCard({ material, onView, onComplete, onDismiss }: Materi
             aria-label="Dismiss material"
             title="Dismiss"
           >
-            &#x2715;
+            {'\uD83D\uDDD1\uFE0F'}
           </button>
         )}
       </div>
