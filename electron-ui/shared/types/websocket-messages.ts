@@ -82,7 +82,8 @@ export type ServerMessageType =
   | 'session:issue_selected'
   | 'dashboard:issue'
   | 'dashboard:issues_complete'
-  // Review & commit workflow (8)
+  // Review & commit workflow (9)
+  | 'review:progress'
   | 'review:result'
   | 'commit:suggestion'
   | 'commit:error'
@@ -688,7 +689,17 @@ export interface DashboardIssuesCompleteMessage extends BaseMessage {
   payload: Record<string, never>;
 }
 
-// -- Review & commit workflow — server messages (8) --------------------------
+// -- Review & commit workflow — server messages (9) --------------------------
+
+/** Review agent progress event (tool use). */
+export interface ReviewProgressMessage extends BaseMessage {
+  type: 'review:progress';
+  payload: {
+    message: string;
+    toolName?: string;
+    filePath?: string;
+  };
+}
 
 /** Code review result from the backend. */
 export interface ReviewResultMessage extends BaseMessage {
@@ -823,11 +834,11 @@ export interface DashboardStatsPeriodMessage extends BaseMessage {
   };
 }
 
-/** Resume an in-progress task. */
+/** Resume an in-progress task by restoring its session from the database. */
 export interface DashboardResumeTaskMessage extends BaseMessage {
   type: 'dashboard:resume_task';
   payload: {
-    taskId: string;
+    issueNumber: number;
   };
 }
 
@@ -1194,6 +1205,7 @@ export type ServerMessage =
   | SessionIssueSelectedMessage
   | DashboardSingleIssueMessage
   | DashboardIssuesCompleteMessage
+  | ReviewProgressMessage
   | ReviewResultMessage
   | CommitSuggestionMessage
   | CommitErrorMessage

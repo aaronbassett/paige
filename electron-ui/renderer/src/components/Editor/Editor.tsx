@@ -230,13 +230,15 @@ export interface CodeEditorProps {
    * FloatingExplainButton) can access the Monaco editor instance.
    */
   editorInstanceRef?: React.MutableRefObject<MonacoEditorNS.IStandaloneCodeEditor | null>;
+  /** Called when the Monaco editor instance is ready. */
+  onEditorReady?: (editor: MonacoEditorNS.IStandaloneCodeEditor) => void;
 }
 
 // ---------------------------------------------------------------------------
 // CodeEditor component
 // ---------------------------------------------------------------------------
 
-export function CodeEditor({ editorInstanceRef }: CodeEditorProps) {
+export function CodeEditor({ editorInstanceRef, onEditorReady }: CodeEditorProps) {
   // Internal ref -- always maintained
   const editorRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
@@ -270,6 +272,31 @@ export function CodeEditor({ editorInstanceRef }: CodeEditorProps) {
         editorInstanceRef.current = editor;
       }
 
+      // Notify parent that the editor is ready
+      onEditorReady?.(editor);
+
+      // Override Monaco's default no-op Cmd+S / Cmd+W with custom actions
+      // that dispatch events useFileOperations can handle. Without this,
+      // Monaco consumes the keystroke (preventDefault + stopPropagation)
+      // and the window-level keydown listener never fires.
+      editor.addAction({
+        id: 'paige-save',
+        label: 'Save',
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+        run: () => {
+          window.dispatchEvent(new Event('paige:save'));
+        },
+      });
+
+      editor.addAction({
+        id: 'paige-close-tab',
+        label: 'Close Tab',
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyW],
+        run: () => {
+          window.dispatchEvent(new Event('paige:close-tab'));
+        },
+      });
+
       // Track cursor position changes
       editor.onDidChangeCursorPosition((e) => {
         const currentPath = editorState.getActiveTabPath();
@@ -284,7 +311,7 @@ export function CodeEditor({ editorInstanceRef }: CodeEditorProps) {
       // Focus the editor on mount
       editor.focus();
     },
-    [editorInstanceRef]
+    [editorInstanceRef, onEditorReady]
   );
 
   // -------------------------------------------------------------------------

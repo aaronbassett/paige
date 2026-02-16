@@ -3,19 +3,21 @@
  * materials (articles, videos).
  *
  * Each material renders as a MaterialCard with thumbnail, type badge,
- * title, description, view count, and action buttons (view, complete, dismiss).
+ * title, description, view count, and action buttons (complete, dismiss).
  *
- * Clicking "complete" opens a CompletionModal where the learner answers
- * a comprehension question. The answer is validated server-side and
- * feedback is shown via coaching toasts.
+ * Clicking the graduation cap opens a CompletionModal where the learner
+ * answers a comprehension question. The answer is validated server-side.
+ *
+ * Completed materials stay in the list with a trophy badge, faded out,
+ * and sorted to the bottom.
  *
  * States:
  *   - Loading (materials === null): "Loading..." text
- *   - Empty (no pending materials): encouragement to complete phases
- *   - Ready: animated list of pending MaterialCards
+ *   - Empty (no materials at all): encouragement to complete phases
+ *   - Ready: animated list of MaterialCards
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence, LayoutGroup } from 'framer-motion';
 import type { LearningMaterial } from '@shared/types/entities';
 import type { WebSocketMessage } from '@shared/types/websocket-messages';
@@ -78,6 +80,7 @@ export function LearningMaterials({ materials }: LearningMaterialsProps) {
   const [localMaterials, setLocalMaterials] = useState<LearningMaterial[]>(materials ?? []);
   const [modalMaterial, setModalMaterial] = useState<LearningMaterial | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   // Sync from parent prop
   useEffect(() => {
@@ -94,11 +97,11 @@ export function LearningMaterials({ materials }: LearningMaterialsProps) {
           status: string;
         };
         setLocalMaterials((prev) =>
-          status === 'pending'
-            ? prev.map((m) =>
+          status === 'dismissed'
+            ? prev.filter((m) => m.id !== id)
+            : prev.map((m) =>
                 m.id === id ? { ...m, viewCount, status: status as LearningMaterial['status'] } : m
               )
-            : prev.filter((m) => m.id !== id)
         );
       }),
       on('materials:complete_result', (msg: WebSocketMessage) => {
@@ -109,24 +112,24 @@ export function LearningMaterials({ materials }: LearningMaterialsProps) {
         };
         setSubmitting(false);
         if (correct) {
+          setFeedback(null);
           setModalMaterial(null);
+          // Mark as completed locally instead of removing
+          setLocalMaterials((prev) =>
+            prev.map((m) => (m.id === id ? { ...m, status: 'completed' as const } : m))
+          );
           showCoachingToast({
             messageId: `material-complete-${id}`,
             message: 'Nice work! Material marked as complete.',
             type: 'success',
           });
         } else {
-          setModalMaterial(null);
-          showCoachingToast({
-            messageId: `material-retry-${id}`,
-            message: message ?? 'Not quite \u2014 give the material another read and try again.',
-            type: 'warning',
-          });
+          setFeedback(message ?? 'Not quite \u2014 give the material another read and try again.');
         }
       }),
       on('materials:open_url', (msg: WebSocketMessage) => {
         const { url } = msg.payload as { url: string };
-        window.open(url, '_blank');
+        window.paige.openExternal(url);
       }),
     ];
 
@@ -143,7 +146,10 @@ export function LearningMaterials({ materials }: LearningMaterialsProps) {
   const handleComplete = useCallback(
     (id: number) => {
       const material = localMaterials.find((m) => m.id === id);
-      if (material) setModalMaterial(material);
+      if (material) {
+        setFeedback(null);
+        setModalMaterial(material);
+      }
     },
     [localMaterials]
   );
@@ -163,6 +169,14 @@ export function LearningMaterials({ materials }: LearningMaterialsProps) {
     [send]
   );
 
+  // Sort: pending first, completed at the bottom
+  const sortedMaterials = useMemo(() => {
+    const visible = localMaterials.filter((m) => m.status !== 'dismissed');
+    const pending = visible.filter((m) => m.status === 'pending');
+    const completed = visible.filter((m) => m.status === 'completed');
+    return [...pending, ...completed];
+  }, [localMaterials]);
+
   // Loading state
   if (materials === null) {
     return (
@@ -173,19 +187,17 @@ export function LearningMaterials({ materials }: LearningMaterialsProps) {
     );
   }
 
-  const pendingMaterials = localMaterials.filter((m) => m.status === 'pending');
-
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>Learning Materials</div>
 
-      {pendingMaterials.length === 0 ? (
+      {sortedMaterials.length === 0 ? (
         <div style={emptyStyle}>Complete coaching phases to unlock learning materials</div>
       ) : (
         <LayoutGroup>
           <div style={listStyle}>
             <AnimatePresence mode="popLayout">
-              {pendingMaterials.map((material) => (
+              {sortedMaterials.map((material) => (
                 <MaterialCard
                   key={material.id}
                   material={material}
@@ -203,8 +215,12 @@ export function LearningMaterials({ materials }: LearningMaterialsProps) {
         <CompletionModal
           material={modalMaterial}
           onSubmit={handleSubmitAnswer}
-          onClose={() => setModalMaterial(null)}
+          onClose={() => {
+            setFeedback(null);
+            setModalMaterial(null);
+          }}
           submitting={submitting}
+          feedback={feedback}
         />
       )}
     </div>

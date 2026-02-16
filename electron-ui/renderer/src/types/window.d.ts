@@ -24,9 +24,20 @@ interface PaigeTerminalAPI {
   onExit: (callback: (info: { code: number; signal?: number }) => void) => void;
 }
 
+interface PaigeMenuAPI {
+  /** Subscribe to Cmd+S (Save) routed from the application menu. Returns cleanup function. */
+  onSave: (callback: () => void) => () => void;
+
+  /** Subscribe to Cmd+W (Close Tab) routed from the application menu. Returns cleanup function. */
+  onCloseTab: (callback: () => void) => () => void;
+}
+
 interface PaigeAPI {
   readonly platform: NodeJS.Platform;
+  /** Open a URL in the host OS default browser. */
+  openExternal: (url: string) => void;
   terminal: PaigeTerminalAPI;
+  menu: PaigeMenuAPI;
 }
 
 interface Window {

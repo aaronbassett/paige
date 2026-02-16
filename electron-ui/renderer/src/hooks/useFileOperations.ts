@@ -255,9 +255,36 @@ export function useFileOperations(): UseFileOperationsReturn {
 
   // -------------------------------------------------------------------------
   // Keyboard shortcuts: Cmd+S (save), Cmd+W (close)
+  //
+  // Three paths exist for these shortcuts:
+  //   1. Monaco keybinding — CodeEditor registers Cmd+S / Cmd+W actions
+  //      that dispatch 'paige:save' / 'paige:close-tab' custom events.
+  //      This is the primary path when the editor is focused, because
+  //      Monaco consumes keystrokes (stopPropagation) before they reach
+  //      window-level listeners.
+  //   2. Electron menu IPC — the custom application menu intercepts Cmd+S /
+  //      Cmd+W at the main-process level and forwards them via IPC. This
+  //      fires in Electron mode regardless of where focus is.
+  //   3. DOM keydown — fallback for non-editor contexts (e.g. file tree
+  //      focused) in non-Electron environments.
   // -------------------------------------------------------------------------
 
   useEffect(() => {
+    // Path 1: Monaco custom events (editor focused)
+    const handlePaigeSave = () => saveActiveFile();
+    const handlePaigeCloseTab = () => closeActiveTab();
+    window.addEventListener('paige:save', handlePaigeSave);
+    window.addEventListener('paige:close-tab', handlePaigeCloseTab);
+
+    // Path 2: Electron menu IPC
+    let cleanupSave: (() => void) | undefined;
+    let cleanupCloseTab: (() => void) | undefined;
+    if (window.paige?.menu) {
+      cleanupSave = window.paige.menu.onSave(() => saveActiveFile());
+      cleanupCloseTab = window.paige.menu.onCloseTab(() => closeActiveTab());
+    }
+
+    // Path 3: DOM keydown fallback (non-editor focus, non-Electron)
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMod = e.metaKey || e.ctrlKey;
 
@@ -272,6 +299,10 @@ export function useFileOperations(): UseFileOperationsReturn {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
+      window.removeEventListener('paige:save', handlePaigeSave);
+      window.removeEventListener('paige:close-tab', handlePaigeCloseTab);
+      cleanupSave?.();
+      cleanupCloseTab?.();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [saveActiveFile, closeActiveTab]);

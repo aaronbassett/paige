@@ -218,7 +218,7 @@ export interface UserIdleEndData {
 export interface UserExplainData {
   readonly path: string;
   readonly range: LineRange;
-  readonly selectedText: string;
+  readonly text: string;
 }
 
 export interface ObserverMuteData {
@@ -261,6 +261,10 @@ export interface DashboardRequestData {
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface DashboardRefreshIssuesData {}
+
+export interface DashboardResumeTaskData {
+  readonly issueNumber: number;
+}
 
 export interface TerminalCommandData {
   readonly command: string;
@@ -604,6 +608,7 @@ export interface ObserverNudgeData {
 }
 
 export interface ExplainResponseData {
+  readonly title: string;
   readonly explanation: string;
   readonly phaseConnection?: string | undefined;
 }
@@ -634,6 +639,12 @@ export interface PracticeAttempt {
 
 export interface PracticePreviousAttemptsData {
   readonly attempts: readonly PracticeAttempt[];
+}
+
+export interface ReviewProgressData {
+  readonly message: string;
+  readonly toolName?: string | undefined;
+  readonly filePath?: string | undefined;
 }
 
 export interface ReviewErrorData {
@@ -887,6 +898,11 @@ export interface DashboardRefreshIssuesMessage {
   readonly data: DashboardRefreshIssuesData;
 }
 
+export interface DashboardResumeTaskMessage {
+  readonly type: 'dashboard:resume_task';
+  readonly data: DashboardResumeTaskData;
+}
+
 export interface TerminalCommandMessage {
   readonly type: 'terminal:command';
   readonly data: TerminalCommandData;
@@ -1004,6 +1020,7 @@ export type ClientToServerMessage =
   | ChallengeLoadMessage
   | DashboardRequestMessage
   | DashboardRefreshIssuesMessage
+  | DashboardResumeTaskMessage
   | TerminalCommandMessage
   | TerminalReadyMessage
   | TerminalResizeMessage
@@ -1144,6 +1161,11 @@ export interface ChallengeLoadedMessage {
 export interface ChallengeLoadErrorMessage {
   readonly type: 'challenge:load_error';
   readonly data: ChallengeLoadErrorData;
+}
+
+export interface ReviewProgressMessage {
+  readonly type: 'review:progress';
+  readonly data: ReviewProgressData;
 }
 
 export interface ReviewErrorMessage {
@@ -1339,6 +1361,7 @@ export type ServerToClientMessage =
   | PlanningCompleteMessage
   | PlanningErrorMessage
   | ReviewResultMessage
+  | ReviewProgressMessage
   | CommitSuggestionMessage
   | CommitErrorMessage
   | PrSuggestionMessage

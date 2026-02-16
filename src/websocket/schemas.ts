@@ -88,7 +88,7 @@ const userIdleEndDataSchema = z.object({
 const userExplainDataSchema = z.object({
   path: z.string(),
   range: lineRangeSchema,
-  selectedText: z.string(),
+  text: z.string(),
 });
 
 const observerMuteDataSchema = z.object({
@@ -146,7 +146,9 @@ const treeCollapseDataSchema = z.object({
 });
 
 const reviewRequestDataSchema = z.object({
-  phaseId: z.number(),
+  scope: z.enum(['phase', 'current_file', 'open_files', 'current_task']),
+  activeFilePath: z.string().optional(),
+  openFilePaths: z.array(z.string()).optional(),
 });
 
 const reposListRequestDataSchema = z.object({});

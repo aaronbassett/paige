@@ -127,6 +127,7 @@ export type TriageResponse = z.infer<typeof triageSchema>;
 // Dreyfus-aware code explanation for selected code.
 
 export const explainThisSchema = z.object({
+  title: z.string(),
   explanation: z.string(),
   phaseConnection: z.string().optional(),
 });

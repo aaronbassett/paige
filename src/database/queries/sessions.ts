@@ -147,3 +147,20 @@ export async function getInProgressIssueNumbers(db: AppDatabase): Promise<number
 
   return rows.map((row) => row.issue_number as number);
 }
+
+/**
+ * Finds the most recent active session for the given issue number.
+ * Used by the resume task flow to restore a previously planned session.
+ */
+export async function getSessionByIssueNumber(
+  db: AppDatabase,
+  issueNumber: number,
+): Promise<Session | undefined> {
+  return db
+    .selectFrom('sessions')
+    .selectAll()
+    .where('issue_number', '=', issueNumber)
+    .where('status', '=', 'active')
+    .orderBy('last_activity_at', 'desc')
+    .executeTakeFirst() as Promise<Session | undefined>;
+}

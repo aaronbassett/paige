@@ -69,6 +69,7 @@ export function handleUserExplain(_ws: WsWebSocket, data: unknown, _connectionId
       broadcast({
         type: 'explain:response',
         data: {
+          title: result.title,
           explanation: result.explanation,
           phaseConnection: result.phaseConnection ?? undefined,
         },

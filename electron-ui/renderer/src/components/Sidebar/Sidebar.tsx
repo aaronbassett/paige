@@ -3,9 +3,9 @@
  * sub-components and manages session state via WebSocket.
  *
  * Fills its parent container (height set by parent IDE.tsx).
- * Renders a vertical stack: back-to-dashboard link, IssueContext,
- * HintSlider, PhaseStepper, review/commit controls, ReviewResults,
- * and modal portals for CommitModal, PrModal, and SaveDiscardModal.
+ * Renders a vertical stack: tab bar (Issue Detail / Explanations),
+ * IssueContext, HintSlider, PhaseStepper, review/commit controls,
+ * ReviewResults, ExplanationsPanel, and modal portals.
  *
  * Handles session lifecycle messages, phase:transition, review:result,
  * buffer:update (for re-review detection), and git:exit_complete.
@@ -27,6 +27,7 @@ import type {
   SessionRestoreMessage,
   PhaseTransitionMessage,
   ReviewResultMessage,
+  ReviewProgressMessage,
 } from '@shared/types/websocket-messages';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useHintLevel } from '../../hooks/useHintLevel';
@@ -36,6 +37,8 @@ import { IssueContextDisplay } from './IssueContext';
 import { HintSlider } from './HintSlider';
 import { PhaseStepper } from './PhaseStepper';
 import { ReviewResults } from './ReviewResults';
+import { ExplanationsPanel } from './ExplanationsPanel';
+import type { ExplanationEntry } from './ExplanationsPanel';
 import { CommitModal } from '../Modals/CommitModal';
 import { PrModal } from '../Modals/PrModal';
 import { SaveDiscardModal } from '../Modals/SaveDiscardModal';
@@ -52,6 +55,13 @@ const SPRING_TRANSITION = { type: 'spring' as const, stiffness: 300, damping: 28
 // ---------------------------------------------------------------------------
 
 type CommitState = 'idle' | 'ready_to_commit' | 'needs_re_review';
+type SidebarTab = 'issue' | 'explanations';
+
+interface ReviewLogEntry {
+  message: string;
+  toolName?: string;
+  timestamp: number;
+}
 
 // ---------------------------------------------------------------------------
 // Styles
@@ -93,16 +103,30 @@ const placeholderStyle: React.CSSProperties = {
   padding: 'var(--space-md)',
 };
 
-const backLinkStyle: React.CSSProperties = {
+const tabBarStyle: React.CSSProperties = {
+  display: 'flex',
+  borderBottom: '1px solid var(--border-subtle)',
+  flexShrink: 0,
+};
+
+const tabButtonStyle: React.CSSProperties = {
+  flex: 1,
+  padding: 'var(--space-xs) var(--space-sm)',
   background: 'none',
   border: 'none',
-  padding: 'var(--space-xs) var(--space-md)',
+  borderBottom: '2px solid transparent',
   fontFamily: 'var(--font-family)',
   fontSize: 'var(--font-small-size)',
-  color: 'var(--text-muted)',
+  fontWeight: 500,
   cursor: 'pointer',
-  textAlign: 'left',
-  transition: 'color 0.15s ease',
+  color: 'var(--text-muted)',
+  transition: 'color 0.15s ease, border-color 0.15s ease',
+};
+
+const tabButtonActiveStyle: React.CSSProperties = {
+  ...tabButtonStyle,
+  color: 'var(--text-primary)',
+  borderBottomColor: 'var(--accent-primary, #d97757)',
 };
 
 const reviewSectionStyle: React.CSSProperties = {
@@ -262,12 +286,14 @@ interface CoachingSidebarProps {
   initialIssueContext?: IssueContext | null;
   initialPhases?: Phase[] | null;
   onNavigate?: (view: AppView) => void;
+  explainRequestCount?: number;
 }
 
 export function CoachingSidebar({
   initialIssueContext = null,
   initialPhases = null,
   onNavigate,
+  explainRequestCount,
 }: CoachingSidebarProps): React.ReactElement {
   // ---- Session state -------------------------------------------------------
 
@@ -278,8 +304,16 @@ export function CoachingSidebar({
 
   const [reviewResult, setReviewResult] = useState<ReviewResult | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewLogs, setReviewLogs] = useState<ReviewLogEntry[]>([]);
   const [commitState, setCommitState] = useState<CommitState>('idle');
   const [showReviewDropdown, setShowReviewDropdown] = useState(false);
+
+  // ---- Explanations state ---------------------------------------------------
+
+  const [activeTab, setActiveTab] = useState<SidebarTab>('issue');
+  const [explanations, setExplanations] = useState<ExplanationEntry[]>([]);
+  const [explanationLoading, setExplanationLoading] = useState(false);
+  const [expandedExplanationId, setExpandedExplanationId] = useState<string | null>(null);
 
   // ---- Modal state ---------------------------------------------------------
 
@@ -299,6 +333,19 @@ export function CoachingSidebar({
     onDecreaseHintLevel: decreaseHintLevel,
     onIncreaseHintLevel: increaseHintLevel,
   });
+
+  // ---- React to explain requests from IDE ----------------------------------
+  // Track previous count with state so we can detect new requests during render
+  // (React-recommended pattern for adjusting state when a prop changes —
+  //  avoids useEffect + setState which violates react-hooks/set-state-in-effect).
+
+  const [prevExplainCount, setPrevExplainCount] = useState(0);
+  if (explainRequestCount && explainRequestCount > prevExplainCount) {
+    setPrevExplainCount(explainRequestCount);
+    setActiveTab('explanations');
+    setExplanationLoading(true);
+    setExpandedExplanationId(null);
+  }
 
   // ---- WebSocket listeners -------------------------------------------------
 
@@ -320,6 +367,10 @@ export function CoachingSidebar({
       setPhases(null);
       setReviewResult(null);
       setCommitState('idle');
+      setExplanations([]);
+      setExplanationLoading(false);
+      setExpandedExplanationId(null);
+      setActiveTab('issue');
     });
 
     const unsubTransition = on('phase:transition', (msg: WebSocketMessage) => {
@@ -336,15 +387,37 @@ export function CoachingSidebar({
       setReviewLoading(false);
     });
 
+    const unsubReviewProgress = on('review:progress', (msg: WebSocketMessage) => {
+      const { payload } = msg as ReviewProgressMessage;
+      setReviewLogs((prev) => {
+        const next = [
+          ...prev,
+          { message: payload.message, toolName: payload.toolName, timestamp: Date.now() },
+        ];
+        return next.length > 50 ? next.slice(-50) : next;
+      });
+    });
+
     const unsubReviewResult = on('review:result', (msg: WebSocketMessage) => {
       const { payload } = msg as ReviewResultMessage;
       setReviewResult(payload);
       setReviewLoading(false);
+      setReviewLogs([]);
       if (payload.phaseComplete === true) {
         setCommitState('ready_to_commit');
       } else {
         setCommitState('idle');
       }
+    });
+
+    const unsubReviewError = on('review:error', (msg: WebSocketMessage) => {
+      const { payload } = msg as { payload: { error: string } };
+      setReviewLoading(false);
+      setReviewLogs([]);
+      setReviewResult({
+        overallFeedback: `Review failed: ${payload.error}. Please try again.`,
+        codeComments: [],
+      });
     });
 
     const unsubBufferUpdate = on('buffer:update', () => {
@@ -359,6 +432,37 @@ export function CoachingSidebar({
       });
     });
 
+    const unsubExplainResponse = on('explain:response', (msg: WebSocketMessage) => {
+      const { payload } = msg as unknown as {
+        payload: { title: string; explanation: string; phaseConnection?: string };
+      };
+      const newId = `explain-${Date.now()}`;
+      const entry: ExplanationEntry = {
+        id: newId,
+        title: payload.title,
+        explanation: payload.explanation,
+        phaseConnection: payload.phaseConnection,
+        timestamp: Date.now(),
+      };
+      setExplanations((prev) => [entry, ...prev]);
+      setExplanationLoading(false);
+      setExpandedExplanationId(newId);
+    });
+
+    const unsubExplainError = on('explain:error', (msg: WebSocketMessage) => {
+      const { payload } = msg as unknown as { payload: { error: string } };
+      const newId = `explain-err-${Date.now()}`;
+      const entry: ExplanationEntry = {
+        id: newId,
+        title: 'Explain failed',
+        explanation: payload.error,
+        timestamp: Date.now(),
+      };
+      setExplanations((prev) => [entry, ...prev]);
+      setExplanationLoading(false);
+      setExpandedExplanationId(newId);
+    });
+
     const unsubGitExitComplete = on('git:exit_complete', () => {
       setSaveDiscardModalOpen(false);
       if (onNavigate) {
@@ -371,8 +475,12 @@ export function CoachingSidebar({
       unsubRestore();
       unsubEnd();
       unsubTransition();
+      unsubReviewProgress();
       unsubReviewResult();
+      unsubReviewError();
       unsubBufferUpdate();
+      unsubExplainResponse();
+      unsubExplainError();
       unsubGitExitComplete();
     };
   }, [on, onNavigate]);
@@ -415,6 +523,7 @@ export function CoachingSidebar({
     (scope: ReviewScope) => {
       setReviewLoading(true);
       setReviewResult(null);
+      setReviewLogs([]);
       setShowReviewDropdown(false);
 
       const activeTabPath = editorState.getActiveTabPath();
@@ -453,23 +562,13 @@ export function CoachingSidebar({
     }
   }, [commitState]);
 
+  const handleToggleExplanation = useCallback((id: string) => {
+    setExpandedExplanationId((prev) => (prev === id ? null : id));
+  }, []);
+
   const handleOpenPr = useCallback(() => {
     setPrModalOpen(true);
   }, []);
-
-  const handleBackToDashboard = useCallback(() => {
-    // Check for dirty tabs
-    const tabs = editorState.getTabs();
-    const hasDirtyTabs = tabs.some((t) => t.isDirty);
-
-    if (hasDirtyTabs) {
-      setSaveDiscardModalOpen(true);
-    } else {
-      if (onNavigate) {
-        onNavigate('dashboard');
-      }
-    }
-  }, [onNavigate]);
 
   const handleSaveAndExit = useCallback(() => {
     void send('git:save_and_exit', {});
@@ -513,176 +612,196 @@ export function CoachingSidebar({
 
   return (
     <aside style={sidebarStyle} aria-label="Coaching sidebar">
-      {/* Back to dashboard link */}
-      <button
-        type="button"
-        style={backLinkStyle}
-        onClick={handleBackToDashboard}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = 'var(--text-secondary)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = 'var(--text-muted)';
-        }}
-        aria-label="Back to dashboard"
-      >
-        &#x2190; Dashboard
-      </button>
-
-      {/* Issue context -- always visible at the top, not scrollable */}
-      <IssueContextDisplay issueContext={issueContext} />
-
-      {/* Scrollable content area for hint controls + phase stepper + review */}
-      <div style={scrollableAreaStyle}>
-        {/* Hint slider */}
-        <div style={hintSectionStyle}>
-          <HintSlider level={hintLevel} onChange={handleHintChange} />
-        </div>
-
-        {/* Phase stepper with layout animation */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={phases.map((p) => `${p.number}:${p.status}`).join(',')}
-            style={stepperSectionStyle}
-            layout
-            initial={{ opacity: 0.8 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0.8 }}
-            transition={SPRING_TRANSITION}
-          >
-            <PhaseStepper phases={phases} hintLevel={hintLevel} onExpandStep={handleExpandStep} />
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Review / Commit / PR controls */}
-        <div style={reviewSectionStyle}>
-          {isAllComplete ? (
-            /* All phases complete: show Open PR button */
-            <button
-              type="button"
-              style={prButtonStyle}
-              onClick={handleOpenPr}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = '0.85';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = '1';
-              }}
-            >
-              Open Pull Request
-            </button>
-          ) : (
-            /* Active phase: show review + commit controls */
-            <>
-              {/* Review split button */}
-              <div style={reviewButtonRowStyle}>
-                <button
-                  type="button"
-                  style={reviewMainButtonStyle}
-                  onClick={handleReviewPhase}
-                  disabled={reviewLoading}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'var(--bg-inset)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'var(--bg-surface)';
-                  }}
-                >
-                  {reviewLoading ? 'Reviewing...' : 'Review Phase'}
-                </button>
-                <button
-                  type="button"
-                  style={reviewDropdownButtonStyle}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowReviewDropdown((prev) => !prev);
-                  }}
-                  aria-label="Review scope options"
-                  aria-expanded={showReviewDropdown}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'var(--bg-inset)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'var(--bg-surface)';
-                  }}
-                >
-                  &#x25BC;
-                </button>
-
-                {/* Dropdown menu */}
-                {showReviewDropdown && (
-                  <div style={dropdownMenuStyle}>
-                    <button
-                      type="button"
-                      style={dropdownItemStyle}
-                      onClick={() => handleReview('current_file')}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--bg-surface)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      Review Current File
-                    </button>
-                    <button
-                      type="button"
-                      style={dropdownItemStyle}
-                      onClick={() => handleReview('open_files')}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--bg-surface)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      Review Open Files
-                    </button>
-                    <button
-                      type="button"
-                      style={dropdownItemStyle}
-                      onClick={() => handleReview('current_task')}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--bg-surface)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      Review Current Task
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Commit button */}
-              <button
-                type="button"
-                style={getCommitButtonStyle(commitState)}
-                onClick={handleCommitClick}
-                disabled={commitState !== 'ready_to_commit'}
-                title={
-                  commitState === 'needs_re_review'
-                    ? 'Code changed since last review. Review again before committing.'
-                    : commitState === 'idle'
-                      ? 'Complete a review first to enable committing.'
-                      : 'Commit this phase and continue to the next.'
-                }
-              >
-                {getCommitButtonLabel(commitState)}
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Review results */}
-        <ReviewResults
-          result={reviewResult}
-          loading={reviewLoading}
-          onDismiss={handleDismissReview}
-          onCodeCommentClick={handleCodeCommentClick}
-        />
+      {/* Tab bar */}
+      <div style={tabBarStyle}>
+        <button
+          type="button"
+          style={activeTab === 'issue' ? tabButtonActiveStyle : tabButtonStyle}
+          onClick={() => setActiveTab('issue')}
+        >
+          Issue Detail
+        </button>
+        <button
+          type="button"
+          style={activeTab === 'explanations' ? tabButtonActiveStyle : tabButtonStyle}
+          onClick={() => setActiveTab('explanations')}
+        >
+          Explanations
+        </button>
       </div>
+
+      {activeTab === 'issue' ? (
+        <>
+          {/* Issue context */}
+          <IssueContextDisplay issueContext={issueContext} />
+
+          {/* Scrollable content area for hint controls + phase stepper + review */}
+          <div style={scrollableAreaStyle}>
+            {/* Hint slider */}
+            <div style={hintSectionStyle}>
+              <HintSlider level={hintLevel} onChange={handleHintChange} />
+            </div>
+
+            {/* Phase stepper with layout animation */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={phases.map((p) => `${p.number}:${p.status}`).join(',')}
+                style={stepperSectionStyle}
+                layout
+                initial={{ opacity: 0.8 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0.8 }}
+                transition={SPRING_TRANSITION}
+              >
+                <PhaseStepper
+                  phases={phases}
+                  hintLevel={hintLevel}
+                  onExpandStep={handleExpandStep}
+                />
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Review / Commit / PR controls */}
+            <div style={reviewSectionStyle}>
+              {isAllComplete ? (
+                /* All phases complete: show Open PR button */
+                <button
+                  type="button"
+                  style={prButtonStyle}
+                  onClick={handleOpenPr}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.85';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                >
+                  Open Pull Request
+                </button>
+              ) : (
+                /* Active phase: show review + commit controls */
+                <>
+                  {/* Review split button */}
+                  <div style={reviewButtonRowStyle}>
+                    <button
+                      type="button"
+                      style={reviewMainButtonStyle}
+                      onClick={handleReviewPhase}
+                      disabled={reviewLoading}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-inset)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-surface)';
+                      }}
+                    >
+                      {reviewLoading ? 'Reviewing...' : 'Review Phase'}
+                    </button>
+                    <button
+                      type="button"
+                      style={reviewDropdownButtonStyle}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowReviewDropdown((prev) => !prev);
+                      }}
+                      aria-label="Review scope options"
+                      aria-expanded={showReviewDropdown}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-inset)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-surface)';
+                      }}
+                    >
+                      &#x25BC;
+                    </button>
+
+                    {/* Dropdown menu */}
+                    {showReviewDropdown && (
+                      <div style={dropdownMenuStyle}>
+                        <button
+                          type="button"
+                          style={dropdownItemStyle}
+                          onClick={() => handleReview('current_file')}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'var(--bg-surface)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          Review Current File
+                        </button>
+                        <button
+                          type="button"
+                          style={dropdownItemStyle}
+                          onClick={() => handleReview('open_files')}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'var(--bg-surface)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          Review Open Files
+                        </button>
+                        <button
+                          type="button"
+                          style={dropdownItemStyle}
+                          onClick={() => handleReview('current_task')}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'var(--bg-surface)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          Review Current Task
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Commit button */}
+                  <button
+                    type="button"
+                    style={getCommitButtonStyle(commitState)}
+                    onClick={handleCommitClick}
+                    disabled={commitState !== 'ready_to_commit'}
+                    title={
+                      commitState === 'needs_re_review'
+                        ? 'Code changed since last review. Review again before committing.'
+                        : commitState === 'idle'
+                          ? 'Complete a review first to enable committing.'
+                          : 'Commit this phase and continue to the next.'
+                    }
+                  >
+                    {getCommitButtonLabel(commitState)}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Review results */}
+            <ReviewResults
+              result={reviewResult}
+              loading={reviewLoading}
+              logs={reviewLogs}
+              onDismiss={handleDismissReview}
+              onCodeCommentClick={handleCodeCommentClick}
+            />
+          </div>
+        </>
+      ) : (
+        <div style={scrollableAreaStyle}>
+          <ExplanationsPanel
+            explanations={explanations}
+            loading={explanationLoading}
+            expandedId={expandedExplanationId}
+            onToggle={handleToggleExplanation}
+          />
+        </div>
+      )}
 
       {/* Modals */}
       <CommitModal

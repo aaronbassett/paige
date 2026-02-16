@@ -42,6 +42,12 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: React.PropsWithChildren) => <>{children}</>,
 }));
 
+// Mock window.paige.openExternal for Electron IPC bridge
+Object.defineProperty(window, 'paige', {
+  value: { openExternal: vi.fn(), platform: 'darwin', terminal: {}, menu: {} },
+  writable: true,
+});
+
 // Import after mocks are in place
 import { MaterialCard } from '../../../../../renderer/src/components/Dashboard/materials/MaterialCard';
 
@@ -121,9 +127,9 @@ describe('MaterialCard', () => {
   describe('thumbnail', () => {
     it('renders thumbnail image when thumbnailUrl is provided', () => {
       renderCard();
-      const img = screen.getByRole('img');
+      const img = screen.getByAltText('Learn React Hooks');
       expect(img).toHaveAttribute('src', 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg');
-      expect(img).toHaveAttribute('alt', 'Learn React Hooks');
+      expect(img).toHaveAttribute('role', 'link');
     });
 
     it('renders placeholder icon when thumbnailUrl is null', () => {
@@ -160,11 +166,11 @@ describe('MaterialCard', () => {
   // -------------------------------------------------------------------------
 
   describe('action buttons', () => {
-    it('calls onView with material id when view button is clicked', async () => {
+    it('calls onView with material id when title is clicked', async () => {
       const user = userEvent.setup();
       const onView = vi.fn();
       renderCard({ id: 42 }, { onView });
-      await user.click(screen.getByLabelText('View material'));
+      await user.click(screen.getByText('Learn React Hooks'));
       expect(onView).toHaveBeenCalledTimes(1);
       expect(onView).toHaveBeenCalledWith(42);
     });
@@ -187,16 +193,14 @@ describe('MaterialCard', () => {
       expect(onDismiss).toHaveBeenCalledWith(99);
     });
 
-    it('has accessible labels on all action buttons', () => {
+    it('has accessible labels on action buttons', () => {
       renderCard();
-      expect(screen.getByLabelText('View material')).toBeInTheDocument();
       expect(screen.getByLabelText('Complete material')).toBeInTheDocument();
       expect(screen.getByLabelText('Dismiss material')).toBeInTheDocument();
     });
 
-    it('has tooltip titles on all action buttons', () => {
+    it('has tooltip titles on action buttons', () => {
       renderCard();
-      expect(screen.getByTitle('Open in browser')).toBeInTheDocument();
       expect(screen.getByTitle('Mark as complete')).toBeInTheDocument();
       expect(screen.getByTitle('Dismiss')).toBeInTheDocument();
     });

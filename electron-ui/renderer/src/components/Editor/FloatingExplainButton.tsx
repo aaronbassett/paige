@@ -38,7 +38,7 @@ export interface ExplainPayload {
 
 export interface FloatingExplainButtonProps {
   /** Monaco editor instance to track selections on. */
-  editorRef: React.RefObject<monacoEditor.IStandaloneCodeEditor | null>;
+  editor: monacoEditor.IStandaloneCodeEditor | null;
   /** Current file path displayed in the editor. */
   path: string;
   /** Called when the user clicks "Explain". */
@@ -92,7 +92,7 @@ const buttonStyle: React.CSSProperties = {
 // ---------------------------------------------------------------------------
 
 export function FloatingExplainButton({
-  editorRef,
+  editor,
   path,
   onExplain,
 }: FloatingExplainButtonProps): React.ReactElement | null {
@@ -201,18 +201,17 @@ export function FloatingExplainButton({
   // -------------------------------------------------------------------------
 
   useEffect(() => {
-    const editorInstance = editorRef.current;
-    if (!editorInstance) {
+    if (!editor) {
       return;
     }
 
     // --- Selection change ---
-    const selectionDisposable = editorInstance.onDidChangeCursorSelection(() => {
-      evaluateSelection(editorInstance);
+    const selectionDisposable = editor.onDidChangeCursorSelection(() => {
+      evaluateSelection(editor);
     });
 
     // --- Scroll: hide immediately, re-evaluate after settle ---
-    const scrollDisposable = editorInstance.onDidScrollChange(() => {
+    const scrollDisposable = editor.onDidScrollChange(() => {
       // Hide button during scroll
       setOpacity(0);
 
@@ -222,7 +221,7 @@ export function FloatingExplainButton({
 
       scrollTimerRef.current = setTimeout(() => {
         scrollTimerRef.current = null;
-        evaluateSelection(editorInstance);
+        evaluateSelection(editor);
       }, SCROLL_SETTLE_MS);
     });
 
@@ -235,7 +234,7 @@ export function FloatingExplainButton({
         scrollTimerRef.current = null;
       }
     };
-  }, [editorRef, evaluateSelection]);
+  }, [editor, evaluateSelection]);
 
   // -------------------------------------------------------------------------
   // Click handler

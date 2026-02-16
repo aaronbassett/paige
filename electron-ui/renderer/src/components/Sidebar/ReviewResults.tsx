@@ -8,7 +8,7 @@
  * Loading state renders a pulsing "Reviewing..." indicator.
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ReviewResult, ReviewCodeComment, ReviewTaskFeedback } from '@shared/types/entities';
 
@@ -16,9 +16,16 @@ import type { ReviewResult, ReviewCodeComment, ReviewTaskFeedback } from '@share
 // Props
 // ---------------------------------------------------------------------------
 
+interface ReviewLogEntry {
+  message: string;
+  toolName?: string;
+  timestamp: number;
+}
+
 export interface ReviewResultsProps {
   result: ReviewResult | null;
   loading: boolean;
+  logs?: ReviewLogEntry[];
   onDismiss: () => void;
   onCodeCommentClick: (filePath: string, line: number) => void;
 }
@@ -73,6 +80,41 @@ const loadingStyle: React.CSSProperties = {
   color: 'var(--accent-primary)',
   animation: 'review-pulse 1.5s ease-in-out infinite',
   padding: 'var(--space-sm) 0',
+};
+
+const logContainerStyle: React.CSSProperties = {
+  maxHeight: '150px',
+  overflowY: 'auto',
+  background: 'var(--bg-inset, #1a1a1a)',
+  borderRadius: '6px',
+  padding: '8px',
+  marginTop: 'var(--space-xs)',
+  fontFamily: 'var(--font-family, monospace)',
+  fontSize: '11px',
+  lineHeight: '1.5',
+  color: 'var(--text-secondary, #999)',
+};
+
+const logEntryStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: '4px',
+  alignItems: 'baseline',
+};
+
+const logBulletStyle: React.CSSProperties = {
+  color: 'var(--accent-primary, #d97757)',
+  flexShrink: 0,
+  userSelect: 'none',
+};
+
+const logToolNameStyle: React.CSSProperties = {
+  color: 'var(--accent-primary, #d97757)',
+  fontWeight: 600,
+};
+
+const logMessageStyle: React.CSSProperties = {
+  color: 'var(--text-secondary, #999)',
+  wordBreak: 'break-word',
 };
 
 const overallFeedbackStyle: React.CSSProperties = {
@@ -266,15 +308,51 @@ function CodeCommentItem({
 export function ReviewResults({
   result,
   loading,
+  logs = [],
   onDismiss,
   onCodeCommentClick,
 }: ReviewResultsProps): React.ReactElement | null {
   ensurePulseKeyframes();
 
+  const logScrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll log container when new entries arrive.
+  useEffect(() => {
+    const el = logScrollRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [logs.length]);
+
   if (loading) {
     return (
       <div style={containerStyle}>
         <p style={loadingStyle}>Reviewing...</p>
+        {logs.length > 0 && (
+          <div
+            ref={logScrollRef}
+            style={logContainerStyle}
+            role="log"
+            aria-label="Review activity log"
+          >
+            <AnimatePresence initial={false}>
+              {logs.map((entry, i) => (
+                <motion.div
+                  key={`${entry.timestamp}-${i}`}
+                  style={logEntryStyle}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <span style={logBulletStyle}>{'>'}</span>
+                  {entry.toolName && <span style={logToolNameStyle}>[{entry.toolName}]</span>}
+                  <span style={logMessageStyle}>{entry.message}</span>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
     );
   }

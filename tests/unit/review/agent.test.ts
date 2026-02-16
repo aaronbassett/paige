@@ -214,7 +214,7 @@ describe('runReviewAgent', () => {
 
   it('throws when maximum turns are exceeded', async () => {
     // Every turn returns a tool use, never a final text response
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 20; i++) {
       mockCreate.mockResolvedValueOnce({
         content: [
           {
@@ -231,7 +231,7 @@ describe('runReviewAgent', () => {
       'Review agent exceeded maximum turns',
     );
 
-    expect(mockCreate).toHaveBeenCalledTimes(10);
+    expect(mockCreate).toHaveBeenCalledTimes(20);
   });
 
   it('parses JSON wrapped in markdown code fences', async () => {
