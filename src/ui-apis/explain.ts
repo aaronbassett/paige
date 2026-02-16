@@ -12,6 +12,7 @@ import type { UserExplainData } from '../types/websocket.js';
 
 /** Result of an Explain This request. */
 export interface ExplainResult {
+  title: string;
   explanation: string;
   phaseConnection: string | null;
 }
@@ -65,6 +66,7 @@ function buildSystemPrompt(assessments: DreyfusAssessment[], phaseContext: strin
 
   prompt +=
     '\n\nRespond with a JSON object containing:\n' +
+    '- "title": A short title (max 50 characters) summarizing what the selected code does.\n' +
     '- "explanation": A clear explanation of the selected code.\n' +
     '- "phaseConnection": (optional) How this code relates to the current coaching phase, or omit if not relevant.';
 
@@ -125,6 +127,7 @@ export async function handleExplainThis(
   });
 
   return {
+    title: response.title,
     explanation: response.explanation,
     phaseConnection: response.phaseConnection ?? null,
   };

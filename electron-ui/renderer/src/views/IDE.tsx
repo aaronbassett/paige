@@ -184,6 +184,10 @@ export function IDE({ onNavigate, planningResult }: IDEProps) {
   // WebSocket send for review and explain
   const { send } = useWebSocket();
 
+  // Explain request counter — incremented on each explain click so CoachingSidebar
+  // can react by switching to the Explanations tab and showing a loading state.
+  const [explainRequestCount, setExplainRequestCount] = useState(0);
+
   // -------------------------------------------------------------------------
   // Resize handler: auto-collapse sidebars
   // -------------------------------------------------------------------------
@@ -246,6 +250,7 @@ export function IDE({ onNavigate, planningResult }: IDEProps) {
   const handleExplain = useCallback(
     (payload: ExplainPayload) => {
       void send('user:explain', payload);
+      setExplainRequestCount((c) => c + 1);
     },
     [send]
   );
@@ -415,6 +420,7 @@ export function IDE({ onNavigate, planningResult }: IDEProps) {
             initialIssueContext={initialIssueContext}
             initialPhases={initialPhases}
             onNavigate={onNavigate}
+            explainRequestCount={explainRequestCount}
           />
         )}
       </motion.aside>

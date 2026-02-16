@@ -115,25 +115,6 @@ export function useCoachingMessages(): UseCoachingMessagesReturn {
       }
     });
 
-    // Explain This responses: show as info toast
-    const unsubExplainResponse = on('explain:response', (msg: WebSocketMessage) => {
-      const { payload } = msg as unknown as {
-        payload: { explanation: string; phaseConnection?: string };
-      };
-      let content = payload.explanation;
-      if (payload.phaseConnection) {
-        content += `\n\n${payload.phaseConnection}`;
-      }
-      const messageId = `explain-${Date.now()}`;
-      showCoachingToast({ messageId, message: content, type: 'info' });
-    });
-
-    const unsubExplainError = on('explain:error', (msg: WebSocketMessage) => {
-      const { payload } = msg as unknown as { payload: { error: string } };
-      const messageId = `explain-err-${Date.now()}`;
-      showCoachingToast({ messageId, message: payload.error, type: 'warning' });
-    });
-
     // Phase transition: clear coaching balloons and toasts (but NOT review comments).
     const unsubPhaseTransition = on('phase:transition', () => {
       setMessages([]);
@@ -144,8 +125,6 @@ export function useCoachingMessages(): UseCoachingMessagesReturn {
     return () => {
       unsubMessage();
       unsubClear();
-      unsubExplainResponse();
-      unsubExplainError();
       unsubPhaseTransition();
     };
   }, [on]);

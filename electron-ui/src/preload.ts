@@ -17,6 +17,13 @@ interface PaigeAPI {
     /** Register a listener for PTY process exit. */
     onExit: (callback: (info: { code: number; signal?: number }) => void) => void;
   };
+  /** Menu IPC bridge — receives keyboard shortcuts routed from the main process menu. */
+  menu: {
+    /** Register a listener for Cmd+S (Save) routed from the application menu. Returns cleanup function. */
+    onSave: (callback: () => void) => () => void;
+    /** Register a listener for Cmd+W (Close Tab) routed from the application menu. Returns cleanup function. */
+    onCloseTab: (callback: () => void) => () => void;
+  };
 }
 
 const api: PaigeAPI = {
@@ -40,6 +47,22 @@ const api: PaigeAPI = {
       ipcRenderer.on('terminal:exit', (_event, info: { code: number; signal?: number }) => {
         callback(info);
       });
+    },
+  },
+  menu: {
+    onSave: (callback: () => void) => {
+      const handler = () => callback();
+      ipcRenderer.on('menu:save', handler);
+      return () => {
+        ipcRenderer.removeListener('menu:save', handler);
+      };
+    },
+    onCloseTab: (callback: () => void) => {
+      const handler = () => callback();
+      ipcRenderer.on('menu:close-tab', handler);
+      return () => {
+        ipcRenderer.removeListener('menu:close-tab', handler);
+      };
     },
   },
 };

@@ -1,6 +1,8 @@
 // WebSocket handlers for file:open and file:save messages from Electron clients.
 // Reads/writes files via the file-system layer and responds with fs:content or fs:save_ack/fs:save_error.
 
+import { join } from 'node:path';
+
 import { WebSocket as WsWebSocket } from 'ws';
 
 import { loadEnv } from '../../config/env.js';
@@ -8,7 +10,7 @@ import { getDatabase } from '../../database/db.js';
 import { readFile, writeFile } from '../../file-system/file-ops.js';
 import { logAction } from '../../logger/action-log.js';
 import { getLogger } from '../../logger/logtape.js';
-import { getActiveSessionId } from '../../mcp/session.js';
+import { getActiveRepo, getActiveSessionId } from '../../mcp/session.js';
 import type { ActionType } from '../../types/domain.js';
 
 const logger = getLogger(['paige', 'ws-handler', 'file']);
@@ -53,6 +55,20 @@ function safeLogAction(actionType: ActionType, data?: Record<string, unknown>): 
   }
 }
 
+// ── Helpers (project dir) ────────────────────────────────────────────────────
+
+/**
+ * Resolves the correct project directory: the active repo clone if one
+ * is set, otherwise the PROJECT_DIR env fallback.
+ */
+function resolveProjectDir(): string {
+  const env = loadEnv();
+  const activeRepo = getActiveRepo();
+  return activeRepo !== null
+    ? join(env.dataDir, 'repos', activeRepo.owner, activeRepo.repo)
+    : env.projectDir;
+}
+
 // ── Handlers ─────────────────────────────────────────────────────────────────
 
 /**
@@ -68,8 +84,8 @@ export async function handleFileOpen(
   const { path } = data as FileOpenData;
 
   try {
-    const env = loadEnv();
-    const { content, language } = await readFile(path, env.projectDir);
+    const projectDir = resolveProjectDir();
+    const { content, language } = await readFile(path, projectDir);
     const lineCount = content.split('\n').length;
 
     safeLogAction('file_open', { path });
@@ -95,8 +111,8 @@ export async function handleFileSave(
   const { path, content } = data as FileSaveData;
 
   try {
-    const env = loadEnv();
-    await writeFile(path, content, env.projectDir);
+    const projectDir = resolveProjectDir();
+    await writeFile(path, content, projectDir);
 
     safeLogAction('file_save', { path });
 

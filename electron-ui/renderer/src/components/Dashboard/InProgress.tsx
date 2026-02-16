@@ -295,7 +295,7 @@ interface InProgressProps {
 }
 
 export function InProgress({ onNavigate }: InProgressProps) {
-  const { on } = useWebSocket();
+  const { on, send } = useWebSocket();
 
   const [items, setItems] = useState<InProgressItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -349,12 +349,12 @@ export function InProgress({ onNavigate }: InProgressProps) {
   const handleItemClick = useCallback(
     (item: InProgressItem) => {
       if (item.type === 'issue') {
-        onNavigate('ide', { issueNumber: item.number });
+        send('dashboard:resume_task', { issueNumber: item.number });
       } else {
         window.open(item.htmlUrl, '_blank');
       }
     },
-    [onNavigate]
+    [send]
   );
 
   const getRowStyle = (item: InProgressItem, index: number) => {

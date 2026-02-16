@@ -24,6 +24,7 @@ import {
 import { handleReposList, handleReposActivity } from './handlers/repos.js';
 import { handleSessionStartRepo } from './handlers/session-start.js';
 import { handlePlanningStart } from './handlers/planning.js';
+import { handleResumeTask } from './handlers/resume.js';
 import { handleFsRequestTree } from './handlers/file-tree.js';
 import {
   handleTerminalReady,
@@ -110,6 +111,7 @@ const handlers = new Map<string, MessageHandler>([
   ['dashboard:request', handleDashboardRequestWs],
   ['dashboard:refresh_issues', handleDashboardRefreshIssuesWs],
   ['dashboard:stats_period', handleDashboardStatsPeriodWs],
+  ['dashboard:resume_task', handleResumeTask],
   ['repos:list', handleReposList],
   ['repos:activity', handleReposActivity],
   ['session:start_repo', handleSessionStartRepo],

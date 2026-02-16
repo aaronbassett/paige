@@ -5,11 +5,14 @@
  * IDE, and Placeholder views based on `currentView` state.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AppView } from '@shared/types/entities';
-import type { SessionRepoStartedMessage, WebSocketMessage } from '@shared/types/websocket-messages';
-import type { PlanningCompletePayload } from '@shared/types/websocket-messages';
+import type {
+  SessionRepoStartedMessage,
+  PlanningCompletePayload,
+  WebSocketMessage,
+} from '@shared/types/websocket-messages';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { Landing } from '../views/Landing';
 import { Dashboard } from '../views/Dashboard';
@@ -82,6 +85,8 @@ export function AppShell() {
   const [planningResult, setPlanningResult] = useState<PlanningCompletePayload | null>(null);
 
   const { send, on } = useWebSocket();
+  const currentViewRef = useRef(currentView);
+  currentViewRef.current = currentView;
 
   const handleNavigate = useCallback(
     (view: AppView, context?: { issueNumber?: number; kataId?: number }) => {
@@ -126,6 +131,24 @@ export function AppShell() {
       const m = msg as SessionRepoStartedMessage;
       setCurrentRepo({ owner: m.payload.owner, repo: m.payload.repo });
       setCurrentView('dashboard');
+    });
+    return unsub;
+  }, [on]);
+
+  /**
+   * Listen for planning:complete to handle session resume.
+   *
+   * When the planning view is active, PlanningLoader handles this message
+   * via its own usePlanningProgress hook. But for resumed sessions
+   * (triggered from the dashboard), the response arrives before
+   * PlanningLoader could mount, so AppShell handles it directly.
+   */
+  useEffect(() => {
+    const unsub = on('planning:complete', (msg: WebSocketMessage) => {
+      if (currentViewRef.current === 'planning') return; // PlanningLoader handles it
+      const result = (msg as { payload: PlanningCompletePayload }).payload;
+      setPlanningResult(result);
+      setCurrentView('ide');
     });
     return unsub;
   }, [on]);

@@ -25,6 +25,13 @@ export function _setClient(c: Anthropic): void {
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
+/** Progress event emitted during the review agent loop. */
+export interface ReviewProgressEvent {
+  message: string;
+  toolName?: string | undefined;
+  filePath?: string | undefined;
+}
+
 /** Input parameters for a review agent run. */
 export interface ReviewRequest {
   /** What scope to review: a full phase, specific file(s), or a single task. */
@@ -41,12 +48,14 @@ export interface ReviewRequest {
   activeFilePath?: string;
   /** All open file paths (relative, for multi-file reviews). */
   openFilePaths?: string[];
+  /** Optional callback invoked with progress events during the agent loop. */
+  onProgress?: (event: ReviewProgressEvent) => void;
 }
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-const MAX_TURNS = 10;
-const MAX_TOKENS = 4096;
+const MAX_TURNS = 20;
+const MAX_TOKENS = 8192;
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 const SYSTEM_PROMPT = `You are a coaching-oriented code reviewer for junior developers. Your job is to help them learn, not just find bugs.
@@ -60,7 +69,9 @@ Review the code changes and provide:
 Be specific. Reference actual code. Explain WHY something matters, not just what to change.
 Use severity levels: 'praise' for good work, 'suggestion' for improvements, 'issue' for problems.
 
-After reviewing, output your final result as a JSON object matching this schema:
+IMPORTANT: Be efficient with tool calls. Start with git_diff to see what changed, then read only the files that were modified. Do NOT exhaustively explore the codebase. Once you have enough context (usually after 3-5 tool calls), stop calling tools and produce your final JSON result.
+
+When you are ready, output ONLY a JSON object (no tool calls) matching this schema:
 {
   "overallFeedback": "string",
   "codeComments": [{ "filePath": "string", "startLine": number, "endLine": number, "comment": "string", "severity": "suggestion" | "issue" | "praise" }],
@@ -85,6 +96,9 @@ After reviewing, output your final result as a JSON object matching this schema:
 export async function runReviewAgent(request: ReviewRequest): Promise<ReviewResult> {
   const anthropic = getClient();
   const userPrompt = buildUserPrompt(request);
+  const { onProgress } = request;
+
+  onProgress?.({ message: 'Starting review...' });
 
   const messages: Anthropic.MessageParam[] = [{ role: 'user', content: userPrompt }];
 
@@ -110,11 +124,21 @@ export async function runReviewAgent(request: ReviewRequest): Promise<ReviewResu
       // Execute each tool and collect results
       const toolResults: Anthropic.ToolResultBlockParam[] = [];
       for (const toolUse of toolUseBlocks) {
-        const result = await executeReviewTool(
-          toolUse.name,
-          toolUse.input as Record<string, unknown>,
-          request.projectDir,
-        );
+        const input = toolUse.input as Record<string, unknown>;
+        const filePath = (input['path'] as string | undefined) ?? undefined;
+        const toolLabel =
+          toolUse.name === 'read_file'
+            ? `Reading ${filePath ?? 'file'}`
+            : toolUse.name === 'git_diff'
+              ? filePath
+                ? `Checking diff for ${filePath}`
+                : 'Checking git diff'
+              : toolUse.name === 'list_files'
+                ? `Listing files in ${filePath ?? '.'}`
+                : `Running ${toolUse.name}`;
+        onProgress?.({ message: toolLabel, toolName: toolUse.name, filePath });
+
+        const result = await executeReviewTool(toolUse.name, input, request.projectDir);
         toolResults.push({
           type: 'tool_result',
           tool_use_id: toolUse.id,
@@ -122,12 +146,22 @@ export async function runReviewAgent(request: ReviewRequest): Promise<ReviewResu
         });
       }
 
-      // Feed tool results back as a user message
-      messages.push({ role: 'user', content: toolResults });
+      // Feed tool results back as a user message.
+      // If nearing the turn limit, nudge the model to wrap up.
+      const userContent: Anthropic.ContentBlockParam[] = [...toolResults];
+      if (turn >= MAX_TURNS - 2) {
+        userContent.push({
+          type: 'text',
+          text: 'You are running low on turns. Please stop calling tools and produce your final JSON review result now.',
+        });
+      }
+      messages.push({ role: 'user', content: userContent });
       continue;
     }
 
     // No tool use — this is the final response. Extract text and parse JSON.
+    onProgress?.({ message: 'Generating review feedback...' });
+
     const textBlock = response.content.find(
       (block): block is Anthropic.TextBlock => block.type === 'text',
     );

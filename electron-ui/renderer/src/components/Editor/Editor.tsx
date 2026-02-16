@@ -275,6 +275,28 @@ export function CodeEditor({ editorInstanceRef, onEditorReady }: CodeEditorProps
       // Notify parent that the editor is ready
       onEditorReady?.(editor);
 
+      // Override Monaco's default no-op Cmd+S / Cmd+W with custom actions
+      // that dispatch events useFileOperations can handle. Without this,
+      // Monaco consumes the keystroke (preventDefault + stopPropagation)
+      // and the window-level keydown listener never fires.
+      editor.addAction({
+        id: 'paige-save',
+        label: 'Save',
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+        run: () => {
+          window.dispatchEvent(new Event('paige:save'));
+        },
+      });
+
+      editor.addAction({
+        id: 'paige-close-tab',
+        label: 'Close Tab',
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyW],
+        run: () => {
+          window.dispatchEvent(new Event('paige:close-tab'));
+        },
+      });
+
       // Track cursor position changes
       editor.onDidChangeCursorPosition((e) => {
         const currentPath = editorState.getActiveTabPath();

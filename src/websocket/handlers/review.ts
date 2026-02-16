@@ -2,7 +2,11 @@
 // Delegates to the multi-turn review agent and broadcasts the result.
 
 import type { WebSocket as WsWebSocket } from 'ws';
-import type { ReviewRequestData } from '../../types/websocket.js';
+import type {
+  ReviewRequestData,
+  ReviewProgressMessage,
+  ServerToClientMessage,
+} from '../../types/websocket.js';
 import { getLogger } from '../../logger/logtape.js';
 import { getActiveRepo, getActiveSessionId } from '../../mcp/session.js';
 import { getDatabase } from '../../database/db.js';
@@ -58,7 +62,21 @@ export function handleReviewRequest(_ws: WsWebSocket, data: unknown, _connection
       }
     }
 
-    const request: Parameters<typeof runReviewAgent>[0] = { scope, projectDir };
+    const request: Parameters<typeof runReviewAgent>[0] = {
+      scope,
+      projectDir,
+      onProgress(event) {
+        const progressMessage: ReviewProgressMessage = {
+          type: 'review:progress',
+          data: {
+            message: event.message,
+            toolName: event.toolName,
+            filePath: event.filePath,
+          },
+        };
+        broadcast(progressMessage as ServerToClientMessage);
+      },
+    };
     if (phaseTitle !== undefined) request.phaseTitle = phaseTitle;
     if (phaseDescription !== undefined) request.phaseDescription = phaseDescription;
     if (activeFilePath !== undefined && activeFilePath !== null)

@@ -129,6 +129,7 @@ function activePhase(): Phase {
 /** Default callApi response matching the expected Zod schema. */
 function defaultApiResponse() {
   return {
+    title: 'Debounce utility function',
     explanation: 'This is a debounce function that delays execution until a pause in calls.',
     phaseConnection:
       'This relates to the current phase where you are implementing core utility logic.',
@@ -167,6 +168,7 @@ describe('handleExplainThis (integration)', () => {
     const result = await handleExplainThis(defaultExplainData(), SESSION_ID);
 
     expect(result).toBeDefined();
+    expect(result.title).toBe('Debounce utility function');
     expect(result.explanation).toBe(
       'This is a debounce function that delays execution until a pause in calls.',
     );
@@ -223,6 +225,7 @@ describe('handleExplainThis (integration)', () => {
     mockGetPlansBySession.mockResolvedValue([activePlan()]);
     mockGetPhasesByPlan.mockResolvedValue([activePhase()]);
     mockCallApi.mockResolvedValue({
+      title: 'Debounce utility',
       explanation: 'A debounce utility.',
       phaseConnection: 'Directly relates to Phase 2: Implement core logic',
     });
@@ -238,6 +241,7 @@ describe('handleExplainThis (integration)', () => {
   it('returns null phaseConnection when no active plan', async () => {
     mockGetPlansBySession.mockResolvedValue([]);
     mockCallApi.mockResolvedValue({
+      title: 'Debounce function',
       explanation: 'A debounce function.',
       phaseConnection: undefined,
     });
@@ -257,6 +261,7 @@ describe('handleExplainThis (integration)', () => {
       { ...activePhase(), status: 'pending', number: 2, title: 'Core' } as Phase,
     ]);
     mockCallApi.mockResolvedValue({
+      title: 'Debounce function',
       explanation: 'A debounce function.',
       phaseConnection: undefined,
     });

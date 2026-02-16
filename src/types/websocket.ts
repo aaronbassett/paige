@@ -608,6 +608,7 @@ export interface ObserverNudgeData {
 }
 
 export interface ExplainResponseData {
+  readonly title: string;
   readonly explanation: string;
   readonly phaseConnection?: string | undefined;
 }
